@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IVGraph — Hebbian Concept Explorer</title>
+<style>
+  :root {
+    --surface-1: #fcfcfb;
+    --page: #f9f9f7;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --grid: #e1e0d9;
+    --baseline: #c3c2b7;
+    --border: rgba(11,11,11,0.10);
+    --c1:#2a78d6; --c2:#1baf7a; --c3:#eda100; --c4:#008300;
+    --c5:#4a3aa7; --c6:#e34948; --c7:#e87ba4; --c8:#eb6834;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-1: #1a1a19;
+      --page: #0d0d0d;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #898781;
+      --grid: #2c2c2a;
+      --baseline: #383835;
+      --border: rgba(255,255,255,0.10);
+      --c1:#3987e5; --c2:#199e70; --c3:#c98500; --c4:#008300;
+      --c5:#9085e9; --c6:#e66767; --c7:#d55181; --c8:#d95926;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page); color: var(--text-primary);
+    height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+  }
+  header {
+    display: flex; align-items: center; gap: 16px; padding: 10px 16px;
+    border-bottom: 1px solid var(--border); background: var(--surface-1);
+    flex-wrap: wrap;
+  }
+  header h1 { font-size: 15px; font-weight: 650; }
+  header .sub { color: var(--text-muted); font-size: 12px; }
+  .controls { display: flex; align-items: center; gap: 14px; margin-left: auto; flex-wrap: wrap; }
+  .controls label { color: var(--text-secondary); font-size: 12px; display: flex; align-items: center; gap: 6px; }
+  input[type=range] { width: 110px; accent-color: var(--c1); }
+  input[type=checkbox] { accent-color: var(--c1); }
+  button, .filebtn {
+    font: inherit; font-size: 12px; color: var(--text-primary);
+    background: var(--surface-1); border: 1px solid var(--baseline);
+    border-radius: 6px; padding: 4px 10px; cursor: pointer;
+  }
+  button:hover, .filebtn:hover { border-color: var(--text-muted); }
+  main { flex: 1; display: flex; min-height: 0; }
+  #stage { flex: 1; position: relative; background: var(--surface-1); }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; }
+  canvas.dragging { cursor: grabbing; }
+  aside {
+    width: 300px; border-left: 1px solid var(--border); background: var(--surface-1);
+    overflow-y: auto; padding: 14px; flex-shrink: 0;
+  }
+  aside h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em;
+             color: var(--text-muted); margin: 14px 0 6px; font-weight: 600; }
+  aside h2:first-child { margin-top: 0; }
+  .concept-row {
+    display: flex; align-items: center; gap: 8px; padding: 5px 6px;
+    border-radius: 6px; cursor: pointer; color: var(--text-secondary);
+  }
+  .concept-row:hover { background: var(--page); }
+  .concept-row.active { background: var(--page); color: var(--text-primary); }
+  .swatch { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+            border: 1px solid var(--border); }
+  .concept-row .meta { margin-left: auto; color: var(--text-muted); font-size: 11px; }
+  #details { font-size: 13px; color: var(--text-secondary); }
+  #details dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; }
+  #details dt { color: var(--text-muted); }
+  #details dd { color: var(--text-primary); }
+  #tooltip {
+    position: absolute; pointer-events: none; display: none; z-index: 5;
+    background: var(--surface-1); border: 1px solid var(--baseline);
+    border-radius: 6px; padding: 6px 9px; font-size: 12px; max-width: 240px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.15); color: var(--text-secondary);
+  }
+  #tooltip b { color: var(--text-primary); }
+  #drop {
+    position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--surface-1) 80%, transparent);
+    border: 2px dashed var(--baseline); font-size: 15px; color: var(--text-secondary); z-index: 10;
+  }
+  body.dropping #drop { display: flex; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--grid); }
+  th { color: var(--text-muted); font-weight: 600; }
+  td { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+  .hint { color: var(--text-muted); font-size: 12px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>IVGraph · Hebbian Concept Explorer</h1>
+    <div class="sub" id="meta">loading…</div>
+  </div>
+  <div class="controls">
+    <label>edge weight ≥ <span id="thvalue">0.15</span>
+      <input type="range" id="threshold" min="0" max="0.9" step="0.05" value="0.15"></label>
+    <label><input type="checkbox" id="showCoact" checked> co-activation</label>
+    <label><input type="checkbox" id="showMember" checked> membership</label>
+    <label><input type="checkbox" id="showAffinity" checked> class affinity</label>
+    <label><input type="checkbox" id="showLabels" checked> labels</label>
+    <button id="reheat">re-layout</button>
+    <label class="filebtn">open JSON…
+      <input type="file" id="file" accept=".json" hidden></label>
+  </div>
+</header>
+<main>
+  <div id="stage">
+    <canvas id="canvas"></canvas>
+    <div id="tooltip"></div>
+    <div id="drop">drop an IVGraph .json file to load it</div>
+  </div>
+  <aside>
+    <h2>Concepts</h2>
+    <div id="concepts"></div>
+    <h2>Selection</h2>
+    <div id="details"><div class="hint">Click a node to inspect it. Drag to
+      reposition, scroll to zoom, drag the background to pan.</div></div>
+    <h2>Concept table</h2>
+    <div style="overflow-x:auto"><table id="table">
+      <thead><tr><th>concept</th><th>units</th><th>coh.</th><th>top class</th></tr></thead>
+      <tbody></tbody>
+    </table></div>
+  </aside>
+</main>
+<script>
+"use strict";
+const PALETTE = ["c1","c2","c3","c4","c5","c6","c7","c8"];
+const css = name => getComputedStyle(document.documentElement).getPropertyValue("--" + name).trim();
+const clusterColor = c => css(PALETTE[((c % 8) + 8) % 8]);
+
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const tooltip = document.getElementById("tooltip");
+
+let graph = null;           // raw document
+let nodes = [], edges = []; // simulation state
+let byId = new Map();
+let view = { x: 0, y: 0, k: 1 };
+let alpha = 0;
+let selected = null, hovered = null, highlightCluster = null;
+let dragNode = null, panning = null;
+
+function loadGraph(doc) {
+  graph = doc;
+  byId = new Map();
+  const W = canvas.clientWidth || 800, H = canvas.clientHeight || 600;
+  nodes = doc.nodes.map((n, i) => {
+    const angle = (i / doc.nodes.length) * Math.PI * 2;
+    const r = Math.min(W, H) * 0.35 * (0.4 + 0.6 * Math.random());
+    const node = Object.assign({}, n, {
+      x: W / 2 + r * Math.cos(angle), y: H / 2 + r * Math.sin(angle),
+      vx: 0, vy: 0,
+      r: n.type === "class" ? 9 : n.type === "concept" ? 7 + 2 * (n.size || 1) : 3 + 3 * (n.size || 1),
+    });
+    byId.set(n.id, node);
+    return node;
+  });
+  edges = doc.edges
+    .map(e => Object.assign({}, e, { s: byId.get(e.source), t: byId.get(e.target) }))
+    .filter(e => e.s && e.t);
+  const m = doc.meta || {};
+  document.getElementById("meta").textContent =
+    [m.dataset, m.backbone, m.layer, `${nodes.length} nodes / ${edges.length} edges`]
+      .filter(Boolean).join(" · ");
+  selected = null; highlightCluster = null;
+  view = { x: 0, y: 0, k: 1 };
+  buildSidebar();
+  renderDetails();
+  reheat();
+}
+
+function concepts() { return nodes.filter(n => n.type === "concept"); }
+
+function buildSidebar() {
+  const list = document.getElementById("concepts");
+  list.innerHTML = "";
+  for (const c of concepts()) {
+    const row = document.createElement("div");
+    row.className = "concept-row";
+    row.dataset.cluster = c.cluster;
+    const units = edges.filter(e => e.kind === "membership" && e.t === c).length;
+    row.innerHTML = `<span class="swatch" style="background:${clusterColor(c.cluster)}"></span>
+      <span>${c.label}</span><span class="meta">${units} units</span>`;
+    row.onclick = () => {
+      highlightCluster = highlightCluster === c.cluster ? null : c.cluster;
+      selected = highlightCluster === null ? null : c;
+      buildSidebar(); renderDetails(); draw();
+    };
+    if (highlightCluster === c.cluster) row.classList.add("active");
+    list.appendChild(row);
+  }
+  const tbody = document.querySelector("#table tbody");
+  tbody.innerHTML = "";
+  for (const c of concepts()) {
+    const units = edges.filter(e => e.kind === "membership" && e.t === c).length;
+    const top = Object.entries(c.classes || {}).sort((a, b) => b[1] - a[1])[0];
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${c.label}</td><td>${units}</td>
+      <td>${(c.coherence ?? 0).toFixed(2)}</td>
+      <td>${top ? `${top[0]} (${top[1].toFixed(2)})` : "—"}</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+function renderDetails() {
+  const el = document.getElementById("details");
+  if (!selected) {
+    el.innerHTML = '<div class="hint">Click a node to inspect it. Drag to reposition, scroll to zoom, drag the background to pan.</div>';
+    return;
+  }
+  const n = selected;
+  const rows = [["type", n.type], ["id", n.id]];
+  if (n.cluster !== undefined) rows.push(["cluster", n.cluster]);
+  if (n.activation !== undefined) rows.push(["activation", n.activation.toFixed(4)]);
+  if (n.coherence !== undefined) rows.push(["coherence", n.coherence.toFixed(3)]);
+  if (n.importance !== undefined) rows.push(["importance", n.importance.toFixed(4)]);
+  if (n.classes) rows.push(["classes", Object.entries(n.classes)
+    .map(([k, v]) => `${k} ${v.toFixed(2)}`).join(", ")]);
+  const deg = edges.filter(e => e.s === n || e.t === n).length;
+  rows.push(["edges", deg]);
+  el.innerHTML = `<dl><dt>label</dt><dd><b>${n.label}</b></dd>` +
+    rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("") + "</dl>";
+}
+
+// ------------------------------------------------------------- filters
+function visibleEdges() {
+  const th = +document.getElementById("threshold").value;
+  const kinds = {
+    coactivation: document.getElementById("showCoact").checked,
+    membership: document.getElementById("showMember").checked,
+    affinity: document.getElementById("showAffinity").checked,
+  };
+  return edges.filter(e => kinds[e.kind] !== false && (e.weight ?? 1) >= (e.kind === "coactivation" ? th : 0));
+}
+
+// ------------------------------------------------------------- simulation
+function reheat() { alpha = 1; requestAnimationFrame(tick); }
+document.getElementById("reheat").onclick = reheat;
+
+function tick() {
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  const active = visibleEdges();
+  // spring forces along edges
+  for (const e of active) {
+    const rest = e.kind === "coactivation" ? 120 - 70 * (e.weight ?? 0.5)
+               : e.kind === "membership" ? 46 : 120;
+    const k = e.kind === "coactivation" ? 0.02 * (e.weight ?? 0.5) : 0.03;
+    const dx = e.t.x - e.s.x, dy = e.t.y - e.s.y;
+    const d = Math.hypot(dx, dy) || 1;
+    const f = k * (d - rest) / d;
+    e.s.vx += f * dx; e.s.vy += f * dy;
+    e.t.vx -= f * dx; e.t.vy -= f * dy;
+  }
+  // pairwise repulsion (fine for a few hundred nodes)
+  for (let i = 0; i < nodes.length; i++) {
+    const a = nodes[i];
+    for (let j = i + 1; j < nodes.length; j++) {
+      const b = nodes[j];
+      let dx = b.x - a.x, dy = b.y - a.y;
+      let d2 = dx * dx + dy * dy;
+      if (d2 > 40000) continue;
+      d2 = Math.max(d2, 25);
+      const f = 900 / d2;
+      const d = Math.sqrt(d2);
+      dx /= d; dy /= d;
+      a.vx -= f * dx; a.vy -= f * dy;
+      b.vx += f * dx; b.vy += f * dy;
+    }
+  }
+  // gravity toward center
+  for (const n of nodes) {
+    n.vx += (W / 2 - n.x) * 0.002;
+    n.vy += (H / 2 - n.y) * 0.002;
+    if (n !== dragNode) {
+      n.x += n.vx * alpha; n.y += n.vy * alpha;
+    }
+    n.vx *= 0.6; n.vy *= 0.6;
+  }
+  alpha *= 0.985;
+  draw();
+  if (alpha > 0.02) requestAnimationFrame(tick);
+}
+
+// ------------------------------------------------------------- rendering
+function resize() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.clientWidth * dpr;
+  canvas.height = canvas.clientHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  draw();
+}
+window.addEventListener("resize", resize);
+
+function dimmed(n) {
+  return highlightCluster !== null && n.cluster !== highlightCluster && n.type !== "class";
+}
+
+function draw() {
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  ctx.save();
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = css("surface-1");
+  ctx.fillRect(0, 0, W, H);
+  ctx.translate(view.x, view.y);
+  ctx.scale(view.k, view.k);
+
+  const showLabels = document.getElementById("showLabels").checked;
+  for (const e of visibleEdges()) {
+    const hi = highlightCluster !== null &&
+      (e.s.cluster === highlightCluster || e.t.cluster === highlightCluster);
+    const dim = highlightCluster !== null && !hi;
+    ctx.beginPath();
+    ctx.moveTo(e.s.x, e.s.y);
+    ctx.lineTo(e.t.x, e.t.y);
+    if (e.kind === "membership") {
+      ctx.strokeStyle = clusterColor(e.t.cluster ?? e.s.cluster);
+      ctx.globalAlpha = dim ? 0.06 : 0.3;
+      ctx.lineWidth = 1;
+    } else if (e.kind === "affinity") {
+      ctx.strokeStyle = css("text-muted");
+      ctx.globalAlpha = dim ? 0.08 : 0.5;
+      ctx.lineWidth = 1 + 2 * (e.weight ?? 0.3);
+      ctx.setLineDash([4, 3]);
+    } else {
+      ctx.strokeStyle = css("baseline");
+      ctx.globalAlpha = (dim ? 0.05 : 0.15) + 0.5 * (e.weight ?? 0);
+      ctx.lineWidth = 0.5 + 1.5 * (e.weight ?? 0);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1;
+  }
+
+  for (const n of nodes) {
+    ctx.globalAlpha = dimmed(n) ? 0.2 : 1;
+    if (n.type === "class") {
+      // classes are neutral squares — never confused with cluster hues
+      ctx.fillStyle = css("text-secondary");
+      ctx.fillRect(n.x - n.r * 0.8, n.y - n.r * 0.8, n.r * 1.6, n.r * 1.6);
+    } else {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      ctx.fillStyle = clusterColor(n.cluster ?? 0);
+      ctx.fill();
+      if (n.type === "concept") {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = css("surface-1");
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, n.r + 2.5, 0, Math.PI * 2);
+        ctx.strokeStyle = clusterColor(n.cluster ?? 0);
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
+    }
+    if (n === selected || n === hovered) {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r + 5, 0, Math.PI * 2);
+      ctx.strokeStyle = css("text-primary");
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    if (showLabels && (n.type === "concept" || n.type === "class")) {
+      ctx.font = `${n.type === "class" ? "600 " : ""}11px system-ui, sans-serif`;
+      ctx.fillStyle = dimmed(n) ? css("text-muted") : css("text-primary");
+      ctx.textAlign = "center";
+      ctx.fillText(n.label, n.x, n.y - n.r - 6);
+    }
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
+
+// ------------------------------------------------------------- interaction
+function toWorld(px, py) {
+  return { x: (px - view.x) / view.k, y: (py - view.y) / view.k };
+}
+function pick(px, py) {
+  const p = toWorld(px, py);
+  let best = null, bestD = Infinity;
+  for (const n of nodes) {
+    const d = Math.hypot(n.x - p.x, n.y - p.y);
+    if (d < Math.max(n.r + 4, 8) && d < bestD) { best = n; bestD = d; }
+  }
+  return best;
+}
+canvas.addEventListener("pointerdown", ev => {
+  const n = pick(ev.offsetX, ev.offsetY);
+  if (n) { dragNode = n; alpha = Math.max(alpha, 0.3); requestAnimationFrame(tick); }
+  else panning = { x: ev.offsetX - view.x, y: ev.offsetY - view.y };
+  canvas.classList.add("dragging");
+  canvas.setPointerCapture(ev.pointerId);
+});
+canvas.addEventListener("pointermove", ev => {
+  if (dragNode) {
+    const p = toWorld(ev.offsetX, ev.offsetY);
+    dragNode.x = p.x; dragNode.y = p.y;
+    dragNode.vx = dragNode.vy = 0;
+    if (alpha <= 0.02) draw();
+  } else if (panning) {
+    view.x = ev.offsetX - panning.x;
+    view.y = ev.offsetY - panning.y;
+    draw();
+  } else {
+    const n = pick(ev.offsetX, ev.offsetY);
+    hovered = n;
+    if (n) {
+      tooltip.style.display = "block";
+      tooltip.style.left = (ev.offsetX + 14) + "px";
+      tooltip.style.top = (ev.offsetY + 14) + "px";
+      const extra = n.type === "unit" ? `activation ${n.activation?.toFixed(3) ?? "—"}`
+        : n.type === "concept" ? `coherence ${n.coherence?.toFixed(2) ?? "—"}` : "class";
+      tooltip.innerHTML = `<b>${n.label}</b><br>${extra}`;
+    } else tooltip.style.display = "none";
+    draw();
+  }
+});
+canvas.addEventListener("pointerup", ev => {
+  if (dragNode && !ev.movementX && !ev.movementY) {}
+  canvas.classList.remove("dragging");
+  dragNode = null; panning = null;
+});
+canvas.addEventListener("click", ev => {
+  const n = pick(ev.offsetX, ev.offsetY);
+  selected = n || null;
+  if (n && n.type === "concept") highlightCluster = n.cluster;
+  else if (!n) highlightCluster = null;
+  buildSidebar(); renderDetails(); draw();
+});
+canvas.addEventListener("wheel", ev => {
+  ev.preventDefault();
+  const factor = Math.exp(-ev.deltaY * 0.0015);
+  const k = Math.min(6, Math.max(0.2, view.k * factor));
+  const p = toWorld(ev.offsetX, ev.offsetY);
+  view.x = ev.offsetX - p.x * k;
+  view.y = ev.offsetY - p.y * k;
+  view.k = k;
+  draw();
+}, { passive: false });
+
+for (const id of ["threshold", "showCoact", "showMember", "showAffinity", "showLabels"]) {
+  document.getElementById(id).addEventListener("input", () => {
+    document.getElementById("thvalue").textContent =
+      (+document.getElementById("threshold").value).toFixed(2);
+    alpha = Math.max(alpha, 0.3); requestAnimationFrame(tick); draw();
+  });
+}
+
+// ------------------------------------------------------------- loading
+function readFile(file) {
+  file.text().then(t => {
+    try { loadGraph(JSON.parse(t)); }
+    catch (e) { alert("Not valid IVGraph JSON: " + e.message); }
+  });
+}
+document.getElementById("file").addEventListener("change", ev => {
+  if (ev.target.files[0]) readFile(ev.target.files[0]);
+});
+window.addEventListener("dragover", ev => { ev.preventDefault(); document.body.classList.add("dropping"); });
+window.addEventListener("dragleave", ev => { if (!ev.relatedTarget) document.body.classList.remove("dropping"); });
+window.addEventListener("drop", ev => {
+  ev.preventDefault();
+  document.body.classList.remove("dropping");
+  if (ev.dataTransfer.files[0]) readFile(ev.dataTransfer.files[0]);
+});
+
+resize();
+fetch("sample-graph.json")
+  .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+  .then(loadGraph)
+  .catch(() => {
+    document.getElementById("meta").textContent = "no sample graph found — drop an IVGraph JSON to begin";
+  });
+</script>
+</body>
+</html>
