@@ -816,7 +816,7 @@ function applyActivations(results, probs) {
   liveMode = true;
 }
 
-let lastProbs = null, lastPredIdx = -1;
+let lastProbs = null, lastPredIdx = -1, lastLogits = null;
 function renderPrediction(probs, ms) {
   lastProbs = probs;
   const order = probs.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]);
@@ -873,7 +873,8 @@ async function classifyImage(file) {
       const t0 = performance.now();
       const res = await session.run({ images: new ort.Tensor("float32", lastTensor, [1, C, S, S]) });
       const ms = performance.now() - t0;
-      const probs = softmax(Array.from(res.logits.data));
+      lastLogits = Array.from(res.logits.data);
+      const probs = softmax(lastLogits);
       applyActivations(res, probs);
       renderPrediction(probs, ms);
       buildConceptList(); renderDetails();
@@ -897,7 +898,11 @@ async function runSaliency() {
   const S = manifest.image_size, C = manifest.in_channels;
   const K = classNames.length;
   const G = 7, cell = Math.ceil(S / G);        // 7×7 grid, processed a row at a time
-  const baseP = lastProbs[lastPredIdx];
+  // Measure the drop in the predicted class's raw LOGIT when each patch is
+  // occluded. Logits keep their dynamic range even when softmax saturates to
+  // ~100% (as it does on confident predictions), so this stays informative
+  // where a probability drop would be uniformly zero.
+  const baseLogit = lastLogits[lastPredIdx];
   const drop = new Float32Array(G * G);
   const t0 = performance.now();
   try {
@@ -918,11 +923,8 @@ async function runSaliency() {
       const res = await session.run({ images: new ort.Tensor("float32", batch, [G, C, S, S]) });
       const logits = res.logits.data;
       for (let col = 0; col < G; col++) {
-        let mx = -Infinity;
-        for (let k = 0; k < K; k++) mx = Math.max(mx, logits[col*K + k]);
-        let sum = 0; for (let k = 0; k < K; k++) sum += Math.exp(logits[col*K + k] - mx);
-        const p = Math.exp(logits[col*K + lastPredIdx] - mx) / sum;
-        drop[row * G + col] = Math.max(0, baseP - p);
+        const occLogit = logits[col * K + lastPredIdx];
+        drop[row * G + col] = Math.max(0, baseLogit - occLogit);
       }
       drawSaliency(drop, G, Math.max(1e-6, ...drop));
       infstatus.textContent = `probing where the model looked… ${Math.round(100*(row+1)/G)}%`;
