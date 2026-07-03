@@ -132,6 +132,79 @@
     background: var(--surface-2); color: var(--text-secondary); margin: 2px 3px 0 0; }
   .chip.live { background: color-mix(in srgb, var(--live) 22%, var(--surface-2)); color: var(--text-primary); }
 
+  /* SHAP influence (signed bars) */
+  .sbar { display: flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 3px 0; color: var(--text-secondary); }
+  .sbar .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+  .sbar .nm:hover { color: var(--text-primary); }
+  .sbar .axis { width: 112px; height: 9px; position: relative; flex-shrink: 0;
+    background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+  .sbar .axis::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0;
+    width: 1px; background: var(--baseline); }
+  .sbar .fillp { position: absolute; top: 0; bottom: 0; border-radius: 2px; }
+  .sbar .fillp.pos { left: 50%; background: var(--c2); }
+  .sbar .fillp.neg { right: 50%; background: var(--c6); }
+  .sbar .val { width: 46px; text-align: right; font-variant-numeric: tabular-nums;
+    color: var(--text-muted); flex-shrink: 0; font-size: 11.5px; }
+  .method-note { font-size: 11px; color: var(--text-muted); margin-top: 7px; }
+  .method-note b { color: var(--text-secondary); font-weight: 600; }
+  #preds .bar-row { cursor: pointer; border-radius: 5px; padding: 3px 4px; }
+  #preds .bar-row:hover { background: var(--surface-2); }
+  #preds .bar-row.shap-target { background: var(--surface-2); box-shadow: inset 2px 0 0 var(--c2); }
+
+  /* class regions */
+  #classSearch { width: 100%; font: inherit; font-size: 12.5px; color: var(--text-primary);
+    background: var(--surface-2); border: 1px solid var(--baseline); border-radius: 7px; padding: 6px 9px; }
+  #classSearch:focus { outline: none; border-color: var(--accent); }
+  #classResults { max-height: 168px; overflow-y: auto; margin-top: 5px; }
+  .class-hit { padding: 5px 8px; border-radius: 6px; font-size: 12.5px; cursor: pointer; color: var(--text-secondary); }
+  .class-hit:hover { background: var(--surface-2); color: var(--text-primary); }
+  #regionActive { display: none; align-items: center; gap: 7px; margin-top: 8px; font-size: 12.5px; }
+  #regionActive.show { display: flex; }
+  #regionActive .rname { flex: 1; font-weight: 650; color: var(--accent);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #regionActive button { padding: 2px 8px; font-size: 11px; }
+  .dualbar { display: flex; align-items: center; gap: 8px; font-size: 12.5px; padding: 3px 0; color: var(--text-secondary); }
+  .dualbar .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dualbar .pair { width: 112px; flex-shrink: 0; }
+  .dualbar .pair .track { display: block; width: 100%; height: 5px; border-radius: 3px;
+    background: var(--surface-2); overflow: hidden; margin: 1px 0; }
+  .dualbar .pair .fill { display: block; height: 100%; border-radius: 3px; }
+  .dualbar .pair .fill.img { background: var(--live); }
+  .dualbar .pair .fill.reg { background: var(--accent); }
+  .dualbar .tag { width: 20px; text-align: center; flex-shrink: 0; font-size: 12px; }
+  .legend { display: flex; gap: 12px; font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+  .legend .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+
+  /* saliency target picker */
+  #saltarget { font: inherit; font-size: 12px; color: var(--text-primary); background: var(--surface-1);
+    border: 1px solid var(--baseline); border-radius: 7px; padding: 4px 7px; max-width: 170px; display: none; }
+
+  /* region badge on the stage */
+  #regionBadge { position: absolute; left: 12px; top: 10px; display: none; z-index: 5;
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface-1));
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    color: var(--text-primary); font-size: 12px; padding: 4px 10px; border-radius: 20px; }
+  #regionBadge.show { display: block; }
+  #regionBadge b { color: var(--accent); }
+
+  /* demo tour */
+  #tourCard { position: absolute; left: 16px; bottom: 40px; z-index: 25; width: 330px; max-width: calc(100% - 32px);
+    background: var(--surface-1); border: 1px solid var(--baseline); border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.28); padding: 14px 16px; display: none; }
+  #tourCard.show { display: block; }
+  #tourCard h3 { font-size: 13px; margin: 0 0 6px; color: var(--text-primary); display: flex; gap: 8px; align-items: baseline; }
+  #tourCard h3 .step-n { color: var(--text-muted); font-size: 11px; font-weight: 500; }
+  #tourCard .body { font-size: 12.5px; color: var(--text-secondary); line-height: 1.55; }
+  #tourCard .body b { color: var(--text-primary); }
+  #tourCard .body .hl-live { color: var(--live); font-weight: 600; }
+  #tourCard .body .hl-region { color: var(--accent); font-weight: 600; }
+  #tourCard .nav { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+  #tourCard .dots { display: flex; gap: 4px; margin-right: auto; }
+  #tourCard .dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--baseline); }
+  #tourCard .dots i.on { background: var(--accent); }
+  .tour-hi { position: relative; box-shadow: 0 0 0 2px var(--accent), 0 0 18px color-mix(in srgb, var(--accent) 40%, transparent) !important;
+    border-radius: 10px; transition: box-shadow .25s; }
+
   /* concept list */
   .concept-row { display: flex; align-items: center; gap: 9px; padding: 6px 7px; border-radius: 7px;
     cursor: pointer; color: var(--text-secondary); }
@@ -185,6 +258,7 @@
       <button data-view="full">Full graph</button>
     </div>
     <label><input type="checkbox" id="showLabels" checked> labels</label>
+    <button id="tourbtn" class="primary" title="Guided walkthrough: Hebbian activation regions + SHAP influence">▶ demo tour</button>
     <button id="reheat" title="Re-run layout">re-layout</button>
     <button id="themebtn" title="Toggle theme">◐</button>
     <label class="filebtn">open graph… <input type="file" id="file" accept=".json,application/json" hidden></label>
@@ -194,8 +268,19 @@
 <main>
   <div id="stage">
     <canvas id="canvas"></canvas>
+    <div id="regionBadge">activation region of <b></b></div>
     <div class="stage-hint" id="stageHint">drag to pan · scroll to zoom · click a concept to expand</div>
     <div id="globaldrop">drop an image to classify — or a graph .json to load</div>
+    <div id="tourCard">
+      <h3><span class="ttl"></span><span class="step-n"></span></h3>
+      <div class="body"></div>
+      <div class="nav">
+        <div class="dots"></div>
+        <button id="tourBack">back</button>
+        <button id="tourNext" class="primary">next</button>
+        <button id="tourExit" title="Exit tour">✕</button>
+      </div>
+    </div>
   </div>
   <aside>
     <div class="sec" id="classifySec">
@@ -211,6 +296,7 @@
       </div>
       <div id="imgtools" style="display:none">
         <button id="salbtn" title="Occlusion saliency: where the model looked">Where did it look?</button>
+        <select id="saltarget" title="Show where the prediction — or a single Hebbian concept — looks"></select>
         <button id="clearinf">clear</button>
       </div>
       <div id="infstatus"></div>
@@ -221,6 +307,30 @@
       <h2>Why this prediction</h2>
       <div class="why" id="whyText"></div>
       <div id="attrbars" style="margin-top:10px"></div>
+    </div>
+
+    <div class="sec" id="shapSec" style="display:none">
+      <h2>SHAP influence</h2>
+      <div class="why" id="shapIntro"></div>
+      <div id="shapBars" style="margin-top:8px"></div>
+      <div class="method-note" id="shapMethod"></div>
+    </div>
+
+    <div class="sec" id="matchSec" style="display:none">
+      <h2>Image vs. class region</h2>
+      <div class="why" id="matchIntro"></div>
+      <div class="legend" style="margin-top:8px">
+        <span><span class="sw" style="background:var(--live)"></span>this image</span>
+        <span><span class="sw" style="background:var(--accent)"></span>class region</span>
+      </div>
+      <div id="matchBars"></div>
+    </div>
+
+    <div class="sec" id="regionSec" style="display:none">
+      <h2>Class activation regions</h2>
+      <input id="classSearch" type="search" placeholder="search a class… (e.g. Cardinal)" autocomplete="off">
+      <div id="classResults"></div>
+      <div id="regionActive"><span class="rname"></span><button id="regionClear">clear</button></div>
     </div>
 
     <div class="sec">
@@ -248,6 +358,10 @@ const $ = id => document.getElementById(id);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
 const canvas = $("canvas"), ctx = canvas.getContext("2d"), tooltip = $("tooltip");
+function hexRGB(hex) {
+  const h = hex.replace("#", "");
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
 
 /* ───────────────────────────── model ─────────────────────────────── */
 // graph doc + derived concept model
@@ -256,6 +370,12 @@ let concepts = [];          // rich concept objects
 let conceptById = new Map();
 let classNames = [];        // from graph (fallback) or manifest
 let liveMode = false;
+let explain = null;         // explain.json: class fingerprints + SHAP influence
+let explainSpec = null;     // activation_outputs entry matching explain.layer
+let regionClass = -1;       // class whose Hebbian activation region is shown
+let shapTarget = -1;        // class the SHAP panel explains
+let lastActs = null;        // raw activation outputs of the last inference
+let lastLogits = null;      // raw logits of the last inference
 
 /* ─────────────────── graph → concept model ───────────────────────── */
 function buildModel(document_) {
@@ -295,6 +415,20 @@ function buildModel(document_) {
   });
   conceptById = new Map(concepts.map(c => [c.id, c]));
 
+  // resolve each concept's units to activation outputs (for live firing,
+  // per-concept saliency) and to explain-pack matrix columns (regions, SHAP)
+  for (const c of concepts) {
+    c.actRefs = [];
+    if (manifest && manifest.activation_outputs) {
+      for (const u of c.units)
+        for (const spec of manifest.activation_outputs)
+          if (u.id.startsWith(spec.node_prefix)) {
+            c.actRefs.push([spec.output, +u.id.slice(spec.node_prefix.length)]);
+            break;
+          }
+    }
+  }
+
   // concept↔concept similarity edges: shared attributes + shared top classes
   const conEdges = [];
   for (let a = 0; a < concepts.length; a++) {
@@ -314,6 +448,7 @@ function buildModel(document_) {
   // responds to, so it is neither complete nor index-aligned with the logits.
   classNames = (manifest && manifest.class_names) ? manifest.class_names
     : nodes.filter(n => n.type === "class").map(n => n.label);
+  computeExplainIndices();
 
   // sizes
   const maxImp = Math.max(1e-6, ...concepts.map(c => c.importance));
@@ -331,6 +466,7 @@ function buildModel(document_) {
   $("conceptCount").textContent = concepts.length;
 
   selected = null; expanded = null; clearInference(false);
+  setRegionClass(-1);
   seedLayout();
   buildConceptList();
   renderDetails();
@@ -500,6 +636,22 @@ function draw() {
     }
   }
 
+  // class-region halo: the Hebbian activation region of the picked class
+  if (regionClass >= 0) {
+    const [ar, ag, ab] = hexRGB(css("accent"));
+    for (const c of concepts) {
+      const v = c.region || 0;
+      if (v <= 0.08) continue;
+      const r = conceptRadius(c);
+      const R = r + 10 + 16 * v;
+      const grd = ctx.createRadialGradient(c.x, c.y, r * 0.5, c.x, c.y, R);
+      grd.addColorStop(0, `rgba(${ar},${ag},${ab},${0.28 * v})`);
+      grd.addColorStop(1, `rgba(${ar},${ag},${ab},0)`);
+      ctx.fillStyle = grd;
+      ctx.beginPath(); ctx.arc(c.x, c.y, R, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
   // concepts
   const drawnLabels = [];   // greedy label collision
   const order = [...concepts].sort((a, b) =>
@@ -508,7 +660,11 @@ function draw() {
     const r = conceptRadius(c);
     const dim = expanded && c.id !== expanded && !(doc._conEdges || []).some(e =>
       (e.a.id === expanded && e.b === c) || (e.b.id === expanded && e.a === c));
-    ctx.globalAlpha = dim ? 0.28 : 1;
+    let alphaMul = dim ? 0.28 : 1;
+    // region mode without a live image: fade everything outside the region
+    if (regionClass >= 0 && !liveMode)
+      alphaMul *= 0.35 + 0.65 * clamp((c.region || 0) / 0.5, 0, 1);
+    ctx.globalAlpha = alphaMul;
     ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
     ctx.fillStyle = clusterColor(c.cluster); ctx.fill();
     ctx.lineWidth = 2; ctx.strokeStyle = css("surface-1"); ctx.stroke();
@@ -519,6 +675,12 @@ function draw() {
     if (liveMode && (c.live || 0) > 0.55) {
       ctx.beginPath(); ctx.arc(c.x, c.y, r + 3, 0, Math.PI * 2);
       ctx.strokeStyle = css("live"); ctx.lineWidth = 1.4; ctx.stroke();
+    }
+    if (regionClass >= 0 && (c.region || 0) > 0.3) {
+      // dashed accent ring = part of the picked class's activation region
+      ctx.beginPath(); ctx.arc(c.x, c.y, r + (liveMode ? 6.5 : 3), 0, Math.PI * 2);
+      ctx.strokeStyle = css("accent"); ctx.lineWidth = 1.6;
+      ctx.setLineDash([4, 3]); ctx.stroke(); ctx.setLineDash([]);
     }
     const force = c === hovered || c === selected || c.id === expanded;
     if (showLabels && !dim && (force || r * view.k > 13)) {
@@ -633,7 +795,9 @@ function showTooltip(hit, cx, cy) {
     const attrs = c.attrNames.slice(0, 3).join(" · ") || "—";
     html = `<b>${c.label}</b><br>${c.units.length} neurons · coherence ${c.coherence.toFixed(2)}` +
       `<br><span class="t-attrs">${attrs}</span>` +
-      (liveMode ? `<br>fires on image: ${(100 * (c.live || 0)).toFixed(0)}%` : "");
+      (liveMode ? `<br>fires on image: ${(100 * (c.live || 0)).toFixed(0)}%` : "") +
+      (regionClass >= 0 ? `<br><span style="color:var(--accent)">share of “${classNames[regionClass]}” region: ${(100 * (c.region || 0)).toFixed(0)}%</span>` : "") +
+      (c.phi != null && shapTarget >= 0 ? `<br>SHAP → ${classNames[shapTarget]}: ${c.phi >= 0 ? "+" : ""}${c.phi.toFixed(2)}` : "");
   } else if (hit.sat) {
     const s = hit.sat;
     html = s.kind === "attribute"
@@ -698,6 +862,177 @@ function centerOn(c) {
   const W = canvas.clientWidth, H = canvas.clientHeight;
   view.k = clamp(view.k, 0.9, 1.6);
   view.x = W / 2 - view.k * c.x; view.y = H / 2 - view.k * c.y;
+}
+
+/* ════════════ Hebbian class activation regions (explain pack) ═════════ */
+function computeExplainIndices() {
+  explainSpec = (explain && manifest && manifest.activation_outputs)
+    ? manifest.activation_outputs.find(s => s.layer === explain.layer) || null : null;
+  const prefix = explain ? explain.node_prefix : null;
+  for (const c of concepts)
+    c.unitIdx = prefix
+      ? c.units.filter(u => u.id.startsWith(prefix)).map(u => +u.id.slice(prefix.length))
+      : [];
+  refreshRegionUI();
+}
+
+function refreshRegionUI() {
+  const ok = explain && explain.fingerprints
+    && classNames.length === explain.num_classes && concepts.length;
+  $("regionSec").style.display = ok ? "block" : "none";
+  if (!ok && regionClass >= 0) setRegionClass(-1);
+}
+
+function conceptRegionScores(k) {
+  const row = explain && explain.fingerprints ? explain.fingerprints.matrix[k] : null;
+  if (!row) return null;
+  const scores = concepts.map(c => {
+    if (!c.unitIdx || !c.unitIdx.length) return 0;
+    let s = 0; for (const u of c.unitIdx) s += row[u] || 0;
+    return s / c.unitIdx.length;
+  });
+  const mx = Math.max(1e-9, ...scores);
+  return scores.map(s => s / mx);
+}
+
+function setRegionClass(k) {
+  regionClass = k;
+  const scores = k >= 0 ? conceptRegionScores(k) : null;
+  if (k >= 0 && !scores) { regionClass = -1; return; }
+  concepts.forEach((c, i) => { c.region = scores ? scores[i] : 0; });
+  const badge = $("regionBadge"), active = $("regionActive");
+  if (regionClass >= 0) {
+    badge.querySelector("b").textContent = classNames[k] || ("class " + k);
+    badge.classList.add("show");
+    active.classList.add("show");
+    active.querySelector(".rname").textContent = classNames[k] || ("class " + k);
+  } else {
+    badge.classList.remove("show");
+    active.classList.remove("show");
+  }
+  renderMatch();
+  if (doc) { buildConceptList(); draw(); }
+}
+
+function renderClassResults(q) {
+  const box = $("classResults"); box.innerHTML = "";
+  q = q.trim().toLowerCase();
+  if (!q) return;
+  const hits = [];
+  classNames.forEach((n, i) => { if ((n || "").toLowerCase().includes(q)) hits.push([n, i]); });
+  for (const [n, i] of hits.slice(0, 10)) {
+    const el = document.createElement("div");
+    el.className = "class-hit"; el.textContent = n;
+    el.onclick = () => { setRegionClass(i); box.innerHTML = ""; };
+    box.appendChild(el);
+  }
+  if (!hits.length)
+    box.innerHTML = '<div class="muted" style="padding:5px 8px">no class matches</div>';
+}
+$("classSearch").addEventListener("input", () => renderClassResults($("classSearch").value));
+$("regionClear").onclick = () => {
+  setRegionClass(-1); $("classSearch").value = ""; $("classResults").innerHTML = "";
+};
+
+/* ═══════════════ SHAP influence of the Hebbian regions ════════════════ */
+function unitPhiFor(k) {
+  if (!explain || !explain.shap || !explainSpec || !lastActs) return null;
+  const a = lastActs[explainSpec.output];
+  const w = explain.shap.weights[k], b = explain.shap.baseline;
+  if (!a || !w) return null;
+  const phi = new Float32Array(b.length);
+  for (let u = 0; u < b.length; u++) phi[u] = w[u] * (a[u] - b[u]);
+  return phi;
+}
+
+function setShapTarget(k) {
+  shapTarget = k;
+  renderShap();
+  [...$("preds").children].forEach(r =>
+    r.classList.toggle("shap-target", +r.dataset.cls === k));
+  draw();
+}
+
+function renderShap() {
+  const sec = $("shapSec");
+  const phi = shapTarget >= 0 ? unitPhiFor(shapTarget) : null;
+  if (!phi) {
+    sec.style.display = "none";
+    for (const c of concepts) c.phi = null;
+    return;
+  }
+  sec.style.display = "block";
+  let total = 0;
+  for (const c of concepts) {
+    let s = 0; for (const u of c.unitIdx) s += phi[u] || 0;
+    c.phi = s; total += s;
+  }
+  const name = classNames[shapTarget] || ("class " + shapTarget);
+  $("shapIntro").innerHTML =
+    `How much each Hebbian activation region pushed the <b>${name}</b> logit — ` +
+    `green toward it, red away. Click another prediction above to compare.`;
+  const rows = [...concepts].sort((a, b) => Math.abs(b.phi) - Math.abs(a.phi)).slice(0, 8);
+  const mx = Math.max(1e-9, ...rows.map(c => Math.abs(c.phi)));
+  $("shapBars").innerHTML = rows.map(c => {
+    const pct = 50 * Math.abs(c.phi) / mx;
+    return `<div class="sbar" data-cid="${c.id}">
+      <span class="swatch" style="background:${clusterColor(c.cluster)}"></span>
+      <span class="nm" title="${c.label}">${c.label}</span>
+      <span class="axis"><span class="fillp ${c.phi >= 0 ? "pos" : "neg"}" style="width:${pct}%"></span></span>
+      <span class="val">${c.phi >= 0 ? "+" : ""}${c.phi.toFixed(2)}</span></div>`;
+  }).join("");
+  [...$("shapBars").children].forEach(row => {
+    row.onclick = () => {
+      const c = conceptById.get(row.dataset.cid);
+      if (c) { centerOn(c); selectConcept(c, true); }
+    };
+  });
+  const exact = explain.shap.method === "exact-linear";
+  let note = exact
+    ? `<b>exact Shapley values</b> — the logit is linear in these neurons, so each ` +
+      `contribution is closed-form (reference: background mean), computed live in your browser.`
+    : `<b>expected-gradients approximation</b> — a first-order SHAP estimate over a ` +
+      `background set (this model's readout is not linear in the tracked neurons).`;
+  if (lastLogits && explain.shap.expected_logits) {
+    const lg = lastLogits[shapTarget], e0 = explain.shap.expected_logits[shapTarget];
+    const rem = lg - e0 - total;
+    note += `<br>logit ${lg.toFixed(2)} = base ${e0.toFixed(2)} ` +
+      `${total >= 0 ? "+" : "−"} ${Math.abs(total).toFixed(2)} (concepts) ` +
+      `${rem >= 0 ? "+" : "−"} ${Math.abs(rem).toFixed(2)} (other paths)`;
+  }
+  $("shapMethod").innerHTML = note;
+}
+
+/* ═══════════ image firing pattern vs. class activation region ═════════ */
+function renderMatch() {
+  const sec = $("matchSec");
+  const k = regionClass >= 0 ? regionClass : lastPredIdx;
+  const scores = (liveMode && k >= 0) ? conceptRegionScores(k) : null;
+  if (!scores) { sec.style.display = "none"; return; }
+  sec.style.display = "block";
+  const name = classNames[k] || ("class " + k);
+  let dot = 0, na = 0, nb = 0;
+  concepts.forEach((c, i) => {
+    const l = c.live || 0;
+    dot += l * scores[i]; na += l * l; nb += scores[i] * scores[i];
+  });
+  const cos = dot / Math.max(1e-9, Math.sqrt(na * nb));
+  $("matchIntro").innerHTML =
+    `This image's firing pattern vs. the typical activation region of <b>${name}</b>` +
+    ` — <b>${(100 * cos).toFixed(0)}% match</b>.` +
+    (regionClass < 0 ? ` <button id="matchShow" style="margin-left:6px">show region on graph</button>` : "");
+  const show = $("matchShow");
+  if (show) show.onclick = () => setRegionClass(k);
+  const rows = concepts.map((c, i) => ({ c, img: c.live || 0, reg: scores[i] }))
+    .sort((a, b) => Math.max(b.img, b.reg) - Math.max(a.img, a.reg)).slice(0, 8);
+  $("matchBars").innerHTML = rows.map(({ c, img, reg }) => {
+    const agree = (img > 0.4) === (reg > 0.4);
+    return `<div class="dualbar"><span class="nm" title="${c.label}">${c.label}</span>
+      <span class="pair">
+        <span class="track"><span class="fill img" style="width:${Math.round(100 * img)}%"></span></span>
+        <span class="track"><span class="fill reg" style="width:${Math.round(100 * reg)}%"></span></span>
+      </span><span class="tag" title="${agree ? "image and class region agree" : "mismatch"}">${agree ? "✓" : "≠"}</span></div>`;
+  }).join("");
 }
 
 /* ─────────────────────────── view controls ───────────────────────── */
@@ -802,10 +1137,12 @@ function softmax(v) { const m = Math.max(...v); const e = v.map(x => Math.exp(x 
 
 function applyActivations(results, probs) {
   for (const c of concepts) c.live = 0;
+  lastActs = {};
   // map ONNX activation outputs → unit ids → concept firing
   const unitLive = new Map();
   for (const spec of manifest.activation_outputs) {
     const t = results[spec.output]; if (!t) continue;
+    lastActs[spec.output] = Float32Array.from(t.data);
     const v = t.data, mx = Math.max(1e-8, ...v);
     for (let i = 0; i < v.length; i++) unitLive.set(spec.node_prefix + i, v[i] / mx);
   }
@@ -821,12 +1158,20 @@ function renderPrediction(probs, ms) {
   lastProbs = probs;
   const order = probs.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]);
   lastPredIdx = order[0][1];
+  const shapReady = explain && explain.shap && explainSpec;
   $("preds").innerHTML = order.slice(0, 5).map(([p, i]) => `
-    <div class="bar-row"><span class="nm" title="${classNames[i] || i}">${classNames[i] || i}</span>
+    <div class="bar-row" data-cls="${i}"${shapReady ? ' title="click: SHAP influence toward this class"' : ""}>
+      <span class="nm" title="${classNames[i] || i}">${classNames[i] || i}</span>
       <span class="track"><span class="fill" style="width:${Math.round(100*p)}%"></span></span>
       <span class="pct">${(100*p).toFixed(1)}%</span></div>`).join("");
+  if (shapReady)
+    [...$("preds").children].forEach(row => row.onclick = () => setShapTarget(+row.dataset.cls));
   infstatus.textContent = `inference ${ms.toFixed(0)} ms · graph shows what fired`;
   renderWhy(order.slice(0, 1)[0][1]);
+  setShapTarget(lastPredIdx);
+  renderMatch();
+  refreshSalTargets();
+  tourNotify("classified");
 }
 
 function renderWhy(predIdx) {
@@ -873,7 +1218,8 @@ async function classifyImage(file) {
       const t0 = performance.now();
       const res = await session.run({ images: new ort.Tensor("float32", lastTensor, [1, C, S, S]) });
       const ms = performance.now() - t0;
-      const probs = softmax(Array.from(res.logits.data));
+      lastLogits = Array.from(res.logits.data);
+      const probs = softmax(lastLogits);
       applyActivations(res, probs);
       renderPrediction(probs, ms);
       buildConceptList(); renderDetails();
@@ -889,8 +1235,13 @@ async function classifyImage(file) {
 let lastImg = null;
 
 /* ───────────── occlusion saliency (batched, faithful) ────────────── */
+// One occlusion sweep yields BOTH the class saliency ("where did the
+// prediction look") and, because every masked run also emits the neuron
+// activations, a spatial map per Hebbian concept ("where does this
+// activation region look") — pick the target in the dropdown afterwards.
 $("salbtn").onclick = runSaliency;
 let salRunning = false;
+let salData = null;   // { G, drop: class-prob drops, cellActs: per-cell activation outputs }
 async function runSaliency() {
   if (!session || !lastTensor || lastPredIdx < 0 || salRunning) return;
   const btn = $("salbtn"); btn.disabled = true; salRunning = true;
@@ -899,6 +1250,7 @@ async function runSaliency() {
   const G = 7, cell = Math.ceil(S / G);        // 7×7 grid, processed a row at a time
   const baseP = lastProbs[lastPredIdx];
   const drop = new Float32Array(G * G);
+  const cellActs = Array.from({ length: G * G }, () => ({}));
   const t0 = performance.now();
   try {
     for (let row = 0; row < G; row++) {
@@ -923,17 +1275,70 @@ async function runSaliency() {
         let sum = 0; for (let k = 0; k < K; k++) sum += Math.exp(logits[col*K + k] - mx);
         const p = Math.exp(logits[col*K + lastPredIdx] - mx) / sum;
         drop[row * G + col] = Math.max(0, baseP - p);
+        for (const spec of manifest.activation_outputs) {
+          const t = res[spec.output]; if (!t) continue;
+          const U = t.dims[t.dims.length - 1];
+          cellActs[row * G + col][spec.output] =
+            Float32Array.from(t.data.slice(col * U, (col + 1) * U));
+        }
       }
       drawSaliency(drop, G, Math.max(1e-6, ...drop));
       infstatus.textContent = `probing where the model looked… ${Math.round(100*(row+1)/G)}%`;
       await new Promise(r => setTimeout(r));    // yield so the paint shows
     }
-    infstatus.textContent = `saliency in ${((performance.now()-t0)/1000).toFixed(1)} s · brighter = more important for this prediction`;
+    salData = { G, drop, cellActs };
+    refreshSalTargets();
+    infstatus.textContent = `saliency in ${((performance.now()-t0)/1000).toFixed(1)} s · brighter = more important — switch target to see per-concept regions`;
+    tourNotify("saliency");
   } catch (e) { infstatus.textContent = "saliency failed: " + e.message; }
   finally { btn.disabled = false; salRunning = false; }
 }
 
-function drawSaliency(drop, G, mx) {
+// spatial map of one concept: occlusion-induced drop in its firing
+function conceptDropMap(c) {
+  const { G, cellActs } = salData;
+  const out = new Float32Array(G * G);
+  if (!c.actRefs.length || !lastActs) return out;
+  let base = 0;
+  for (const [o, i] of c.actRefs) base += lastActs[o] ? lastActs[o][i] : 0;
+  base /= c.actRefs.length;
+  for (let g = 0; g < G * G; g++) {
+    let v = 0;
+    for (const [o, i] of c.actRefs) { const a = cellActs[g][o]; v += a ? a[i] : 0; }
+    v /= c.actRefs.length;
+    out[g] = Math.max(0, base - v);
+  }
+  return out;
+}
+
+function refreshSalTargets() {
+  const sel = $("saltarget");
+  if (!salData) { sel.style.display = "none"; return; }
+  const prev = sel.value;
+  const top = [...concepts].filter(c => c.actRefs.length && (c.live || 0) > 0.02)
+    .sort((a, b) => (b.live || 0) - (a.live || 0)).slice(0, 6);
+  sel.innerHTML =
+    `<option value="pred">prediction: ${classNames[lastPredIdx] || "?"}</option>` +
+    top.map(c => `<option value="${c.id}">concept: ${c.label}</option>`).join("");
+  sel.style.display = "inline-block";
+  if ([...sel.options].some(o => o.value === prev)) sel.value = prev;
+  renderSalTarget();
+}
+$("saltarget").onchange = renderSalTarget;
+
+function renderSalTarget() {
+  if (!salData) return;
+  const v = $("saltarget").value;
+  if (v === "pred" || !v) {
+    drawSaliency(salData.drop, salData.G, Math.max(1e-6, ...salData.drop));
+    return;
+  }
+  const c = conceptById.get(v); if (!c) return;
+  const map = conceptDropMap(c);
+  drawSaliency(map, salData.G, Math.max(1e-6, ...map), hexRGB(clusterColor(c.cluster)));
+}
+
+function drawSaliency(drop, G, mx, rgb) {
   const el = $("salcanvas"), pv = $("preview");
   const w = pv.clientWidth, h = pv.clientHeight;
   el.width = w; el.height = h; const c = el.getContext("2d");
@@ -942,9 +1347,11 @@ function drawSaliency(drop, G, mx) {
   for (let g = 0; g < G * G; g++) {
     const gx = g % G, gy = (g / G) | 0;
     const v = drop[g] / mx;                       // 0..1 importance
-    // warm ramp: low → transparent, high → saturated orange/red
     const a = Math.pow(v, 0.7);
-    c.fillStyle = `rgba(${230}, ${Math.round(140 - 110*v)}, ${Math.round(30*(1-v))}, ${0.72*a})`;
+    // warm ramp for the prediction; the concept's cluster color otherwise
+    c.fillStyle = rgb
+      ? `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${0.78*a})`
+      : `rgba(${230}, ${Math.round(140 - 110*v)}, ${Math.round(30*(1-v))}, ${0.72*a})`;
     c.fillRect(gx*cw, gy*ch, cw + 1, ch + 1);
   }
   // light blur for smoothness
@@ -954,9 +1361,12 @@ function drawSaliency(drop, G, mx) {
 
 function clearInference(clearImg) {
   liveMode = false;
-  for (const c of concepts) c.live = 0;
+  for (const c of concepts) { c.live = 0; c.phi = null; }
   lastProbs = null; lastPredIdx = -1; lastTensor = null;
+  lastActs = null; lastLogits = null; shapTarget = -1; salData = null;
   $("preds").innerHTML = ""; $("whySec").style.display = "none";
+  $("shapSec").style.display = "none"; $("matchSec").style.display = "none";
+  $("saltarget").style.display = "none";
   if (clearImg !== false) {
     $("imgwrap").classList.remove("show"); $("dropzone").style.display = "block";
     $("imgtools").style.display = "none"; $("salcanvas").style.opacity = 0; infstatus.textContent = "";
@@ -994,10 +1404,155 @@ function flash(msg) {
   clearTimeout(bannerTimer); bannerTimer = setTimeout(() => b.classList.remove("show"), 6000);
 }
 
+/* ═══════════════════════════ DEMO TOUR ════════════════════════════ */
+// A guided walkthrough of Hebbian activation regions for class
+// representation + SHAP influence. Steps that need data the deployment
+// doesn't have (no bundle, no explain pack) are skipped automatically.
+function demoRegionClass() {
+  // the class most concentrated in a single strong concept reads best
+  if (regionClass >= 0) return regionClass;
+  for (const c of [...concepts].sort((a, b) => b.importance - a.importance)) {
+    for (const [name] of c.topClasses) {
+      const k = classNames.indexOf(name);
+      if (k >= 0) return k;
+    }
+  }
+  return classNames.length ? 0 : -1;
+}
+
+const TOUR = [
+  {
+    id: "intro", target: "#stage",
+    title: "The Hebbian concept graph",
+    body: "While this classifier trained, a <b>Hebbian feature memory</b> watched its neurons: " +
+      "<i>units that fire together, wire together</i>. Units that kept co-activating were " +
+      "clustered into the <b>concepts</b> you see — each one an <b>activation region</b> in " +
+      "neuron space. Recording is pure observation; training itself is untouched.",
+    enter() { expanded = null; selectConcept(null); },
+  },
+  {
+    id: "region", target: "#regionSec",
+    title: "A class is a region",
+    avail: () => explain && explain.fingerprints && classNames.length === explain.num_classes,
+    body: () => `The model represents each class as a <span class="hl-region">region of ` +
+      `co-firing neurons</span>. Here is the region of <b>${classNames[demoRegionClass()] || "a class"}</b> — ` +
+      `dashed blue halos mark the concepts it lives in. Search any class below to see its region.`,
+    enter() { const k = demoRegionClass(); if (k >= 0) setRegionClass(k); },
+  },
+  {
+    id: "upload", target: "#classifySec",
+    title: "Classify an image",
+    avail: () => !!manifest,
+    body: "Drop any photo into the panel on the right — inference runs <b>entirely in your " +
+      "browser</b>. The tour continues automatically once the prediction lands.",
+    enter() { $("classifySec").scrollIntoView({ block: "nearest" }); },
+  },
+  {
+    id: "fire", target: "#stage",
+    title: "Watch the regions fire",
+    avail: () => liveMode,
+    body: "The graph is now <span class=\"hl-live\">live</span>: concepts glow and grow by how " +
+      "strongly this image made them fire. The prediction is literally <b>which activation " +
+      "regions lit up</b> — hover a concept to see its firing strength and grounded attributes.",
+    enter() { $("regionClear").click(); },
+  },
+  {
+    id: "shap", target: "#shapSec",
+    title: "SHAP influence per region",
+    avail: () => liveMode && explain && explain.shap && explainSpec,
+    body: () => (explain.shap.method === "exact-linear"
+      ? "Each bar is the <b>exact Shapley value</b> of one Hebbian region for this prediction — " +
+        "closed-form, because the class logit is linear in these neurons. "
+      : "Each bar is a SHAP (expected-gradients) estimate of one Hebbian region's influence. ") +
+      "Green pushed the logit toward the class, red away — and they <b>add up to the logit</b>. " +
+      "Click another prediction row to see a contrastive explanation.",
+  },
+  {
+    id: "match", target: "#matchSec",
+    title: "Image vs. class region",
+    avail: () => liveMode && explain && explain.fingerprints && classNames.length === explain.num_classes,
+    body: "Does this image fire where its predicted class <i>usually</i> fires? Orange = this " +
+      "image, blue = the class's typical activation region. A high match means the image is a " +
+      "textbook example; a ≠ row shows exactly where it deviates.",
+    enter() { if (lastPredIdx >= 0) setRegionClass(lastPredIdx); renderMatch(); },
+  },
+  {
+    id: "spatial", target: "#imgwrap",
+    title: "Regions in the image",
+    avail: () => liveMode,
+    body: "Finally, back to pixels: each grid cell of the photo is masked and re-run. The heatmap " +
+      "shows where the <b>prediction</b> looked — and the dropdown switches it to a single " +
+      "<b>concept</b>, revealing where each Hebbian region looks in the image.",
+    enter() { if (!salData && !salRunning) runSaliency(); },
+  },
+  {
+    id: "end", target: null,
+    title: "Explore freely",
+    body: "That's the loop: <b>Hebbian regions</b> represent classes, <b>SHAP</b> quantifies each " +
+      "region's influence on a prediction, and occlusion ties regions back to pixels. " +
+      "Everything you saw ran locally in this tab — try your own images and classes.",
+  },
+];
+
+let tourIdx = -1;
+const tourAvail = s => !s.avail || s.avail();
+function clearTourHi() {
+  document.querySelectorAll(".tour-hi").forEach(el => el.classList.remove("tour-hi"));
+}
+function tourGo(dir) {
+  let i = tourIdx + dir;
+  while (i >= 0 && i < TOUR.length && !tourAvail(TOUR[i])) i += dir;
+  if (i < 0) return;
+  if (i >= TOUR.length) return endTour();
+  showTourStep(i);
+}
+function showTourStep(i) {
+  clearTourHi();
+  tourIdx = i;
+  const s = TOUR[i];
+  try { if (s.enter) s.enter(); } catch (e) { /* demo must not break on missing data */ }
+  const card = $("tourCard");
+  card.querySelector(".ttl").textContent = s.title;
+  card.querySelector(".step-n").textContent = `${i + 1} / ${TOUR.length}`;
+  card.querySelector(".body").innerHTML = typeof s.body === "function" ? s.body() : s.body;
+  card.querySelector(".dots").innerHTML =
+    TOUR.map((t, j) => `<i${j === i ? ' class="on"' : ""}></i>`).join("");
+  $("tourBack").disabled = i === 0;
+  $("tourNext").textContent = i === TOUR.length - 1 ? "finish" : "next";
+  card.classList.add("show");
+  if (s.target) {
+    const el = document.querySelector(s.target);
+    if (el && getComputedStyle(el).display !== "none") {
+      el.classList.add("tour-hi");
+      if (el.closest("aside")) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }
+}
+function endTour() {
+  tourIdx = -1;
+  clearTourHi();
+  $("tourCard").classList.remove("show");
+}
+function tourNotify(ev) {
+  if (tourIdx < 0) return;
+  if (ev === "classified" && TOUR[tourIdx].id === "upload") tourGo(1);
+}
+$("tourbtn").onclick = () => { tourIdx = -1; tourGo(1); };
+$("tourNext").onclick = () => tourGo(1);
+$("tourBack").onclick = () => tourGo(-1);
+$("tourExit").onclick = endTour;
+
 /* ─────────────────────────── boot ────────────────────────────────── */
 document.body.classList.toggle("darkblend", isDark());
 resize();
 initInference().then(() => {
+  // demo explain pack (class activation regions + SHAP influence) — optional
+  const exFile = (manifest && manifest.explain) || "explain.json";
+  return fetch(exFile, { cache: "no-cache" })
+    .then(r => (r.ok ? r.json() : null))
+    .then(d => { if (d && d.format === "hatchvision-explain") explain = d; })
+    .catch(() => {});
+}).then(() => {
   const graphFile = (manifest && manifest.graph) || "graph.json";
   return fetch(graphFile, { cache: "no-cache" })
     .then(r => { if (!r.ok) throw new Error(); return r.json(); })

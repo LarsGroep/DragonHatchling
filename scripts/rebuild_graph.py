@@ -55,6 +55,13 @@ def main() -> None:
     p.add_argument("--min-units", type=int, default=2)
     p.add_argument("--activity-threshold", type=float, default=0.02)
     p.add_argument("--out", required=True, help="write IVGraph JSON here")
+    p.add_argument(
+        "--explain-out",
+        default=None,
+        help="also (re)write the demo explain pack here (e.g. bundle/explain.json); "
+        "class fingerprints are rebuilt from the state, an existing file's "
+        "shap section (which needs the model) is preserved",
+    )
     args = p.parse_args()
 
     memory = HebbianFeatureMemory.from_state(
@@ -105,6 +112,23 @@ def main() -> None:
 
     path = export_ivgraph(memory, concepts, layer, class_names, args.out, meta=meta)
     print(f"IVGraph rebuilt at {path}")
+
+    if args.explain_out:
+        from hatchvision.export import build_explain_pack
+
+        doc = build_explain_pack(memory, layer, class_names)
+        out = Path(args.explain_out)
+        if out.exists():
+            try:
+                prev = json.loads(out.read_text())
+                if "shap" in prev:
+                    doc["shap"] = prev["shap"]
+                    print("kept existing shap section (rebuilding it needs the model)")
+            except (json.JSONDecodeError, OSError):
+                pass
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(doc, separators=(",", ":")))
+        print(f"explain pack rebuilt at {out}")
 
 
 if __name__ == "__main__":

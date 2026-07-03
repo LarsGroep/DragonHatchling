@@ -10,8 +10,10 @@ The universal workflow — same command, any registered dataset::
 
 ``--export-bundle DIR`` writes everything the web app needs into DIR:
 ``graph.json`` (Hebbian concept graph, attribute-grounded when the dataset
-has attributes), ``model.onnx`` (with activation outputs) and
-``manifest.json`` (preprocessing + node mapping).
+has attributes), ``model.onnx`` (with activation outputs),
+``manifest.json`` (preprocessing + node mapping), ``explain.json`` (class
+activation regions + SHAP influence for the demo mode) and
+``hebbian_state.pt`` (raw statistics for post-hoc rebuilds).
 
 Try the pure Baby Dragon Hatchling backbone::
 
@@ -157,9 +159,31 @@ def main() -> None:
                 data.spec,
                 args.export_bundle,
                 graph_file=Path(graph_path).name,
+                explain_file="explain.json",
                 extra_meta={"backbone": args.backbone},
             )
             print(f"inference bundle exported to {manifest.parent}")
+
+            # demo explain pack: class activation regions + SHAP influence
+            from hatchvision.export import export_explain_pack
+
+            explain_path = export_explain_pack(
+                memory,
+                layer,
+                data.spec.class_names,
+                Path(args.export_bundle) / "explain.json",
+                model=model,
+                background=probe[: min(64, probe.shape[0])],
+            )
+            print(f"explain pack exported to {explain_path}")
+
+            # raw Hebbian statistics: lets scripts/rebuild_graph.py re-cluster
+            # and re-export graph + fingerprints later without retraining
+            import torch
+
+            torch.save(
+                memory.state_dict(), Path(args.export_bundle) / "hebbian_state.pt"
+            )
 
 
 if __name__ == "__main__":
