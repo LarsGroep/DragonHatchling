@@ -81,6 +81,7 @@ def export_onnx_bundle(
     graph_file: str = "graph.json",
     model_file: str = "model.onnx",
     manifest_file: str = "manifest.json",
+    explain_file: Optional[str] = None,
     opset: int = 17,
     fp16: bool = False,
     extra_meta: Optional[Dict] = None,
@@ -92,7 +93,8 @@ def export_onnx_bundle(
     ``fp16=True`` halves the file by storing weights as float16 while
     keeping float32 inputs/outputs (requires ``onnxconverter-common``) —
     recommended for in-browser bundles of pretrained encoders.
-    Returns the manifest path.
+    ``explain_file`` names the demo explain pack (``export_explain_pack``)
+    so the manifest can point the web app at it. Returns the manifest path.
     """
     out_dir = Path(out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -157,6 +159,7 @@ def export_onnx_bundle(
         "mean": list(mean),
         "std": list(std),
         "class_names": list(spec.class_names),
+        **({"explain": explain_file} if explain_file else {}),
         "activation_outputs": [
             {
                 "layer": name,

@@ -45,9 +45,12 @@ python scripts/train.py --dataset cub200 --root data/cub --backbone hybrid \
 cd webapp && python3 -m http.server 8000
 ```
 
-`--export-bundle DIR` writes the three files the web app consumes:
-`graph.json` (Hebbian concept graph), `model.onnx` (classifier **plus neuron
-activation outputs**), and `manifest.json` (preprocessing + node mapping).
+`--export-bundle DIR` writes the files the web app consumes: `graph.json`
+(Hebbian concept graph), `model.onnx` (classifier **plus neuron activation
+outputs**), `manifest.json` (preprocessing + node mapping), `explain.json`
+(per-class **Hebbian activation regions** + the unit→class **SHAP influence**
+matrix that powers the demo mode) and `hebbian_state.pt` (raw statistics for
+post-hoc rebuilds).
 
 ### CUB-200 on Kaggle (GPU)
 
@@ -140,14 +143,41 @@ The explainability pipeline then:
 Plus pixel-level tools: **Grad-CAM** (no dependencies) and **SHAP**
 (optional `shap` extra).
 
+### Class regions & SHAP influence (`explain.json`)
+
+Two more artifacts make the Hebbian story demoable in the browser
+(`hatchvision/explain/influence.py`):
+
+- **Class fingerprints** — `class_fingerprints` turns the memory's
+  class-conditional firing statistics into a `[classes × units]` matrix:
+  each class's *activation region* in neuron space.
+- **SHAP influence** — `unit_class_influence` computes expected gradients
+  of every class logit w.r.t. the tracked units over a background batch.
+  For the `hybrid`/`bdh` readouts the logit is *linear* in the neurons, so
+  `weights · (activation − baseline)` are **exact Shapley values**
+  (detected automatically and labeled `exact-linear`); other backbones get
+  an honest `expected-gradients` approximation.
+
+Both are exported by `export_explain_pack` into `explain.json`; the web app
+computes per-image, per-concept SHAP contributions from it live.
+Fingerprints can be rebuilt from `hebbian_state.pt` without retraining
+(`scripts/rebuild_graph.py --explain-out`).
+
 ## Web app (`webapp/`)
 
 A zero-build static site (Vercel-ready) that renders the concept graph —
 force layout, cluster highlighting, edge filters, light/dark — and, when a
 bundle is present, runs **inference fully in the browser** via onnxruntime-web
 (vendored, no CDN): upload a photo, get top-5 predictions, and watch the
-units/concepts/attributes that fired light up. See
-[`webapp/README.md`](webapp/README.md).
+units/concepts/attributes that fired light up.
+
+With `explain.json` deployed it becomes a full **demo tool for Hebbian
+activation regions + SHAP influence** — a guided **▶ demo tour** walks
+through: class picker → the class's activation region lights up in the
+graph; classify an image → per-concept **SHAP bars** (exact where the
+readout is linear) that visibly add up to the logit; **image vs. class
+region** overlay; and occlusion maps per concept ("where does this region
+look in the photo"). See [`webapp/README.md`](webapp/README.md).
 
 ## Layout
 

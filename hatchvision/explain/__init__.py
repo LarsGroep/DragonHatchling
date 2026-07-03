@@ -11,6 +11,11 @@ from hatchvision.explain.attributes import (
     ground_concepts_from_class_attributes,
 )
 from hatchvision.explain.shap_explainer import ShapExplainer, shap_available
+from hatchvision.explain.influence import (
+    UnitInfluence,
+    class_fingerprints,
+    unit_class_influence,
+)
 
 __all__ = [
     "GradCAM",
@@ -24,4 +29,7 @@ __all__ = [
     "ground_concepts_from_class_attributes",
     "ShapExplainer",
     "shap_available",
+    "UnitInfluence",
+    "class_fingerprints",
+    "unit_class_influence",
 ]
