@@ -7,5 +7,6 @@ numpy>=1.24
 # optional extras
 # onnx>=1.15        # --export-bundle (in-browser inference for the webapp)
 # onnxruntime>=1.17 # verify exported bundles locally
+# onnxconverter-common>=1.14  # fp16 bundle export
 # shap>=0.44        # SHAP pixel attributions (notebook section 4b)
 # jupyter           # to run notebooks/explainability_demo.ipynb
