@@ -2,1145 +2,1273 @@
   "format": "ivgraph",
   "version": "1.0",
   "meta": {
-    "created": "2026-07-03T13:40:35+00:00",
+    "created": "2026-07-03T19:27:09+00:00",
     "layer": "neurons",
     "num_classes": 200,
     "generator": "hatchvision",
     "dataset": "cub200",
     "backbone": "hybrid",
-    "val_acc": 0.6044
+    "val_acc": 0.6346
   },
   "nodes": [
     {
-      "id": "u:neurons:7",
+      "id": "u:neurons:0",
       "type": "unit",
-      "label": "neurons \u00b7 ch 80",
-      "cluster": 8,
-      "activation": 0.05531,
-      "size": 0.6922
+      "label": "neurons \u00b7 ch 9",
+      "cluster": 5,
+      "activation": 0.02738,
+      "size": 0.5484
     },
     {
-      "id": "u:neurons:11",
+      "id": "u:neurons:2",
       "type": "unit",
-      "label": "neurons \u00b7 ch 126",
-      "cluster": 6,
-      "activation": 0.03234,
-      "size": 0.5708
+      "label": "neurons \u00b7 ch 40",
+      "cluster": 1,
+      "activation": 0.00266,
+      "size": 0.4144
     },
     {
-      "id": "u:neurons:16",
+      "id": "u:neurons:5",
       "type": "unit",
-      "label": "neurons \u00b7 ch 160",
-      "cluster": 7,
-      "activation": 0.02166,
-      "size": 0.5144
+      "label": "neurons \u00b7 ch 61",
+      "cluster": 14,
+      "activation": 0.01225,
+      "size": 0.4664
     },
     {
-      "id": "u:neurons:30",
+      "id": "u:neurons:10",
       "type": "unit",
-      "label": "neurons \u00b7 ch 251",
-      "cluster": 13,
-      "activation": 0.00428,
-      "size": 0.4226
+      "label": "neurons \u00b7 ch 117",
+      "cluster": 22,
+      "activation": 0.05128,
+      "size": 0.6778
     },
     {
-      "id": "u:neurons:53",
+      "id": "u:neurons:33",
       "type": "unit",
-      "label": "neurons \u00b7 ch 468",
-      "cluster": 23,
-      "activation": 0.00229,
-      "size": 0.4121
-    },
-    {
-      "id": "u:neurons:58",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 520",
+      "label": "neurons \u00b7 ch 274",
       "cluster": 21,
-      "activation": 0.01592,
-      "size": 0.4841
+      "activation": 0.01776,
+      "size": 0.4962
     },
     {
-      "id": "u:neurons:65",
+      "id": "u:neurons:34",
       "type": "unit",
-      "label": "neurons \u00b7 ch 596",
+      "label": "neurons \u00b7 ch 275",
+      "cluster": 1,
+      "activation": 0.00765,
+      "size": 0.4415
+    },
+    {
+      "id": "u:neurons:37",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 298",
+      "cluster": 5,
+      "activation": 0.00556,
+      "size": 0.4301
+    },
+    {
+      "id": "u:neurons:38",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 316",
+      "cluster": 8,
+      "activation": 0.00593,
+      "size": 0.4321
+    },
+    {
+      "id": "u:neurons:46",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 388",
+      "cluster": 2,
+      "activation": 0.01071,
+      "size": 0.458
+    },
+    {
+      "id": "u:neurons:64",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 594",
       "cluster": 6,
-      "activation": 0.02641,
-      "size": 0.5395
+      "activation": 0.00664,
+      "size": 0.436
     },
     {
-      "id": "u:neurons:71",
+      "id": "u:neurons:72",
       "type": "unit",
-      "label": "neurons \u00b7 ch 656",
-      "cluster": 9,
-      "activation": 0.06444,
-      "size": 0.7404
+      "label": "neurons \u00b7 ch 658",
+      "cluster": 7,
+      "activation": 0.00622,
+      "size": 0.4337
+    },
+    {
+      "id": "u:neurons:78",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 797",
+      "cluster": 11,
+      "activation": 0.00419,
+      "size": 0.4227
     },
     {
       "id": "u:neurons:79",
       "type": "unit",
       "label": "neurons \u00b7 ch 800",
-      "cluster": 8,
-      "activation": 0.05908,
-      "size": 0.7121
+      "cluster": 23,
+      "activation": 0.00291,
+      "size": 0.4157
     },
     {
       "id": "u:neurons:87",
       "type": "unit",
       "label": "neurons \u00b7 ch 873",
+      "cluster": 12,
+      "activation": 0.04543,
+      "size": 0.6462
+    },
+    {
+      "id": "u:neurons:89",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 890",
       "cluster": 10,
-      "activation": 0.00313,
-      "size": 0.4165
+      "activation": 0.09433,
+      "size": 0.9111
     },
     {
-      "id": "u:neurons:88",
+      "id": "u:neurons:91",
       "type": "unit",
-      "label": "neurons \u00b7 ch 874",
-      "cluster": 5,
-      "activation": 0.00776,
-      "size": 0.441
+      "label": "neurons \u00b7 ch 908",
+      "cluster": 0,
+      "activation": 0.00326,
+      "size": 0.4177
     },
     {
-      "id": "u:neurons:96",
+      "id": "u:neurons:93",
       "type": "unit",
-      "label": "neurons \u00b7 ch 963",
-      "cluster": 14,
-      "activation": 0.01278,
-      "size": 0.4675
+      "label": "neurons \u00b7 ch 914",
+      "cluster": 17,
+      "activation": 0.00813,
+      "size": 0.4441
     },
     {
-      "id": "u:neurons:118",
+      "id": "u:neurons:97",
       "type": "unit",
-      "label": "neurons \u00b7 ch 1216",
+      "label": "neurons \u00b7 ch 988",
+      "cluster": 4,
+      "activation": 0.00763,
+      "size": 0.4414
+    },
+    {
+      "id": "u:neurons:101",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 1087",
       "cluster": 15,
-      "activation": 0.00279,
-      "size": 0.4147
+      "activation": 0.00559,
+      "size": 0.4303
+    },
+    {
+      "id": "u:neurons:102",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 1089",
+      "cluster": 8,
+      "activation": 0.03474,
+      "size": 0.5883
+    },
+    {
+      "id": "u:neurons:106",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 1143",
+      "cluster": 22,
+      "activation": 0.05386,
+      "size": 0.6918
+    },
+    {
+      "id": "u:neurons:126",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 1257",
+      "cluster": 19,
+      "activation": 0.03072,
+      "size": 0.5664
+    },
+    {
+      "id": "u:neurons:127",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 1259",
+      "cluster": 6,
+      "activation": 0.03185,
+      "size": 0.5726
     },
     {
       "id": "u:neurons:130",
       "type": "unit",
       "label": "neurons \u00b7 ch 1282",
-      "cluster": 2,
-      "activation": 0.01543,
-      "size": 0.4815
+      "cluster": 4,
+      "activation": 0.02626,
+      "size": 0.5423
     },
     {
-      "id": "u:neurons:135",
+      "id": "u:neurons:131",
       "type": "unit",
-      "label": "neurons \u00b7 ch 1315",
-      "cluster": 3,
-      "activation": 0.04954,
-      "size": 0.6617
+      "label": "neurons \u00b7 ch 1291",
+      "cluster": 4,
+      "activation": 0.00559,
+      "size": 0.4303
     },
     {
-      "id": "u:neurons:141",
+      "id": "u:neurons:134",
       "type": "unit",
-      "label": "neurons \u00b7 ch 1385",
-      "cluster": 5,
-      "activation": 0.00915,
-      "size": 0.4483
+      "label": "neurons \u00b7 ch 1310",
+      "cluster": 13,
+      "activation": 0.01079,
+      "size": 0.4585
     },
     {
       "id": "u:neurons:146",
       "type": "unit",
       "label": "neurons \u00b7 ch 1426",
-      "cluster": 0,
-      "activation": 0.0038,
-      "size": 0.4201
-    },
-    {
-      "id": "u:neurons:150",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 1463",
-      "cluster": 10,
-      "activation": 0.01967,
-      "size": 0.5039
-    },
-    {
-      "id": "u:neurons:156",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 1513",
-      "cluster": 23,
-      "activation": 0.01173,
-      "size": 0.462
-    },
-    {
-      "id": "u:neurons:159",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 1525",
-      "cluster": 18,
-      "activation": 0.02336,
-      "size": 0.5234
+      "cluster": 2,
+      "activation": 0.00426,
+      "size": 0.4231
     },
     {
       "id": "u:neurons:160",
       "type": "unit",
       "label": "neurons \u00b7 ch 1529",
+      "cluster": 7,
+      "activation": 0.03748,
+      "size": 0.6031
+    },
+    {
+      "id": "u:neurons:164",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 1545",
+      "cluster": 16,
+      "activation": 0.00236,
+      "size": 0.4128
+    },
+    {
+      "id": "u:neurons:172",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 1609",
+      "cluster": 17,
+      "activation": 0.01003,
+      "size": 0.4543
+    },
+    {
+      "id": "u:neurons:176",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 1622",
+      "cluster": 10,
+      "activation": 0.05865,
+      "size": 0.7178
+    },
+    {
+      "id": "u:neurons:178",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 1632",
       "cluster": 1,
-      "activation": 0.01255,
-      "size": 0.4663
-    },
-    {
-      "id": "u:neurons:166",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 1564",
-      "cluster": 18,
-      "activation": 0.00447,
-      "size": 0.4236
-    },
-    {
-      "id": "u:neurons:174",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 1617",
-      "cluster": 22,
-      "activation": 0.04252,
-      "size": 0.6246
+      "activation": 0.02254,
+      "size": 0.5222
     },
     {
       "id": "u:neurons:182",
       "type": "unit",
       "label": "neurons \u00b7 ch 1654",
-      "cluster": 2,
-      "activation": 0.00375,
-      "size": 0.4198
+      "cluster": 11,
+      "activation": 0.02811,
+      "size": 0.5523
+    },
+    {
+      "id": "u:neurons:186",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 1702",
+      "cluster": 9,
+      "activation": 0.02198,
+      "size": 0.5191
+    },
+    {
+      "id": "u:neurons:189",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 1722",
+      "cluster": 1,
+      "activation": 0.04106,
+      "size": 0.6225
+    },
+    {
+      "id": "u:neurons:191",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 1736",
+      "cluster": 0,
+      "activation": 0.01085,
+      "size": 0.4588
+    },
+    {
+      "id": "u:neurons:193",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 1747",
+      "cluster": 16,
+      "activation": 0.01357,
+      "size": 0.4735
     },
     {
       "id": "u:neurons:194",
       "type": "unit",
       "label": "neurons \u00b7 ch 1748",
-      "cluster": 12,
-      "activation": 0.00278,
-      "size": 0.4147
+      "cluster": 5,
+      "activation": 0.00313,
+      "size": 0.4169
     },
     {
-      "id": "u:neurons:197",
+      "id": "u:neurons:202",
       "type": "unit",
-      "label": "neurons \u00b7 ch 1756",
-      "cluster": 18,
-      "activation": 0.00259,
-      "size": 0.4137
+      "label": "neurons \u00b7 ch 1820",
+      "cluster": 10,
+      "activation": 0.06225,
+      "size": 0.7373
     },
     {
-      "id": "u:neurons:200",
+      "id": "u:neurons:206",
       "type": "unit",
-      "label": "neurons \u00b7 ch 1808",
-      "cluster": 3,
-      "activation": 0.09908,
-      "size": 0.9235
+      "label": "neurons \u00b7 ch 1840",
+      "cluster": 14,
+      "activation": 0.07449,
+      "size": 0.8036
+    },
+    {
+      "id": "u:neurons:209",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 1875",
+      "cluster": 20,
+      "activation": 0.05626,
+      "size": 0.7049
     },
     {
       "id": "u:neurons:213",
       "type": "unit",
       "label": "neurons \u00b7 ch 1900",
-      "cluster": 21,
-      "activation": 0.01693,
-      "size": 0.4894
+      "cluster": 6,
+      "activation": 0.02373,
+      "size": 0.5286
     },
     {
-      "id": "u:neurons:216",
+      "id": "u:neurons:218",
       "type": "unit",
-      "label": "neurons \u00b7 ch 1922",
-      "cluster": 3,
-      "activation": 0.05344,
-      "size": 0.6823
+      "label": "neurons \u00b7 ch 1933",
+      "cluster": 12,
+      "activation": 0.05975,
+      "size": 0.7237
     },
     {
-      "id": "u:neurons:221",
+      "id": "u:neurons:226",
       "type": "unit",
-      "label": "neurons \u00b7 ch 1949",
-      "cluster": 5,
-      "activation": 0.00784,
-      "size": 0.4414
+      "label": "neurons \u00b7 ch 1971",
+      "cluster": 23,
+      "activation": 0.0053,
+      "size": 0.4287
     },
     {
-      "id": "u:neurons:234",
+      "id": "u:neurons:242",
       "type": "unit",
-      "label": "neurons \u00b7 ch 2029",
-      "cluster": 3,
-      "activation": 0.08975,
-      "size": 0.8742
+      "label": "neurons \u00b7 ch 2101",
+      "cluster": 20,
+      "activation": 0.0115,
+      "size": 0.4623
     },
     {
-      "id": "u:neurons:237",
+      "id": "u:neurons:245",
       "type": "unit",
-      "label": "neurons \u00b7 ch 2039",
-      "cluster": 11,
-      "activation": 0.03895,
-      "size": 0.6058
+      "label": "neurons \u00b7 ch 2114",
+      "cluster": 14,
+      "activation": 0.0348,
+      "size": 0.5886
     },
     {
-      "id": "u:neurons:244",
+      "id": "u:neurons:249",
       "type": "unit",
-      "label": "neurons \u00b7 ch 2108",
-      "cluster": 1,
-      "activation": 0.02799,
-      "size": 0.5479
+      "label": "neurons \u00b7 ch 2128",
+      "cluster": 22,
+      "activation": 0.01629,
+      "size": 0.4883
+    },
+    {
+      "id": "u:neurons:251",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 2137",
+      "cluster": 2,
+      "activation": 0.00359,
+      "size": 0.4194
     },
     {
       "id": "u:neurons:253",
       "type": "unit",
       "label": "neurons \u00b7 ch 2149",
-      "cluster": 15,
-      "activation": 0.01016,
-      "size": 0.4537
+      "cluster": 19,
+      "activation": 0.02287,
+      "size": 0.5239
+    },
+    {
+      "id": "u:neurons:254",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 2159",
+      "cluster": 7,
+      "activation": 0.0077,
+      "size": 0.4417
     },
     {
       "id": "u:neurons:256",
       "type": "unit",
       "label": "neurons \u00b7 ch 2200",
-      "cluster": 20,
-      "activation": 0.05391,
-      "size": 0.6848
-    },
-    {
-      "id": "u:neurons:258",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 2214",
-      "cluster": 15,
-      "activation": 0.00265,
-      "size": 0.414
-    },
-    {
-      "id": "u:neurons:259",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 2218",
-      "cluster": 8,
-      "activation": 0.02267,
-      "size": 0.5197
-    },
-    {
-      "id": "u:neurons:263",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 2246",
-      "cluster": 17,
-      "activation": 0.01168,
-      "size": 0.4617
-    },
-    {
-      "id": "u:neurons:283",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 2381",
-      "cluster": 19,
-      "activation": 0.03546,
-      "size": 0.5873
-    },
-    {
-      "id": "u:neurons:284",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 2395",
-      "cluster": 6,
-      "activation": 0.06376,
-      "size": 0.7369
-    },
-    {
-      "id": "u:neurons:285",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 2398",
-      "cluster": 2,
-      "activation": 0.03159,
-      "size": 0.5669
-    },
-    {
-      "id": "u:neurons:289",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 2414",
-      "cluster": 9,
-      "activation": 0.11357,
-      "size": 1.0
-    },
-    {
-      "id": "u:neurons:292",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 2421",
-      "cluster": 9,
-      "activation": 0.0596,
-      "size": 0.7149
-    },
-    {
-      "id": "u:neurons:293",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 2423",
       "cluster": 0,
-      "activation": 0.00835,
-      "size": 0.4441
+      "activation": 0.00261,
+      "size": 0.4142
     },
     {
-      "id": "u:neurons:295",
+      "id": "u:neurons:271",
       "type": "unit",
-      "label": "neurons \u00b7 ch 2441",
-      "cluster": 9,
-      "activation": 0.09673,
-      "size": 0.911
+      "label": "neurons \u00b7 ch 2292",
+      "cluster": 19,
+      "activation": 0.02081,
+      "size": 0.5128
     },
     {
-      "id": "u:neurons:300",
+      "id": "u:neurons:274",
       "type": "unit",
-      "label": "neurons \u00b7 ch 2456",
-      "cluster": 13,
-      "activation": 0.00448,
-      "size": 0.4236
+      "label": "neurons \u00b7 ch 2305",
+      "cluster": 4,
+      "activation": 0.0164,
+      "size": 0.4888
     },
     {
-      "id": "u:neurons:301",
+      "id": "u:neurons:280",
       "type": "unit",
-      "label": "neurons \u00b7 ch 2469",
+      "label": "neurons \u00b7 ch 2373",
+      "cluster": 18,
+      "activation": 0.01353,
+      "size": 0.4733
+    },
+    {
+      "id": "u:neurons:286",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 2402",
       "cluster": 21,
-      "activation": 0.00624,
-      "size": 0.433
+      "activation": 0.00228,
+      "size": 0.4124
+    },
+    {
+      "id": "u:neurons:287",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 2403",
+      "cluster": 2,
+      "activation": 0.00861,
+      "size": 0.4467
+    },
+    {
+      "id": "u:neurons:297",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 2446",
+      "cluster": 10,
+      "activation": 0.01897,
+      "size": 0.5028
+    },
+    {
+      "id": "u:neurons:302",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 2475",
+      "cluster": 18,
+      "activation": 0.01274,
+      "size": 0.469
     },
     {
       "id": "u:neurons:303",
       "type": "unit",
       "label": "neurons \u00b7 ch 2479",
-      "cluster": 5,
-      "activation": 0.01452,
-      "size": 0.4767
+      "cluster": 22,
+      "activation": 0.04134,
+      "size": 0.624
     },
     {
-      "id": "u:neurons:306",
+      "id": "u:neurons:304",
       "type": "unit",
-      "label": "neurons \u00b7 ch 2508",
-      "cluster": 1,
-      "activation": 0.00405,
-      "size": 0.4214
+      "label": "neurons \u00b7 ch 2484",
+      "cluster": 23,
+      "activation": 0.01475,
+      "size": 0.4799
     },
     {
-      "id": "u:neurons:313",
+      "id": "u:neurons:312",
       "type": "unit",
-      "label": "neurons \u00b7 ch 2573",
-      "cluster": 8,
-      "activation": 0.02177,
-      "size": 0.515
-    },
-    {
-      "id": "u:neurons:332",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 2687",
-      "cluster": 6,
-      "activation": 0.02949,
-      "size": 0.5558
+      "label": "neurons \u00b7 ch 2571",
+      "cluster": 2,
+      "activation": 0.00252,
+      "size": 0.4137
     },
     {
       "id": "u:neurons:335",
       "type": "unit",
       "label": "neurons \u00b7 ch 2709",
-      "cluster": 7,
-      "activation": 0.00237,
-      "size": 0.4125
+      "cluster": 14,
+      "activation": 0.0306,
+      "size": 0.5658
     },
     {
-      "id": "u:neurons:353",
+      "id": "u:neurons:344",
       "type": "unit",
-      "label": "neurons \u00b7 ch 2808",
-      "cluster": 17,
-      "activation": 0.03151,
-      "size": 0.5665
+      "label": "neurons \u00b7 ch 2769",
+      "cluster": 6,
+      "activation": 0.01035,
+      "size": 0.4561
     },
     {
-      "id": "u:neurons:354",
+      "id": "u:neurons:345",
       "type": "unit",
-      "label": "neurons \u00b7 ch 2836",
-      "cluster": 2,
-      "activation": 0.00391,
-      "size": 0.4206
+      "label": "neurons \u00b7 ch 2771",
+      "cluster": 1,
+      "activation": 0.01489,
+      "size": 0.4807
     },
     {
-      "id": "u:neurons:355",
+      "id": "u:neurons:349",
       "type": "unit",
-      "label": "neurons \u00b7 ch 2842",
+      "label": "neurons \u00b7 ch 2786",
       "cluster": 4,
-      "activation": 0.02688,
-      "size": 0.542
+      "activation": 0.00242,
+      "size": 0.4131
     },
     {
-      "id": "u:neurons:362",
+      "id": "u:neurons:351",
       "type": "unit",
-      "label": "neurons \u00b7 ch 2911",
-      "cluster": 22,
-      "activation": 0.05093,
-      "size": 0.669
-    },
-    {
-      "id": "u:neurons:364",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 2918",
-      "cluster": 17,
-      "activation": 0.01031,
-      "size": 0.4545
+      "label": "neurons \u00b7 ch 2800",
+      "cluster": 0,
+      "activation": 0.02848,
+      "size": 0.5543
     },
     {
       "id": "u:neurons:365",
       "type": "unit",
       "label": "neurons \u00b7 ch 2926",
-      "cluster": 8,
-      "activation": 0.03466,
-      "size": 0.5831
+      "cluster": 1,
+      "activation": 0.03233,
+      "size": 0.5752
+    },
+    {
+      "id": "u:neurons:366",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 2930",
+      "cluster": 5,
+      "activation": 0.01375,
+      "size": 0.4745
     },
     {
       "id": "u:neurons:368",
       "type": "unit",
       "label": "neurons \u00b7 ch 2943",
-      "cluster": 19,
-      "activation": 0.00515,
-      "size": 0.4272
+      "cluster": 16,
+      "activation": 0.00251,
+      "size": 0.4136
     },
     {
-      "id": "u:neurons:370",
+      "id": "u:neurons:372",
       "type": "unit",
-      "label": "neurons \u00b7 ch 2966",
-      "cluster": 10,
-      "activation": 0.03747,
-      "size": 0.598
+      "label": "neurons \u00b7 ch 2978",
+      "cluster": 16,
+      "activation": 0.00348,
+      "size": 0.4188
     },
     {
-      "id": "u:neurons:376",
+      "id": "u:neurons:374",
       "type": "unit",
-      "label": "neurons \u00b7 ch 3000",
-      "cluster": 4,
-      "activation": 0.00954,
-      "size": 0.4504
+      "label": "neurons \u00b7 ch 2985",
+      "cluster": 14,
+      "activation": 0.05818,
+      "size": 0.7152
     },
     {
-      "id": "u:neurons:402",
+      "id": "u:neurons:377",
       "type": "unit",
-      "label": "neurons \u00b7 ch 3198",
-      "cluster": 1,
-      "activation": 0.0108,
-      "size": 0.4571
+      "label": "neurons \u00b7 ch 3011",
+      "cluster": 12,
+      "activation": 0.08272,
+      "size": 0.8482
+    },
+    {
+      "id": "u:neurons:378",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3015",
+      "cluster": 0,
+      "activation": 0.01212,
+      "size": 0.4657
+    },
+    {
+      "id": "u:neurons:382",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3066",
+      "cluster": 15,
+      "activation": 0.00787,
+      "size": 0.4426
+    },
+    {
+      "id": "u:neurons:393",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3145",
+      "cluster": 3,
+      "activation": 0.01272,
+      "size": 0.4689
+    },
+    {
+      "id": "u:neurons:395",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3153",
+      "cluster": 3,
+      "activation": 0.00253,
+      "size": 0.4137
+    },
+    {
+      "id": "u:neurons:401",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3196",
+      "cluster": 9,
+      "activation": 0.00328,
+      "size": 0.4178
     },
     {
       "id": "u:neurons:406",
       "type": "unit",
       "label": "neurons \u00b7 ch 3244",
-      "cluster": 7,
-      "activation": 0.01335,
-      "size": 0.4705
-    },
-    {
-      "id": "u:neurons:414",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 3288",
-      "cluster": 16,
-      "activation": 0.06917,
-      "size": 0.7654
-    },
-    {
-      "id": "u:neurons:422",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 3338",
-      "cluster": 14,
-      "activation": 0.0035,
-      "size": 0.4185
-    },
-    {
-      "id": "u:neurons:425",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 3342",
-      "cluster": 4,
-      "activation": 0.02488,
-      "size": 0.5314
-    },
-    {
-      "id": "u:neurons:431",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 3374",
-      "cluster": 1,
-      "activation": 0.03593,
-      "size": 0.5898
-    },
-    {
-      "id": "u:neurons:433",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 3386",
-      "cluster": 20,
-      "activation": 0.05057,
-      "size": 0.6672
-    },
-    {
-      "id": "u:neurons:434",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 3401",
-      "cluster": 5,
-      "activation": 0.0535,
-      "size": 0.6826
-    },
-    {
-      "id": "u:neurons:437",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 3408",
-      "cluster": 0,
-      "activation": 0.00317,
-      "size": 0.4168
-    },
-    {
-      "id": "u:neurons:446",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 3462",
-      "cluster": 4,
-      "activation": 0.00389,
-      "size": 0.4206
-    },
-    {
-      "id": "u:neurons:451",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 3504",
-      "cluster": 16,
-      "activation": 0.09415,
-      "size": 0.8974
-    },
-    {
-      "id": "u:neurons:467",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 3673",
-      "cluster": 23,
-      "activation": 0.01915,
-      "size": 0.5012
-    },
-    {
-      "id": "u:neurons:468",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 3677",
-      "cluster": 3,
-      "activation": 0.07976,
-      "size": 0.8214
-    },
-    {
-      "id": "u:neurons:489",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 3891",
-      "cluster": 16,
-      "activation": 0.03901,
-      "size": 0.6061
-    },
-    {
-      "id": "u:neurons:493",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 3932",
-      "cluster": 4,
-      "activation": 0.01001,
-      "size": 0.4529
-    },
-    {
-      "id": "u:neurons:499",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 3965",
       "cluster": 12,
-      "activation": 0.00436,
-      "size": 0.4231
+      "activation": 0.06731,
+      "size": 0.7647
+    },
+    {
+      "id": "u:neurons:411",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3265",
+      "cluster": 8,
+      "activation": 0.05323,
+      "size": 0.6884
+    },
+    {
+      "id": "u:neurons:417",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3311",
+      "cluster": 3,
+      "activation": 0.02254,
+      "size": 0.5221
+    },
+    {
+      "id": "u:neurons:418",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3313",
+      "cluster": 17,
+      "activation": 0.00757,
+      "size": 0.441
+    },
+    {
+      "id": "u:neurons:421",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3319",
+      "cluster": 2,
+      "activation": 0.00413,
+      "size": 0.4224
+    },
+    {
+      "id": "u:neurons:423",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3340",
+      "cluster": 21,
+      "activation": 0.00407,
+      "size": 0.4221
+    },
+    {
+      "id": "u:neurons:426",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3346",
+      "cluster": 9,
+      "activation": 0.03547,
+      "size": 0.5922
+    },
+    {
+      "id": "u:neurons:429",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3363",
+      "cluster": 20,
+      "activation": 0.11073,
+      "size": 1.0
+    },
+    {
+      "id": "u:neurons:430",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3370",
+      "cluster": 4,
+      "activation": 0.02168,
+      "size": 0.5175
+    },
+    {
+      "id": "u:neurons:438",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3413",
+      "cluster": 18,
+      "activation": 0.00576,
+      "size": 0.4312
+    },
+    {
+      "id": "u:neurons:448",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3474",
+      "cluster": 20,
+      "activation": 0.0301,
+      "size": 0.5631
+    },
+    {
+      "id": "u:neurons:461",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3611",
+      "cluster": 10,
+      "activation": 0.0994,
+      "size": 0.9386
+    },
+    {
+      "id": "u:neurons:477",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3767",
+      "cluster": 13,
+      "activation": 0.00228,
+      "size": 0.4123
+    },
+    {
+      "id": "u:neurons:479",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3801",
+      "cluster": 3,
+      "activation": 0.00578,
+      "size": 0.4313
+    },
+    {
+      "id": "u:neurons:488",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3889",
+      "cluster": 9,
+      "activation": 0.02786,
+      "size": 0.5509
+    },
+    {
+      "id": "u:neurons:494",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 3933",
+      "cluster": 19,
+      "activation": 0.05307,
+      "size": 0.6875
     },
     {
       "id": "u:neurons:500",
       "type": "unit",
       "label": "neurons \u00b7 ch 3979",
-      "cluster": 11,
-      "activation": 0.06543,
-      "size": 0.7456
+      "cluster": 10,
+      "activation": 0.03959,
+      "size": 0.6145
     },
     {
-      "id": "u:neurons:502",
+      "id": "u:neurons:507",
       "type": "unit",
-      "label": "neurons \u00b7 ch 4002",
-      "cluster": 0,
-      "activation": 0.00436,
-      "size": 0.423
-    },
-    {
-      "id": "u:neurons:506",
-      "type": "unit",
-      "label": "neurons \u00b7 ch 4032",
-      "cluster": 5,
-      "activation": 0.0292,
-      "size": 0.5543
-    },
-    {
-      "id": "c:9",
-      "type": "concept",
-      "label": "primary color: pink \u00b7 breast color: orange",
+      "label": "neurons \u00b7 ch 4039",
       "cluster": 9,
-      "coherence": 0.268,
-      "importance": 0.08358,
-      "classes": {
-        "Yellow bellied Flycatcher": 1.0,
-        "Least Flycatcher": 0.9319,
-        "Acadian Flycatcher": 0.9196
-      },
-      "size": 1.6,
-      "attributes": {
-        "primary color: pink": 1.1807,
-        "breast color: orange": 0.9416,
-        "upperparts color: blue": 0.9064,
-        "underparts color: buff": 0.8777
-      }
+      "activation": 0.01591,
+      "size": 0.4862
     },
     {
-      "id": "c:3",
-      "type": "concept",
-      "label": "under tail color: pink \u00b7 crown color: pink",
-      "cluster": 3,
-      "coherence": 0.1903,
-      "importance": 0.07432,
-      "classes": {
-        "Horned Lark": 1.0,
-        "Least Tern": 0.8892,
-        "Long tailed Jaeger": 0.8529
-      },
-      "size": 1.6,
-      "attributes": {
-        "under tail color: pink": 1.0462,
-        "crown color: pink": 0.9583,
-        "bill color: rufous": 0.7971,
-        "underparts color: yellow": 0.7883
-      }
+      "id": "u:neurons:511",
+      "type": "unit",
+      "label": "neurons \u00b7 ch 4077",
+      "cluster": 0,
+      "activation": 0.00341,
+      "size": 0.4185
     },
     {
-      "id": "c:16",
+      "id": "c:12",
       "type": "concept",
-      "label": "eye color: red \u00b7 under tail color: pink",
-      "cluster": 16,
-      "coherence": 0.2574,
-      "importance": 0.06744,
+      "label": "throat color: green \u00b7 upper tail color: green",
+      "cluster": 12,
+      "coherence": 0.1743,
+      "importance": 0.0638,
       "classes": {
-        "Bronzed Cowbird": 1.0,
-        "Cape Glossy Starling": 0.9831,
-        "Brewer Blackbird": 0.7335
+        "White breasted Kingfisher": 1.0,
+        "Yellow headed Blackbird": 0.7865,
+        "Green Jay": 0.692
       },
       "size": 1.6,
       "attributes": {
-        "eye color: red": 1.4147,
-        "under tail color: pink": 1.1356,
-        "crown color: pink": 0.9993,
-        "wing color: purple": 0.871
-      }
-    },
-    {
-      "id": "c:20",
-      "type": "concept",
-      "label": "upperparts color: rufous \u00b7 shape: owl-like",
-      "cluster": 20,
-      "coherence": 0.2393,
-      "importance": 0.05224,
-      "classes": {
-        "Winter Wren": 1.0,
-        "House Wren": 0.7896,
-        "Rock Wren": 0.5948
-      },
-      "size": 1.6,
-      "attributes": {
-        "upperparts color: rufous": 1.4951,
-        "shape: owl-like": 1.3812,
-        "wing color: rufous": 1.3578,
-        "upper tail color: rufous": 0.9391
-      }
-    },
-    {
-      "id": "c:11",
-      "type": "concept",
-      "label": "leg color: rufous \u00b7 crown color: orange",
-      "cluster": 11,
-      "coherence": 0.2511,
-      "importance": 0.05219,
-      "classes": {
-        "Red eyed Vireo": 1.0,
-        "Warbling Vireo": 0.7257,
-        "White eyed Vireo": 0.6879
-      },
-      "size": 1.6,
-      "attributes": {
-        "leg color: rufous": 2.1585,
-        "crown color: orange": 1.7867,
-        "forehead color: white": 0.6374,
-        "belly color: yellow": 0.5902
-      }
-    },
-    {
-      "id": "c:22",
-      "type": "concept",
-      "label": "forehead color: yellow \u00b7 breast color: yellow",
-      "cluster": 22,
-      "coherence": 0.3117,
-      "importance": 0.04672,
-      "classes": {
-        "Western Meadowlark": 1.0,
-        "Evening Grosbeak": 0.6973,
-        "Yellow breasted Chat": 0.689
-      },
-      "size": 1.6,
-      "attributes": {
-        "forehead color: yellow": 2.0521,
-        "breast color: yellow": 2.0355,
-        "underparts color: yellow": 1.9726,
-        "throat color: yellow": 1.9667
-      }
-    },
-    {
-      "id": "c:8",
-      "type": "concept",
-      "label": "forehead color: yellow \u00b7 crown color: yellow",
-      "cluster": 8,
-      "coherence": 0.1742,
-      "importance": 0.0387,
-      "classes": {
-        "Loggerhead Shrike": 1.0,
-        "Clark Nutcracker": 0.8376,
-        "Hooded Merganser": 0.7826
-      },
-      "size": 1.6,
-      "attributes": {
-        "forehead color: yellow": 1.3009,
-        "crown color: yellow": 1.2801,
-        "belly color: black": 0.8337,
-        "nape color: yellow": 0.8041
-      }
-    },
-    {
-      "id": "c:6",
-      "type": "concept",
-      "label": "leg color: orange \u00b7 shape: owl-like",
-      "cluster": 6,
-      "coherence": 0.2128,
-      "importance": 0.038,
-      "classes": {
-        "Black and white Warbler": 1.0,
-        "Pied Kingfisher": 0.7795,
-        "Cactus Wren": 0.7221
-      },
-      "size": 1.6,
-      "attributes": {
-        "leg color: orange": 0.9258,
-        "shape: owl-like": 0.9151,
-        "upper tail color: rufous": 0.806,
-        "belly color: iridescent": 0.7368
-      }
-    },
-    {
-      "id": "c:5",
-      "type": "concept",
-      "label": "forehead color: yellow \u00b7 crown color: yellow",
-      "cluster": 5,
-      "coherence": 0.1427,
-      "importance": 0.02033,
-      "classes": {
-        "Red bellied Woodpecker": 1.0,
-        "Vermilion Flycatcher": 0.7702,
-        "Northern Flicker": 0.7686
-      },
-      "size": 1.6,
-      "attributes": {
-        "forehead color: yellow": 1.9631,
-        "crown color: yellow": 1.5929,
-        "upper tail color: rufous": 1.4011,
-        "crown color: orange": 1.168
-      }
-    },
-    {
-      "id": "c:19",
-      "type": "concept",
-      "label": "shape: duck-like \u00b7 eye color: buff",
-      "cluster": 19,
-      "coherence": 0.2346,
-      "importance": 0.0203,
-      "classes": {
-        "Pacific Loon": 1.0,
-        "Black footed Albatross": 0.7798,
-        "Pomarine Jaeger": 0.7175
-      },
-      "size": 1.6,
-      "attributes": {
-        "shape: duck-like": 0.8886,
-        "eye color: buff": 0.8162,
-        "bill shape: hooked": 0.7737,
-        "bill shape: spatulate": 0.6976
+        "throat color: green": 1.3131,
+        "upper tail color: green": 1.0044,
+        "under tail color: green": 0.9796,
+        "eye color: blue": 0.9483
       }
     },
     {
       "id": "c:10",
       "type": "concept",
-      "label": "throat color: purple \u00b7 primary color: purple",
+      "label": "underparts color: yellow \u00b7 breast color: yellow",
       "cluster": 10,
-      "coherence": 0.1995,
-      "importance": 0.02009,
+      "coherence": 0.2107,
+      "importance": 0.0622,
       "classes": {
-        "Lincoln Sparrow": 1.0,
-        "White throated Sparrow": 0.814,
-        "Henslow Sparrow": 0.7527
+        "Cedar Waxwing": 1.0,
+        "Red eyed Vireo": 0.8589,
+        "Horned Lark": 0.7808
       },
       "size": 1.6,
       "attributes": {
-        "throat color: purple": 2.4609,
-        "primary color: purple": 1.9554,
-        "wing color: purple": 1.9092,
-        "upperparts color: purple": 1.7899
+        "underparts color: yellow": 2.1419,
+        "breast color: yellow": 2.1034,
+        "throat color: yellow": 2.0841,
+        "belly color: yellow": 1.996
       }
     },
     {
-      "id": "c:1",
+      "id": "c:20",
       "type": "concept",
-      "label": "bill shape: needle \u00b7 bill shape: curved (up or down)",
-      "cluster": 1,
-      "coherence": 0.0676,
-      "importance": 0.01827,
+      "label": "upper tail color: rufous \u00b7 wing color: rufous",
+      "cluster": 20,
+      "coherence": 0.2002,
+      "importance": 0.05215,
       "classes": {
-        "Brown Creeper": 1.0,
-        "Dark eyed Junco": 0.7181,
-        "Least Auklet": 0.7084
+        "Pine Grosbeak": 1.0,
+        "Bohemian Waxwing": 0.9747,
+        "Downy Woodpecker": 0.9715
       },
       "size": 1.6,
       "attributes": {
-        "bill shape: needle": 2.5913,
-        "bill shape: curved (up or down)": 2.5896,
-        "head pattern: striped": 1.8062,
-        "back pattern: spotted": 1.402
-      }
-    },
-    {
-      "id": "c:17",
-      "type": "concept",
-      "label": "belly color: black \u00b7 shape: hawk-like",
-      "cluster": 17,
-      "coherence": 0.3054,
-      "importance": 0.01783,
-      "classes": {
-        "Red winged Blackbird": 1.0,
-        "Groove billed Ani": 0.9788,
-        "Fish Crow": 0.7975
-      },
-      "size": 1.6,
-      "attributes": {
-        "belly color: black": 0.6683,
-        "shape: hawk-like": 0.6646,
-        "breast color: black": 0.6564,
-        "underparts color: black": 0.5995
-      }
-    },
-    {
-      "id": "c:4",
-      "type": "concept",
-      "label": "shape: upright-perching water-like \u00b7 bill shape: specialized",
-      "cluster": 4,
-      "coherence": 0.1178,
-      "importance": 0.01504,
-      "classes": {
-        "Red faced Cormorant": 1.0,
-        "Crested Auklet": 0.9429,
-        "Rhinoceros Auklet": 0.8178
-      },
-      "size": 1.6,
-      "attributes": {
-        "shape: upright-perching water-like": 1.4775,
-        "bill shape: specialized": 1.4038,
-        "head pattern: crested": 1.2419,
-        "bill color: orange": 1.0812
-      }
-    },
-    {
-      "id": "c:2",
-      "type": "concept",
-      "label": "forehead color: purple \u00b7 throat color: red",
-      "cluster": 2,
-      "coherence": 0.1093,
-      "importance": 0.01367,
-      "classes": {
-        "Prothonotary Warbler": 1.0,
-        "Painted Bunting": 0.9563,
-        "Yellow Warbler": 0.7645
-      },
-      "size": 1.6,
-      "attributes": {
-        "forehead color: purple": 2.4818,
-        "throat color: red": 2.378,
-        "crown color: purple": 2.2729,
-        "back color: yellow": 2.2362
-      }
-    },
-    {
-      "id": "c:21",
-      "type": "concept",
-      "label": "shape: owl-like \u00b7 tail pattern: spotted",
-      "cluster": 21,
-      "coherence": 0.2244,
-      "importance": 0.01303,
-      "classes": {
-        "Chuck will Widow": 1.0,
-        "Whip poor Will": 0.8504,
-        "Nighthawk": 0.3769
-      },
-      "size": 1.6,
-      "attributes": {
-        "shape: owl-like": 2.3263,
-        "tail pattern: spotted": 2.2029,
-        "back pattern: spotted": 1.5675,
-        "wing pattern: spotted": 1.3554
-      }
-    },
-    {
-      "id": "c:7",
-      "type": "concept",
-      "label": "forehead color: olive \u00b7 crown color: olive",
-      "cluster": 7,
-      "coherence": 0.1695,
-      "importance": 0.01246,
-      "classes": {
-        "Savannah Sparrow": 1.0,
-        "Ovenbird": 0.9061,
-        "Cape May Warbler": 0.8049
-      },
-      "size": 1.6,
-      "attributes": {
-        "forehead color: olive": 1.6431,
-        "crown color: olive": 1.3546,
-        "primary color: olive": 1.1893,
-        "nape color: olive": 0.9807
-      }
-    },
-    {
-      "id": "c:23",
-      "type": "concept",
-      "label": "forehead color: orange \u00b7 bill shape: curved (up or down)",
-      "cluster": 23,
-      "coherence": 0.3178,
-      "importance": 0.01106,
-      "classes": {
-        "Elegant Tern": 1.0,
-        "Forsters Tern": 0.6671,
-        "White breasted Kingfisher": 0.653
-      },
-      "size": 1.6,
-      "attributes": {
-        "forehead color: orange": 1.0872,
-        "bill shape: curved (up or down)": 0.8208,
-        "primary color: pink": 0.6565,
-        "upper tail color: rufous": 0.5875
-      }
-    },
-    {
-      "id": "c:18",
-      "type": "concept",
-      "label": "throat color: purple \u00b7 wing color: purple",
-      "cluster": 18,
-      "coherence": 0.18,
-      "importance": 0.01014,
-      "classes": {
-        "Nashville Warbler": 1.0,
-        "Tennessee Warbler": 0.8574,
-        "Orange crowned Warbler": 0.7973
-      },
-      "size": 1.6,
-      "attributes": {
-        "throat color: purple": 1.6787,
-        "wing color: purple": 1.3388,
-        "belly color: yellow": 1.3195,
-        "upperparts color: purple": 1.3072
+        "upper tail color: rufous": 1.7271,
+        "wing color: rufous": 1.3362,
+        "leg color: pink": 1.3102,
+        "under tail color: rufous": 1.2479
       }
     },
     {
       "id": "c:14",
       "type": "concept",
-      "label": "under tail color: green \u00b7 primary color: pink",
+      "label": "eye color: blue \u00b7 primary color: pink",
       "cluster": 14,
-      "coherence": 0.4194,
-      "importance": 0.00814,
+      "coherence": 0.1448,
+      "importance": 0.04206,
       "classes": {
-        "Red breasted Merganser": 1.0,
-        "White breasted Kingfisher": 0.4651,
-        "Green Jay": 0.1965
+        "Song Sparrow": 1.0,
+        "Northern Waterthrush": 0.9637,
+        "Savannah Sparrow": 0.9546
       },
       "size": 1.6,
       "attributes": {
-        "under tail color: green": 2.5807,
-        "primary color: pink": 1.8282,
-        "back color: green": 1.7175,
-        "nape color: green": 1.6785
+        "eye color: blue": 1.0552,
+        "primary color: pink": 0.9655,
+        "wing color: purple": 0.8821,
+        "forehead color: olive": 0.8438
       }
     },
     {
-      "id": "c:15",
+      "id": "c:22",
       "type": "concept",
-      "label": "shape: owl-like \u00b7 upperparts color: purple",
-      "cluster": 15,
-      "coherence": 0.199,
-      "importance": 0.0052,
+      "label": "forehead color: blue \u00b7 nape color: blue",
+      "cluster": 22,
+      "coherence": 0.2344,
+      "importance": 0.04069,
       "classes": {
-        "Common Raven": 1.0,
-        "White necked Raven": 0.7038,
-        "Blue Jay": 0.6202
+        "Lazuli Bunting": 1.0,
+        "Baltimore Oriole": 0.5861,
+        "Cape Glossy Starling": 0.5795
       },
       "size": 1.6,
       "attributes": {
-        "shape: owl-like": 2.1739,
-        "upperparts color: purple": 1.6885,
-        "wing color: purple": 1.6885,
-        "throat color: purple": 1.6885
+        "forehead color: blue": 1.9283,
+        "nape color: blue": 1.9215,
+        "throat color: blue": 1.9045,
+        "crown color: blue": 1.8702
+      }
+    },
+    {
+      "id": "c:19",
+      "type": "concept",
+      "label": "bill color: rufous \u00b7 eye color: white",
+      "cluster": 19,
+      "coherence": 0.1442,
+      "importance": 0.03187,
+      "classes": {
+        "Slaty backed Gull": 1.0,
+        "Artic Tern": 0.8603,
+        "Forsters Tern": 0.8556
+      },
+      "size": 1.6,
+      "attributes": {
+        "bill color: rufous": 2.7126,
+        "eye color: white": 0.9293,
+        "bill shape: specialized": 0.7612,
+        "leg color: white": 0.7275
+      }
+    },
+    {
+      "id": "c:8",
+      "type": "concept",
+      "label": "upperparts color: orange \u00b7 wing color: orange",
+      "cluster": 8,
+      "coherence": 0.1699,
+      "importance": 0.0313,
+      "classes": {
+        "Harris Sparrow": 1.0,
+        "White throated Sparrow": 0.9503,
+        "American Redstart": 0.8552
+      },
+      "size": 1.6,
+      "attributes": {
+        "upperparts color: orange": 1.1125,
+        "wing color: orange": 1.1068,
+        "wing color: red": 1.0636,
+        "under tail color: red": 1.034
+      }
+    },
+    {
+      "id": "c:9",
+      "type": "concept",
+      "label": "crown color: yellow \u00b7 forehead color: yellow",
+      "cluster": 9,
+      "coherence": 0.1469,
+      "importance": 0.0209,
+      "classes": {
+        "Magnolia Warbler": 1.0,
+        "Pine Warbler": 0.8512,
+        "Cape May Warbler": 0.8445
+      },
+      "size": 1.6,
+      "attributes": {
+        "crown color: yellow": 0.8937,
+        "forehead color: yellow": 0.8729,
+        "throat color: yellow": 0.8612,
+        "breast color: yellow": 0.8398
+      }
+    },
+    {
+      "id": "c:1",
+      "type": "concept",
+      "label": "back color: green \u00b7 throat color: red",
+      "cluster": 1,
+      "coherence": 0.0855,
+      "importance": 0.02019,
+      "classes": {
+        "Summer Tanager": 1.0,
+        "Cardinal": 0.8412,
+        "Spotted Catbird": 0.8311
+      },
+      "size": 1.6,
+      "attributes": {
+        "back color: green": 2.6741,
+        "throat color: red": 2.5653,
+        "wing color: green": 2.4641,
+        "upperparts color: green": 2.3567
+      }
+    },
+    {
+      "id": "c:6",
+      "type": "concept",
+      "label": "upper tail color: rufous \u00b7 underparts color: red",
+      "cluster": 6,
+      "coherence": 0.2192,
+      "importance": 0.01814,
+      "classes": {
+        "Red headed Woodpecker": 1.0,
+        "Red bellied Woodpecker": 0.7304,
+        "Vermilion Flycatcher": 0.6491
+      },
+      "size": 1.6,
+      "attributes": {
+        "upper tail color: rufous": 3.5055,
+        "underparts color: red": 2.8197,
+        "forehead color: red": 2.7362,
+        "under tail color: red": 2.7332
+      }
+    },
+    {
+      "id": "c:7",
+      "type": "concept",
+      "label": "upper tail color: yellow \u00b7 under tail color: yellow",
+      "cluster": 7,
+      "coherence": 0.2738,
+      "importance": 0.01713,
+      "classes": {
+        "Eared Grebe": 1.0,
+        "Red breasted Merganser": 0.7946,
+        "Yellow breasted Chat": 0.4171
+      },
+      "size": 1.6,
+      "attributes": {
+        "upper tail color: yellow": 2.962,
+        "under tail color: yellow": 2.8818,
+        "belly color: yellow": 1.7071,
+        "throat color: yellow": 1.5775
+      }
+    },
+    {
+      "id": "c:11",
+      "type": "concept",
+      "label": "belly color: blue \u00b7 breast color: blue",
+      "cluster": 11,
+      "coherence": 0.2393,
+      "importance": 0.01615,
+      "classes": {
+        "American Goldfinch": 1.0,
+        "Florida Jay": 0.29,
+        "Common Raven": 0.2763
+      },
+      "size": 1.6,
+      "attributes": {
+        "belly color: blue": 1.0825,
+        "breast color: blue": 0.9792,
+        "underparts color: blue": 0.9773,
+        "upper tail color: blue": 0.8066
+      }
+    },
+    {
+      "id": "c:4",
+      "type": "concept",
+      "label": "bill shape: hooked seabird \u00b7 wing shape: long-wings",
+      "cluster": 4,
+      "coherence": 0.0797,
+      "importance": 0.01333,
+      "classes": {
+        "Black footed Albatross": 1.0,
+        "Sooty Albatross": 0.634,
+        "Red legged Kittiwake": 0.5823
+      },
+      "size": 1.6,
+      "attributes": {
+        "bill shape: hooked seabird": 1.1324,
+        "wing shape: long-wings": 1.1198,
+        "shape: gull-like": 1.0139,
+        "primary color: pink": 0.7881
+      }
+    },
+    {
+      "id": "c:5",
+      "type": "concept",
+      "label": "shape: long-legged-like \u00b7 size: very large (32 - 72 in)",
+      "cluster": 5,
+      "coherence": 0.2633,
+      "importance": 0.01245,
+      "classes": {
+        "Brown Pelican": 1.0,
+        "Frigatebird": 0.6439,
+        "Brandt Cormorant": 0.5906
+      },
+      "size": 1.6,
+      "attributes": {
+        "shape: long-legged-like": 1.8069,
+        "size: very large (32 - 72 in)": 1.6807,
+        "bill shape: hooked seabird": 1.4067,
+        "eye color: blue": 1.3284
+      }
+    },
+    {
+      "id": "c:3",
+      "type": "concept",
+      "label": "throat color: purple \u00b7 upperparts color: purple",
+      "cluster": 3,
+      "coherence": 0.2202,
+      "importance": 0.01089,
+      "classes": {
+        "Pacific Loon": 1.0,
+        "Horned Grebe": 0.7355,
+        "Western Grebe": 0.7182
+      },
+      "size": 1.6,
+      "attributes": {
+        "throat color: purple": 1.7048,
+        "upperparts color: purple": 1.7048,
+        "wing color: purple": 1.7048,
+        "primary color: purple": 1.3223
+      }
+    },
+    {
+      "id": "c:18",
+      "type": "concept",
+      "label": "eye color: rufous \u00b7 leg color: blue",
+      "cluster": 18,
+      "coherence": 0.1797,
+      "importance": 0.01068,
+      "classes": {
+        "Red winged Blackbird": 1.0,
+        "Groove billed Ani": 0.9747,
+        "Shiny Cowbird": 0.8002
+      },
+      "size": 1.6,
+      "attributes": {
+        "eye color: rufous": 0.6815,
+        "leg color: blue": 0.5414,
+        "shape: hawk-like": 0.5412,
+        "breast color: black": 0.5252
       }
     },
     {
       "id": "c:0",
       "type": "concept",
-      "label": "wing color: yellow \u00b7 back color: rufous",
+      "label": "head pattern: crested \u00b7 forehead color: yellow",
       "cluster": 0,
-      "coherence": 0.2945,
-      "importance": 0.00492,
+      "coherence": 0.047,
+      "importance": 0.01012,
       "classes": {
-        "American Goldfinch": 1.0,
-        "European Goldfinch": 0.7071,
-        "Blue winged Warbler": 0.2274
+        "Horned Puffin": 1.0,
+        "Hooded Oriole": 0.8652,
+        "Green Jay": 0.7889
       },
       "size": 1.6,
       "attributes": {
-        "wing color: yellow": 0.9648,
-        "back color: rufous": 0.8742,
-        "upper tail color: rufous": 0.8191,
-        "belly color: yellow": 0.8034
+        "head pattern: crested": 1.043,
+        "forehead color: yellow": 0.749,
+        "bill shape: specialized": 0.6889,
+        "under tail color: rufous": 0.6258
+      }
+    },
+    {
+      "id": "c:17",
+      "type": "concept",
+      "label": "primary color: pink \u00b7 crown color: pink",
+      "cluster": 17,
+      "coherence": 0.29,
+      "importance": 0.00857,
+      "classes": {
+        "Field Sparrow": 1.0,
+        "Purple Finch": 0.9494,
+        "Dark eyed Junco": 0.9059
+      },
+      "size": 1.6,
+      "attributes": {
+        "primary color: pink": 1.8264,
+        "crown color: pink": 1.6819,
+        "leg color: pink": 1.3868,
+        "throat color: purple": 1.0135
+      }
+    },
+    {
+      "id": "c:21",
+      "type": "concept",
+      "label": "crown color: white \u00b7 forehead color: white",
+      "cluster": 21,
+      "coherence": 0.1401,
+      "importance": 0.00804,
+      "classes": {
+        "California Gull": 1.0,
+        "Laysan Albatross": 0.8986,
+        "Western Gull": 0.7862
+      },
+      "size": 1.6,
+      "attributes": {
+        "crown color: white": 1.8997,
+        "forehead color: white": 1.6153,
+        "nape color: white": 1.3719,
+        "leg color: white": 1.3506
+      }
+    },
+    {
+      "id": "c:23",
+      "type": "concept",
+      "label": "bill color: rufous \u00b7 primary color: pink",
+      "cluster": 23,
+      "coherence": 0.2711,
+      "importance": 0.00765,
+      "classes": {
+        "Ivory Gull": 1.0,
+        "Northern Fulmar": 0.5842,
+        "Ring billed Gull": 0.3631
+      },
+      "size": 1.6,
+      "attributes": {
+        "bill color: rufous": 1.1592,
+        "primary color: pink": 0.8023,
+        "under tail color: green": 0.7584,
+        "bill shape: hooked seabird": 0.5944
+      }
+    },
+    {
+      "id": "c:15",
+      "type": "concept",
+      "label": "belly color: blue \u00b7 underparts color: blue",
+      "cluster": 15,
+      "coherence": 0.3053,
+      "importance": 0.00673,
+      "classes": {
+        "Mallard": 1.0,
+        "Florida Jay": 0.792,
+        "Gadwall": 0.7381
+      },
+      "size": 1.6,
+      "attributes": {
+        "belly color: blue": 2.6753,
+        "underparts color: blue": 2.5628,
+        "breast color: blue": 2.1398,
+        "upperparts color: purple": 2.0596
       }
     },
     {
       "id": "c:13",
       "type": "concept",
-      "label": "head pattern: masked \u00b7 bill color: white",
+      "label": "throat color: green \u00b7 wing color: purple",
       "cluster": 13,
-      "coherence": 0.7556,
-      "importance": 0.00438,
+      "coherence": 0.1535,
+      "importance": 0.00653,
       "classes": {
-        "White Pelican": 1.0,
-        "Brown Pelican": 0.1364,
-        "Artic Tern": 0.1147
+        "Boat tailed Grackle": 1.0,
+        "Cape Glossy Starling": 0.8631,
+        "Rusty Blackbird": 0.6963
       },
       "size": 1.6,
       "attributes": {
-        "head pattern: masked": 0.7918,
-        "bill color: white": 0.6759,
-        "bill shape: dagger": 0.5329,
-        "crown color: white": 0.5229
+        "throat color: green": 1.5415,
+        "wing color: purple": 1.2697,
+        "upperparts color: purple": 1.2697,
+        "shape: owl-like": 1.0864
       }
     },
     {
-      "id": "c:12",
+      "id": "c:2",
       "type": "concept",
-      "label": "shape: swallow-like \u00b7 wing shape: long-wings",
-      "cluster": 12,
-      "coherence": 0.3188,
-      "importance": 0.00357,
+      "label": "belly color: blue \u00b7 underparts color: blue",
+      "cluster": 2,
+      "coherence": 0.2458,
+      "importance": 0.00564,
       "classes": {
-        "Sooty Albatross": 1.0,
-        "Brown Pelican": 0.9199,
-        "Black footed Albatross": 0.5827
+        "Green Violetear": 1.0,
+        "Rufous Hummingbird": 0.4145,
+        "Indigo Bunting": 0.3073
       },
       "size": 1.6,
       "attributes": {
-        "shape: swallow-like": 1.3727,
-        "wing shape: long-wings": 1.2953,
-        "shape: gull-like": 1.1734,
-        "bill shape: hooked seabird": 1.1522
+        "belly color: blue": 3.1993,
+        "underparts color: blue": 3.0553,
+        "breast color: blue": 2.6606,
+        "back color: blue": 2.1371
       }
     },
     {
-      "id": "k:Acadian Flycatcher",
-      "type": "class",
-      "label": "Acadian Flycatcher",
-      "size": 2.0
+      "id": "c:16",
+      "type": "concept",
+      "label": "crown color: white \u00b7 forehead color: white",
+      "cluster": 16,
+      "coherence": 0.2384,
+      "importance": 0.00548,
+      "classes": {
+        "Red breasted Merganser": 1.0,
+        "Elegant Tern": 0.8758,
+        "White Pelican": 0.8124
+      },
+      "size": 1.6,
+      "attributes": {
+        "crown color: white": 1.9393,
+        "forehead color: white": 1.6286,
+        "nape color: white": 1.4392,
+        "throat color: white": 1.1765
+      }
     },
     {
       "id": "k:American Goldfinch",
       "type": "class",
       "label": "American Goldfinch",
+      "size": 2.0
+    },
+    {
+      "id": "k:American Redstart",
+      "type": "class",
+      "label": "American Redstart",
       "size": 2.0
     },
     {
@@ -1150,9 +1278,9 @@
       "size": 2.0
     },
     {
-      "id": "k:Black and white Warbler",
+      "id": "k:Baltimore Oriole",
       "type": "class",
-      "label": "Black and white Warbler",
+      "label": "Baltimore Oriole",
       "size": 2.0
     },
     {
@@ -1162,33 +1290,21 @@
       "size": 2.0
     },
     {
-      "id": "k:Blue Jay",
+      "id": "k:Boat tailed Grackle",
       "type": "class",
-      "label": "Blue Jay",
+      "label": "Boat tailed Grackle",
       "size": 2.0
     },
     {
-      "id": "k:Blue winged Warbler",
+      "id": "k:Bohemian Waxwing",
       "type": "class",
-      "label": "Blue winged Warbler",
+      "label": "Bohemian Waxwing",
       "size": 2.0
     },
     {
-      "id": "k:Brewer Blackbird",
+      "id": "k:Brandt Cormorant",
       "type": "class",
-      "label": "Brewer Blackbird",
-      "size": 2.0
-    },
-    {
-      "id": "k:Bronzed Cowbird",
-      "type": "class",
-      "label": "Bronzed Cowbird",
-      "size": 2.0
-    },
-    {
-      "id": "k:Brown Creeper",
-      "type": "class",
-      "label": "Brown Creeper",
+      "label": "Brandt Cormorant",
       "size": 2.0
     },
     {
@@ -1198,9 +1314,9 @@
       "size": 2.0
     },
     {
-      "id": "k:Cactus Wren",
+      "id": "k:California Gull",
       "type": "class",
-      "label": "Cactus Wren",
+      "label": "California Gull",
       "size": 2.0
     },
     {
@@ -1216,15 +1332,15 @@
       "size": 2.0
     },
     {
-      "id": "k:Chuck will Widow",
+      "id": "k:Cardinal",
       "type": "class",
-      "label": "Chuck will Widow",
+      "label": "Cardinal",
       "size": 2.0
     },
     {
-      "id": "k:Clark Nutcracker",
+      "id": "k:Cedar Waxwing",
       "type": "class",
-      "label": "Clark Nutcracker",
+      "label": "Cedar Waxwing",
       "size": 2.0
     },
     {
@@ -1234,15 +1350,21 @@
       "size": 2.0
     },
     {
-      "id": "k:Crested Auklet",
-      "type": "class",
-      "label": "Crested Auklet",
-      "size": 2.0
-    },
-    {
       "id": "k:Dark eyed Junco",
       "type": "class",
       "label": "Dark eyed Junco",
+      "size": 2.0
+    },
+    {
+      "id": "k:Downy Woodpecker",
+      "type": "class",
+      "label": "Downy Woodpecker",
+      "size": 2.0
+    },
+    {
+      "id": "k:Eared Grebe",
+      "type": "class",
+      "label": "Eared Grebe",
       "size": 2.0
     },
     {
@@ -1252,21 +1374,15 @@
       "size": 2.0
     },
     {
-      "id": "k:European Goldfinch",
+      "id": "k:Field Sparrow",
       "type": "class",
-      "label": "European Goldfinch",
+      "label": "Field Sparrow",
       "size": 2.0
     },
     {
-      "id": "k:Evening Grosbeak",
+      "id": "k:Florida Jay",
       "type": "class",
-      "label": "Evening Grosbeak",
-      "size": 2.0
-    },
-    {
-      "id": "k:Fish Crow",
-      "type": "class",
-      "label": "Fish Crow",
+      "label": "Florida Jay",
       "size": 2.0
     },
     {
@@ -1276,9 +1392,27 @@
       "size": 2.0
     },
     {
+      "id": "k:Frigatebird",
+      "type": "class",
+      "label": "Frigatebird",
+      "size": 2.0
+    },
+    {
+      "id": "k:Gadwall",
+      "type": "class",
+      "label": "Gadwall",
+      "size": 2.0
+    },
+    {
       "id": "k:Green Jay",
       "type": "class",
       "label": "Green Jay",
+      "size": 2.0
+    },
+    {
+      "id": "k:Green Violetear",
+      "type": "class",
+      "label": "Green Violetear",
       "size": 2.0
     },
     {
@@ -1288,15 +1422,21 @@
       "size": 2.0
     },
     {
-      "id": "k:Henslow Sparrow",
+      "id": "k:Harris Sparrow",
       "type": "class",
-      "label": "Henslow Sparrow",
+      "label": "Harris Sparrow",
       "size": 2.0
     },
     {
-      "id": "k:Hooded Merganser",
+      "id": "k:Hooded Oriole",
       "type": "class",
-      "label": "Hooded Merganser",
+      "label": "Hooded Oriole",
+      "size": 2.0
+    },
+    {
+      "id": "k:Horned Grebe",
+      "type": "class",
+      "label": "Horned Grebe",
       "size": 2.0
     },
     {
@@ -1306,75 +1446,57 @@
       "size": 2.0
     },
     {
-      "id": "k:House Wren",
+      "id": "k:Horned Puffin",
       "type": "class",
-      "label": "House Wren",
+      "label": "Horned Puffin",
       "size": 2.0
     },
     {
-      "id": "k:Least Auklet",
+      "id": "k:Indigo Bunting",
       "type": "class",
-      "label": "Least Auklet",
+      "label": "Indigo Bunting",
       "size": 2.0
     },
     {
-      "id": "k:Least Flycatcher",
+      "id": "k:Ivory Gull",
       "type": "class",
-      "label": "Least Flycatcher",
+      "label": "Ivory Gull",
       "size": 2.0
     },
     {
-      "id": "k:Least Tern",
+      "id": "k:Laysan Albatross",
       "type": "class",
-      "label": "Least Tern",
+      "label": "Laysan Albatross",
       "size": 2.0
     },
     {
-      "id": "k:Lincoln Sparrow",
+      "id": "k:Lazuli Bunting",
       "type": "class",
-      "label": "Lincoln Sparrow",
+      "label": "Lazuli Bunting",
       "size": 2.0
     },
     {
-      "id": "k:Loggerhead Shrike",
+      "id": "k:Magnolia Warbler",
       "type": "class",
-      "label": "Loggerhead Shrike",
+      "label": "Magnolia Warbler",
       "size": 2.0
     },
     {
-      "id": "k:Long tailed Jaeger",
+      "id": "k:Mallard",
       "type": "class",
-      "label": "Long tailed Jaeger",
+      "label": "Mallard",
       "size": 2.0
     },
     {
-      "id": "k:Nashville Warbler",
+      "id": "k:Northern Fulmar",
       "type": "class",
-      "label": "Nashville Warbler",
+      "label": "Northern Fulmar",
       "size": 2.0
     },
     {
-      "id": "k:Nighthawk",
+      "id": "k:Northern Waterthrush",
       "type": "class",
-      "label": "Nighthawk",
-      "size": 2.0
-    },
-    {
-      "id": "k:Northern Flicker",
-      "type": "class",
-      "label": "Northern Flicker",
-      "size": 2.0
-    },
-    {
-      "id": "k:Orange crowned Warbler",
-      "type": "class",
-      "label": "Orange crowned Warbler",
-      "size": 2.0
-    },
-    {
-      "id": "k:Ovenbird",
-      "type": "class",
-      "label": "Ovenbird",
+      "label": "Northern Waterthrush",
       "size": 2.0
     },
     {
@@ -1384,27 +1506,21 @@
       "size": 2.0
     },
     {
-      "id": "k:Painted Bunting",
+      "id": "k:Pine Grosbeak",
       "type": "class",
-      "label": "Painted Bunting",
+      "label": "Pine Grosbeak",
       "size": 2.0
     },
     {
-      "id": "k:Pied Kingfisher",
+      "id": "k:Pine Warbler",
       "type": "class",
-      "label": "Pied Kingfisher",
+      "label": "Pine Warbler",
       "size": 2.0
     },
     {
-      "id": "k:Pomarine Jaeger",
+      "id": "k:Purple Finch",
       "type": "class",
-      "label": "Pomarine Jaeger",
-      "size": 2.0
-    },
-    {
-      "id": "k:Prothonotary Warbler",
-      "type": "class",
-      "label": "Prothonotary Warbler",
+      "label": "Purple Finch",
       "size": 2.0
     },
     {
@@ -1426,9 +1542,15 @@
       "size": 2.0
     },
     {
-      "id": "k:Red faced Cormorant",
+      "id": "k:Red headed Woodpecker",
       "type": "class",
-      "label": "Red faced Cormorant",
+      "label": "Red headed Woodpecker",
+      "size": 2.0
+    },
+    {
+      "id": "k:Red legged Kittiwake",
+      "type": "class",
+      "label": "Red legged Kittiwake",
       "size": 2.0
     },
     {
@@ -1438,15 +1560,21 @@
       "size": 2.0
     },
     {
-      "id": "k:Rhinoceros Auklet",
+      "id": "k:Ring billed Gull",
       "type": "class",
-      "label": "Rhinoceros Auklet",
+      "label": "Ring billed Gull",
       "size": 2.0
     },
     {
-      "id": "k:Rock Wren",
+      "id": "k:Rufous Hummingbird",
       "type": "class",
-      "label": "Rock Wren",
+      "label": "Rufous Hummingbird",
+      "size": 2.0
+    },
+    {
+      "id": "k:Rusty Blackbird",
+      "type": "class",
+      "label": "Rusty Blackbird",
       "size": 2.0
     },
     {
@@ -1456,15 +1584,39 @@
       "size": 2.0
     },
     {
+      "id": "k:Shiny Cowbird",
+      "type": "class",
+      "label": "Shiny Cowbird",
+      "size": 2.0
+    },
+    {
+      "id": "k:Slaty backed Gull",
+      "type": "class",
+      "label": "Slaty backed Gull",
+      "size": 2.0
+    },
+    {
+      "id": "k:Song Sparrow",
+      "type": "class",
+      "label": "Song Sparrow",
+      "size": 2.0
+    },
+    {
       "id": "k:Sooty Albatross",
       "type": "class",
       "label": "Sooty Albatross",
       "size": 2.0
     },
     {
-      "id": "k:Tennessee Warbler",
+      "id": "k:Spotted Catbird",
       "type": "class",
-      "label": "Tennessee Warbler",
+      "label": "Spotted Catbird",
+      "size": 2.0
+    },
+    {
+      "id": "k:Summer Tanager",
+      "type": "class",
+      "label": "Summer Tanager",
       "size": 2.0
     },
     {
@@ -1474,21 +1626,15 @@
       "size": 2.0
     },
     {
-      "id": "k:Warbling Vireo",
+      "id": "k:Western Grebe",
       "type": "class",
-      "label": "Warbling Vireo",
+      "label": "Western Grebe",
       "size": 2.0
     },
     {
-      "id": "k:Western Meadowlark",
+      "id": "k:Western Gull",
       "type": "class",
-      "label": "Western Meadowlark",
-      "size": 2.0
-    },
-    {
-      "id": "k:Whip poor Will",
-      "type": "class",
-      "label": "Whip poor Will",
+      "label": "Western Gull",
       "size": 2.0
     },
     {
@@ -1504,39 +1650,9 @@
       "size": 2.0
     },
     {
-      "id": "k:White eyed Vireo",
-      "type": "class",
-      "label": "White eyed Vireo",
-      "size": 2.0
-    },
-    {
-      "id": "k:White necked Raven",
-      "type": "class",
-      "label": "White necked Raven",
-      "size": 2.0
-    },
-    {
       "id": "k:White throated Sparrow",
       "type": "class",
       "label": "White throated Sparrow",
-      "size": 2.0
-    },
-    {
-      "id": "k:Winter Wren",
-      "type": "class",
-      "label": "Winter Wren",
-      "size": 2.0
-    },
-    {
-      "id": "k:Yellow Warbler",
-      "type": "class",
-      "label": "Yellow Warbler",
-      "size": 2.0
-    },
-    {
-      "id": "k:Yellow bellied Flycatcher",
-      "type": "class",
-      "label": "Yellow bellied Flycatcher",
       "size": 2.0
     },
     {
@@ -1546,39 +1662,27 @@
       "size": 2.0
     },
     {
+      "id": "k:Yellow headed Blackbird",
+      "type": "class",
+      "label": "Yellow headed Blackbird",
+      "size": 2.0
+    },
+    {
+      "id": "a:back color: blue",
+      "type": "attribute",
+      "label": "back color: blue",
+      "size": 1.2
+    },
+    {
       "id": "a:back color: green",
       "type": "attribute",
       "label": "back color: green",
       "size": 1.2
     },
     {
-      "id": "a:back color: rufous",
+      "id": "a:belly color: blue",
       "type": "attribute",
-      "label": "back color: rufous",
-      "size": 1.2
-    },
-    {
-      "id": "a:back color: yellow",
-      "type": "attribute",
-      "label": "back color: yellow",
-      "size": 1.2
-    },
-    {
-      "id": "a:back pattern: spotted",
-      "type": "attribute",
-      "label": "back pattern: spotted",
-      "size": 1.2
-    },
-    {
-      "id": "a:belly color: black",
-      "type": "attribute",
-      "label": "belly color: black",
-      "size": 1.2
-    },
-    {
-      "id": "a:belly color: iridescent",
-      "type": "attribute",
-      "label": "belly color: iridescent",
+      "label": "belly color: blue",
       "size": 1.2
     },
     {
@@ -1588,57 +1692,15 @@
       "size": 1.2
     },
     {
-      "id": "a:bill color: orange",
-      "type": "attribute",
-      "label": "bill color: orange",
-      "size": 1.2
-    },
-    {
       "id": "a:bill color: rufous",
       "type": "attribute",
       "label": "bill color: rufous",
       "size": 1.2
     },
     {
-      "id": "a:bill color: white",
-      "type": "attribute",
-      "label": "bill color: white",
-      "size": 1.2
-    },
-    {
-      "id": "a:bill shape: curved (up or down)",
-      "type": "attribute",
-      "label": "bill shape: curved (up or down)",
-      "size": 1.2
-    },
-    {
-      "id": "a:bill shape: dagger",
-      "type": "attribute",
-      "label": "bill shape: dagger",
-      "size": 1.2
-    },
-    {
-      "id": "a:bill shape: hooked",
-      "type": "attribute",
-      "label": "bill shape: hooked",
-      "size": 1.2
-    },
-    {
       "id": "a:bill shape: hooked seabird",
       "type": "attribute",
       "label": "bill shape: hooked seabird",
-      "size": 1.2
-    },
-    {
-      "id": "a:bill shape: needle",
-      "type": "attribute",
-      "label": "bill shape: needle",
-      "size": 1.2
-    },
-    {
-      "id": "a:bill shape: spatulate",
-      "type": "attribute",
-      "label": "bill shape: spatulate",
       "size": 1.2
     },
     {
@@ -1654,9 +1716,9 @@
       "size": 1.2
     },
     {
-      "id": "a:breast color: orange",
+      "id": "a:breast color: blue",
       "type": "attribute",
-      "label": "breast color: orange",
+      "label": "breast color: blue",
       "size": 1.2
     },
     {
@@ -1666,27 +1728,15 @@
       "size": 1.2
     },
     {
-      "id": "a:crown color: olive",
+      "id": "a:crown color: blue",
       "type": "attribute",
-      "label": "crown color: olive",
-      "size": 1.2
-    },
-    {
-      "id": "a:crown color: orange",
-      "type": "attribute",
-      "label": "crown color: orange",
+      "label": "crown color: blue",
       "size": 1.2
     },
     {
       "id": "a:crown color: pink",
       "type": "attribute",
       "label": "crown color: pink",
-      "size": 1.2
-    },
-    {
-      "id": "a:crown color: purple",
-      "type": "attribute",
-      "label": "crown color: purple",
       "size": 1.2
     },
     {
@@ -1702,15 +1752,27 @@
       "size": 1.2
     },
     {
-      "id": "a:eye color: buff",
+      "id": "a:eye color: blue",
       "type": "attribute",
-      "label": "eye color: buff",
+      "label": "eye color: blue",
       "size": 1.2
     },
     {
-      "id": "a:eye color: red",
+      "id": "a:eye color: rufous",
       "type": "attribute",
-      "label": "eye color: red",
+      "label": "eye color: rufous",
+      "size": 1.2
+    },
+    {
+      "id": "a:eye color: white",
+      "type": "attribute",
+      "label": "eye color: white",
+      "size": 1.2
+    },
+    {
+      "id": "a:forehead color: blue",
+      "type": "attribute",
+      "label": "forehead color: blue",
       "size": 1.2
     },
     {
@@ -1720,15 +1782,9 @@
       "size": 1.2
     },
     {
-      "id": "a:forehead color: orange",
+      "id": "a:forehead color: red",
       "type": "attribute",
-      "label": "forehead color: orange",
-      "size": 1.2
-    },
-    {
-      "id": "a:forehead color: purple",
-      "type": "attribute",
-      "label": "forehead color: purple",
+      "label": "forehead color: red",
       "size": 1.2
     },
     {
@@ -1750,51 +1806,33 @@
       "size": 1.2
     },
     {
-      "id": "a:head pattern: masked",
+      "id": "a:leg color: blue",
       "type": "attribute",
-      "label": "head pattern: masked",
+      "label": "leg color: blue",
       "size": 1.2
     },
     {
-      "id": "a:head pattern: striped",
+      "id": "a:leg color: pink",
       "type": "attribute",
-      "label": "head pattern: striped",
+      "label": "leg color: pink",
       "size": 1.2
     },
     {
-      "id": "a:leg color: orange",
+      "id": "a:leg color: white",
       "type": "attribute",
-      "label": "leg color: orange",
+      "label": "leg color: white",
       "size": 1.2
     },
     {
-      "id": "a:leg color: rufous",
+      "id": "a:nape color: blue",
       "type": "attribute",
-      "label": "leg color: rufous",
+      "label": "nape color: blue",
       "size": 1.2
     },
     {
-      "id": "a:nape color: green",
+      "id": "a:nape color: white",
       "type": "attribute",
-      "label": "nape color: green",
-      "size": 1.2
-    },
-    {
-      "id": "a:nape color: olive",
-      "type": "attribute",
-      "label": "nape color: olive",
-      "size": 1.2
-    },
-    {
-      "id": "a:nape color: yellow",
-      "type": "attribute",
-      "label": "nape color: yellow",
-      "size": 1.2
-    },
-    {
-      "id": "a:primary color: olive",
-      "type": "attribute",
-      "label": "primary color: olive",
+      "label": "nape color: white",
       "size": 1.2
     },
     {
@@ -1810,12 +1848,6 @@
       "size": 1.2
     },
     {
-      "id": "a:shape: duck-like",
-      "type": "attribute",
-      "label": "shape: duck-like",
-      "size": 1.2
-    },
-    {
       "id": "a:shape: gull-like",
       "type": "attribute",
       "label": "shape: gull-like",
@@ -1828,27 +1860,33 @@
       "size": 1.2
     },
     {
+      "id": "a:shape: long-legged-like",
+      "type": "attribute",
+      "label": "shape: long-legged-like",
+      "size": 1.2
+    },
+    {
       "id": "a:shape: owl-like",
       "type": "attribute",
       "label": "shape: owl-like",
       "size": 1.2
     },
     {
-      "id": "a:shape: swallow-like",
+      "id": "a:size: very large (32 - 72 in)",
       "type": "attribute",
-      "label": "shape: swallow-like",
+      "label": "size: very large (32 - 72 in)",
       "size": 1.2
     },
     {
-      "id": "a:shape: upright-perching water-like",
+      "id": "a:throat color: blue",
       "type": "attribute",
-      "label": "shape: upright-perching water-like",
+      "label": "throat color: blue",
       "size": 1.2
     },
     {
-      "id": "a:tail pattern: spotted",
+      "id": "a:throat color: green",
       "type": "attribute",
-      "label": "tail pattern: spotted",
+      "label": "throat color: green",
       "size": 1.2
     },
     {
@@ -1864,6 +1902,12 @@
       "size": 1.2
     },
     {
+      "id": "a:throat color: white",
+      "type": "attribute",
+      "label": "throat color: white",
+      "size": 1.2
+    },
+    {
       "id": "a:throat color: yellow",
       "type": "attribute",
       "label": "throat color: yellow",
@@ -1876,21 +1920,33 @@
       "size": 1.2
     },
     {
-      "id": "a:under tail color: pink",
+      "id": "a:under tail color: red",
       "type": "attribute",
-      "label": "under tail color: pink",
+      "label": "under tail color: red",
       "size": 1.2
     },
     {
-      "id": "a:underparts color: black",
+      "id": "a:under tail color: rufous",
       "type": "attribute",
-      "label": "underparts color: black",
+      "label": "under tail color: rufous",
       "size": 1.2
     },
     {
-      "id": "a:underparts color: buff",
+      "id": "a:under tail color: yellow",
       "type": "attribute",
-      "label": "underparts color: buff",
+      "label": "under tail color: yellow",
+      "size": 1.2
+    },
+    {
+      "id": "a:underparts color: blue",
+      "type": "attribute",
+      "label": "underparts color: blue",
+      "size": 1.2
+    },
+    {
+      "id": "a:underparts color: red",
+      "type": "attribute",
+      "label": "underparts color: red",
       "size": 1.2
     },
     {
@@ -1900,15 +1956,39 @@
       "size": 1.2
     },
     {
+      "id": "a:upper tail color: blue",
+      "type": "attribute",
+      "label": "upper tail color: blue",
+      "size": 1.2
+    },
+    {
+      "id": "a:upper tail color: green",
+      "type": "attribute",
+      "label": "upper tail color: green",
+      "size": 1.2
+    },
+    {
       "id": "a:upper tail color: rufous",
       "type": "attribute",
       "label": "upper tail color: rufous",
       "size": 1.2
     },
     {
-      "id": "a:upperparts color: blue",
+      "id": "a:upper tail color: yellow",
       "type": "attribute",
-      "label": "upperparts color: blue",
+      "label": "upper tail color: yellow",
+      "size": 1.2
+    },
+    {
+      "id": "a:upperparts color: green",
+      "type": "attribute",
+      "label": "upperparts color: green",
+      "size": 1.2
+    },
+    {
+      "id": "a:upperparts color: orange",
+      "type": "attribute",
+      "label": "upperparts color: orange",
       "size": 1.2
     },
     {
@@ -1918,9 +1998,15 @@
       "size": 1.2
     },
     {
-      "id": "a:upperparts color: rufous",
+      "id": "a:wing color: green",
       "type": "attribute",
-      "label": "upperparts color: rufous",
+      "label": "wing color: green",
+      "size": 1.2
+    },
+    {
+      "id": "a:wing color: orange",
+      "type": "attribute",
+      "label": "wing color: orange",
       "size": 1.2
     },
     {
@@ -1930,21 +2016,15 @@
       "size": 1.2
     },
     {
+      "id": "a:wing color: red",
+      "type": "attribute",
+      "label": "wing color: red",
+      "size": 1.2
+    },
+    {
       "id": "a:wing color: rufous",
       "type": "attribute",
       "label": "wing color: rufous",
-      "size": 1.2
-    },
-    {
-      "id": "a:wing color: yellow",
-      "type": "attribute",
-      "label": "wing color: yellow",
-      "size": 1.2
-    },
-    {
-      "id": "a:wing pattern: spotted",
-      "type": "attribute",
-      "label": "wing pattern: spotted",
       "size": 1.2
     },
     {
@@ -1956,1491 +2036,1587 @@
   ],
   "edges": [
     {
-      "source": "c:9",
-      "target": "a:primary color: pink",
-      "weight": 1.1807,
+      "source": "c:12",
+      "target": "a:throat color: green",
+      "weight": 1.3131,
       "kind": "attribute"
     },
     {
-      "source": "c:9",
-      "target": "a:breast color: orange",
-      "weight": 0.9416,
+      "source": "c:12",
+      "target": "a:upper tail color: green",
+      "weight": 1.0044,
       "kind": "attribute"
     },
     {
-      "source": "c:9",
-      "target": "a:upperparts color: blue",
-      "weight": 0.9064,
+      "source": "c:12",
+      "target": "a:under tail color: green",
+      "weight": 0.9796,
       "kind": "attribute"
     },
     {
-      "source": "c:9",
-      "target": "a:underparts color: buff",
-      "weight": 0.8777,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:71",
-      "target": "c:9",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:289",
-      "target": "c:9",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:292",
-      "target": "c:9",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:295",
-      "target": "c:9",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:9",
-      "target": "k:Yellow bellied Flycatcher",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:9",
-      "target": "k:Least Flycatcher",
-      "weight": 0.9319,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:9",
-      "target": "k:Acadian Flycatcher",
-      "weight": 0.9196,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:3",
-      "target": "a:under tail color: pink",
-      "weight": 1.0462,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:3",
-      "target": "a:crown color: pink",
-      "weight": 0.9583,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:3",
-      "target": "a:bill color: rufous",
-      "weight": 0.7971,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:3",
-      "target": "a:underparts color: yellow",
-      "weight": 0.7883,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:135",
-      "target": "c:3",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:200",
-      "target": "c:3",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:216",
-      "target": "c:3",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:234",
-      "target": "c:3",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:468",
-      "target": "c:3",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:3",
-      "target": "k:Horned Lark",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:3",
-      "target": "k:Least Tern",
-      "weight": 0.8892,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:3",
-      "target": "k:Long tailed Jaeger",
-      "weight": 0.8529,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:16",
-      "target": "a:eye color: red",
-      "weight": 1.4147,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:16",
-      "target": "a:under tail color: pink",
-      "weight": 1.1356,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:16",
-      "target": "a:crown color: pink",
-      "weight": 0.9993,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:16",
-      "target": "a:wing color: purple",
-      "weight": 0.871,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:414",
-      "target": "c:16",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:451",
-      "target": "c:16",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:489",
-      "target": "c:16",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:16",
-      "target": "k:Bronzed Cowbird",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:16",
-      "target": "k:Cape Glossy Starling",
-      "weight": 0.9831,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:16",
-      "target": "k:Brewer Blackbird",
-      "weight": 0.7335,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:20",
-      "target": "a:upperparts color: rufous",
-      "weight": 1.4951,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:20",
-      "target": "a:shape: owl-like",
-      "weight": 1.3812,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:20",
-      "target": "a:wing color: rufous",
-      "weight": 1.3578,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:20",
-      "target": "a:upper tail color: rufous",
-      "weight": 0.9391,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:256",
-      "target": "c:20",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:433",
-      "target": "c:20",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:20",
-      "target": "k:Winter Wren",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:20",
-      "target": "k:House Wren",
-      "weight": 0.7896,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:20",
-      "target": "k:Rock Wren",
-      "weight": 0.5948,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:11",
-      "target": "a:leg color: rufous",
-      "weight": 2.1585,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:11",
-      "target": "a:crown color: orange",
-      "weight": 1.7867,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:11",
-      "target": "a:forehead color: white",
-      "weight": 0.6374,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:11",
-      "target": "a:belly color: yellow",
-      "weight": 0.5902,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:237",
-      "target": "c:11",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:500",
-      "target": "c:11",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:11",
-      "target": "k:Red eyed Vireo",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:11",
-      "target": "k:Warbling Vireo",
-      "weight": 0.7257,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:11",
-      "target": "k:White eyed Vireo",
-      "weight": 0.6879,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:22",
-      "target": "a:forehead color: yellow",
-      "weight": 2.0521,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:22",
-      "target": "a:breast color: yellow",
-      "weight": 2.0355,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:22",
-      "target": "a:underparts color: yellow",
-      "weight": 1.9726,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:22",
-      "target": "a:throat color: yellow",
-      "weight": 1.9667,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:174",
-      "target": "c:22",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:362",
-      "target": "c:22",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:22",
-      "target": "k:Western Meadowlark",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:22",
-      "target": "k:Evening Grosbeak",
-      "weight": 0.6973,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:22",
-      "target": "k:Yellow breasted Chat",
-      "weight": 0.689,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:8",
-      "target": "a:forehead color: yellow",
-      "weight": 1.3009,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:8",
-      "target": "a:crown color: yellow",
-      "weight": 1.2801,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:8",
-      "target": "a:belly color: black",
-      "weight": 0.8337,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:8",
-      "target": "a:nape color: yellow",
-      "weight": 0.8041,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:7",
-      "target": "c:8",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:79",
-      "target": "c:8",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:259",
-      "target": "c:8",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:313",
-      "target": "c:8",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:365",
-      "target": "c:8",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:8",
-      "target": "k:Loggerhead Shrike",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:8",
-      "target": "k:Clark Nutcracker",
-      "weight": 0.8376,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:8",
-      "target": "k:Hooded Merganser",
-      "weight": 0.7826,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:6",
-      "target": "a:leg color: orange",
-      "weight": 0.9258,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:6",
-      "target": "a:shape: owl-like",
-      "weight": 0.9151,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:6",
-      "target": "a:upper tail color: rufous",
-      "weight": 0.806,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:6",
-      "target": "a:belly color: iridescent",
-      "weight": 0.7368,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:11",
-      "target": "c:6",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:65",
-      "target": "c:6",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:284",
-      "target": "c:6",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:332",
-      "target": "c:6",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:6",
-      "target": "k:Black and white Warbler",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:6",
-      "target": "k:Pied Kingfisher",
-      "weight": 0.7795,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:6",
-      "target": "k:Cactus Wren",
-      "weight": 0.7221,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:5",
-      "target": "a:forehead color: yellow",
-      "weight": 1.9631,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:5",
-      "target": "a:crown color: yellow",
-      "weight": 1.5929,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:5",
-      "target": "a:upper tail color: rufous",
-      "weight": 1.4011,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:5",
-      "target": "a:crown color: orange",
-      "weight": 1.168,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:88",
-      "target": "c:5",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:141",
-      "target": "c:5",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:221",
-      "target": "c:5",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:303",
-      "target": "c:5",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:434",
-      "target": "c:5",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:506",
-      "target": "c:5",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:5",
-      "target": "k:Red bellied Woodpecker",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:5",
-      "target": "k:Vermilion Flycatcher",
-      "weight": 0.7702,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:5",
-      "target": "k:Northern Flicker",
-      "weight": 0.7686,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:19",
-      "target": "a:shape: duck-like",
-      "weight": 0.8886,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:19",
-      "target": "a:eye color: buff",
-      "weight": 0.8162,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:19",
-      "target": "a:bill shape: hooked",
-      "weight": 0.7737,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:19",
-      "target": "a:bill shape: spatulate",
-      "weight": 0.6976,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:283",
-      "target": "c:19",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:368",
-      "target": "c:19",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:19",
-      "target": "k:Pacific Loon",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:19",
-      "target": "k:Black footed Albatross",
-      "weight": 0.7798,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:19",
-      "target": "k:Pomarine Jaeger",
-      "weight": 0.7175,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:10",
-      "target": "a:throat color: purple",
-      "weight": 2.4609,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:10",
-      "target": "a:primary color: purple",
-      "weight": 1.9554,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:10",
-      "target": "a:wing color: purple",
-      "weight": 1.9092,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:10",
-      "target": "a:upperparts color: purple",
-      "weight": 1.7899,
+      "source": "c:12",
+      "target": "a:eye color: blue",
+      "weight": 0.9483,
       "kind": "attribute"
     },
     {
       "source": "u:neurons:87",
-      "target": "c:10",
+      "target": "c:12",
       "weight": 1.0,
       "kind": "membership"
     },
     {
-      "source": "u:neurons:150",
-      "target": "c:10",
+      "source": "u:neurons:218",
+      "target": "c:12",
       "weight": 1.0,
       "kind": "membership"
     },
     {
-      "source": "u:neurons:370",
-      "target": "c:10",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:10",
-      "target": "k:Lincoln Sparrow",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:10",
-      "target": "k:White throated Sparrow",
-      "weight": 0.814,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:10",
-      "target": "k:Henslow Sparrow",
-      "weight": 0.7527,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:1",
-      "target": "a:bill shape: needle",
-      "weight": 2.5913,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:1",
-      "target": "a:bill shape: curved (up or down)",
-      "weight": 2.5896,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:1",
-      "target": "a:head pattern: striped",
-      "weight": 1.8062,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:1",
-      "target": "a:back pattern: spotted",
-      "weight": 1.402,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:160",
-      "target": "c:1",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:244",
-      "target": "c:1",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:306",
-      "target": "c:1",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:402",
-      "target": "c:1",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:431",
-      "target": "c:1",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:1",
-      "target": "k:Brown Creeper",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:1",
-      "target": "k:Dark eyed Junco",
-      "weight": 0.7181,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:1",
-      "target": "k:Least Auklet",
-      "weight": 0.7084,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:17",
-      "target": "a:belly color: black",
-      "weight": 0.6683,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:17",
-      "target": "a:shape: hawk-like",
-      "weight": 0.6646,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:17",
-      "target": "a:breast color: black",
-      "weight": 0.6564,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:17",
-      "target": "a:underparts color: black",
-      "weight": 0.5995,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:263",
-      "target": "c:17",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:353",
-      "target": "c:17",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:364",
-      "target": "c:17",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:17",
-      "target": "k:Red winged Blackbird",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:17",
-      "target": "k:Groove billed Ani",
-      "weight": 0.9788,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:17",
-      "target": "k:Fish Crow",
-      "weight": 0.7975,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:4",
-      "target": "a:shape: upright-perching water-like",
-      "weight": 1.4775,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:4",
-      "target": "a:bill shape: specialized",
-      "weight": 1.4038,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:4",
-      "target": "a:head pattern: crested",
-      "weight": 1.2419,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:4",
-      "target": "a:bill color: orange",
-      "weight": 1.0812,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:355",
-      "target": "c:4",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:376",
-      "target": "c:4",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:425",
-      "target": "c:4",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:446",
-      "target": "c:4",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:493",
-      "target": "c:4",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:4",
-      "target": "k:Red faced Cormorant",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:4",
-      "target": "k:Crested Auklet",
-      "weight": 0.9429,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:4",
-      "target": "k:Rhinoceros Auklet",
-      "weight": 0.8178,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:2",
-      "target": "a:forehead color: purple",
-      "weight": 2.4818,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:2",
-      "target": "a:throat color: red",
-      "weight": 2.378,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:2",
-      "target": "a:crown color: purple",
-      "weight": 2.2729,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:2",
-      "target": "a:back color: yellow",
-      "weight": 2.2362,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:130",
-      "target": "c:2",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:182",
-      "target": "c:2",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:285",
-      "target": "c:2",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:354",
-      "target": "c:2",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:2",
-      "target": "k:Prothonotary Warbler",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:2",
-      "target": "k:Painted Bunting",
-      "weight": 0.9563,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:2",
-      "target": "k:Yellow Warbler",
-      "weight": 0.7645,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:21",
-      "target": "a:shape: owl-like",
-      "weight": 2.3263,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:21",
-      "target": "a:tail pattern: spotted",
-      "weight": 2.2029,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:21",
-      "target": "a:back pattern: spotted",
-      "weight": 1.5675,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:21",
-      "target": "a:wing pattern: spotted",
-      "weight": 1.3554,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:58",
-      "target": "c:21",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:213",
-      "target": "c:21",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:301",
-      "target": "c:21",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:21",
-      "target": "k:Chuck will Widow",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:21",
-      "target": "k:Whip poor Will",
-      "weight": 0.8504,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:21",
-      "target": "k:Nighthawk",
-      "weight": 0.3769,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:7",
-      "target": "a:forehead color: olive",
-      "weight": 1.6431,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:7",
-      "target": "a:crown color: olive",
-      "weight": 1.3546,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:7",
-      "target": "a:primary color: olive",
-      "weight": 1.1893,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:7",
-      "target": "a:nape color: olive",
-      "weight": 0.9807,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:16",
-      "target": "c:7",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:335",
-      "target": "c:7",
+      "source": "u:neurons:377",
+      "target": "c:12",
       "weight": 1.0,
       "kind": "membership"
     },
     {
       "source": "u:neurons:406",
+      "target": "c:12",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:12",
+      "target": "k:White breasted Kingfisher",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:12",
+      "target": "k:Yellow headed Blackbird",
+      "weight": 0.7865,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:12",
+      "target": "k:Green Jay",
+      "weight": 0.692,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:10",
+      "target": "a:underparts color: yellow",
+      "weight": 2.1419,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:10",
+      "target": "a:breast color: yellow",
+      "weight": 2.1034,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:10",
+      "target": "a:throat color: yellow",
+      "weight": 2.0841,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:10",
+      "target": "a:belly color: yellow",
+      "weight": 1.996,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:89",
+      "target": "c:10",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:176",
+      "target": "c:10",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:202",
+      "target": "c:10",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:297",
+      "target": "c:10",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:461",
+      "target": "c:10",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:500",
+      "target": "c:10",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:10",
+      "target": "k:Cedar Waxwing",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:10",
+      "target": "k:Red eyed Vireo",
+      "weight": 0.8589,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:10",
+      "target": "k:Horned Lark",
+      "weight": 0.7808,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:20",
+      "target": "a:upper tail color: rufous",
+      "weight": 1.7271,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:20",
+      "target": "a:wing color: rufous",
+      "weight": 1.3362,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:20",
+      "target": "a:leg color: pink",
+      "weight": 1.3102,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:20",
+      "target": "a:under tail color: rufous",
+      "weight": 1.2479,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:209",
+      "target": "c:20",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:242",
+      "target": "c:20",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:429",
+      "target": "c:20",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:448",
+      "target": "c:20",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:20",
+      "target": "k:Pine Grosbeak",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:20",
+      "target": "k:Bohemian Waxwing",
+      "weight": 0.9747,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:20",
+      "target": "k:Downy Woodpecker",
+      "weight": 0.9715,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:14",
+      "target": "a:eye color: blue",
+      "weight": 1.0552,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:14",
+      "target": "a:primary color: pink",
+      "weight": 0.9655,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:14",
+      "target": "a:wing color: purple",
+      "weight": 0.8821,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:14",
+      "target": "a:forehead color: olive",
+      "weight": 0.8438,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:5",
+      "target": "c:14",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:206",
+      "target": "c:14",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:245",
+      "target": "c:14",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:335",
+      "target": "c:14",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:374",
+      "target": "c:14",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:14",
+      "target": "k:Song Sparrow",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:14",
+      "target": "k:Northern Waterthrush",
+      "weight": 0.9637,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:14",
+      "target": "k:Savannah Sparrow",
+      "weight": 0.9546,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:22",
+      "target": "a:forehead color: blue",
+      "weight": 1.9283,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:22",
+      "target": "a:nape color: blue",
+      "weight": 1.9215,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:22",
+      "target": "a:throat color: blue",
+      "weight": 1.9045,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:22",
+      "target": "a:crown color: blue",
+      "weight": 1.8702,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:10",
+      "target": "c:22",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:106",
+      "target": "c:22",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:249",
+      "target": "c:22",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:303",
+      "target": "c:22",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:22",
+      "target": "k:Lazuli Bunting",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:22",
+      "target": "k:Baltimore Oriole",
+      "weight": 0.5861,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:22",
+      "target": "k:Cape Glossy Starling",
+      "weight": 0.5795,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:19",
+      "target": "a:bill color: rufous",
+      "weight": 2.7126,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:19",
+      "target": "a:eye color: white",
+      "weight": 0.9293,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:19",
+      "target": "a:bill shape: specialized",
+      "weight": 0.7612,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:19",
+      "target": "a:leg color: white",
+      "weight": 0.7275,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:126",
+      "target": "c:19",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:253",
+      "target": "c:19",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:271",
+      "target": "c:19",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:494",
+      "target": "c:19",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:19",
+      "target": "k:Slaty backed Gull",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:19",
+      "target": "k:Artic Tern",
+      "weight": 0.8603,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:19",
+      "target": "k:Forsters Tern",
+      "weight": 0.8556,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:8",
+      "target": "a:upperparts color: orange",
+      "weight": 1.1125,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:8",
+      "target": "a:wing color: orange",
+      "weight": 1.1068,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:8",
+      "target": "a:wing color: red",
+      "weight": 1.0636,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:8",
+      "target": "a:under tail color: red",
+      "weight": 1.034,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:38",
+      "target": "c:8",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:102",
+      "target": "c:8",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:411",
+      "target": "c:8",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:8",
+      "target": "k:Harris Sparrow",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:8",
+      "target": "k:White throated Sparrow",
+      "weight": 0.9503,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:8",
+      "target": "k:American Redstart",
+      "weight": 0.8552,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:9",
+      "target": "a:crown color: yellow",
+      "weight": 0.8937,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:9",
+      "target": "a:forehead color: yellow",
+      "weight": 0.8729,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:9",
+      "target": "a:throat color: yellow",
+      "weight": 0.8612,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:9",
+      "target": "a:breast color: yellow",
+      "weight": 0.8398,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:186",
+      "target": "c:9",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:401",
+      "target": "c:9",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:426",
+      "target": "c:9",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:488",
+      "target": "c:9",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:507",
+      "target": "c:9",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:9",
+      "target": "k:Magnolia Warbler",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:9",
+      "target": "k:Pine Warbler",
+      "weight": 0.8512,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:9",
+      "target": "k:Cape May Warbler",
+      "weight": 0.8445,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:1",
+      "target": "a:back color: green",
+      "weight": 2.6741,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:1",
+      "target": "a:throat color: red",
+      "weight": 2.5653,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:1",
+      "target": "a:wing color: green",
+      "weight": 2.4641,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:1",
+      "target": "a:upperparts color: green",
+      "weight": 2.3567,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:2",
+      "target": "c:1",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:34",
+      "target": "c:1",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:178",
+      "target": "c:1",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:189",
+      "target": "c:1",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:345",
+      "target": "c:1",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:365",
+      "target": "c:1",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:1",
+      "target": "k:Summer Tanager",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:1",
+      "target": "k:Cardinal",
+      "weight": 0.8412,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:1",
+      "target": "k:Spotted Catbird",
+      "weight": 0.8311,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:6",
+      "target": "a:upper tail color: rufous",
+      "weight": 3.5055,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:6",
+      "target": "a:underparts color: red",
+      "weight": 2.8197,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:6",
+      "target": "a:forehead color: red",
+      "weight": 2.7362,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:6",
+      "target": "a:under tail color: red",
+      "weight": 2.7332,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:64",
+      "target": "c:6",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:127",
+      "target": "c:6",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:213",
+      "target": "c:6",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:344",
+      "target": "c:6",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:6",
+      "target": "k:Red headed Woodpecker",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:6",
+      "target": "k:Red bellied Woodpecker",
+      "weight": 0.7304,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:6",
+      "target": "k:Vermilion Flycatcher",
+      "weight": 0.6491,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:7",
+      "target": "a:upper tail color: yellow",
+      "weight": 2.962,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:7",
+      "target": "a:under tail color: yellow",
+      "weight": 2.8818,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:7",
+      "target": "a:belly color: yellow",
+      "weight": 1.7071,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:7",
+      "target": "a:throat color: yellow",
+      "weight": 1.5775,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:72",
+      "target": "c:7",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:160",
+      "target": "c:7",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:254",
       "target": "c:7",
       "weight": 1.0,
       "kind": "membership"
     },
     {
       "source": "c:7",
-      "target": "k:Savannah Sparrow",
+      "target": "k:Eared Grebe",
       "weight": 1.0,
       "kind": "affinity"
     },
     {
       "source": "c:7",
-      "target": "k:Ovenbird",
-      "weight": 0.9061,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:7",
-      "target": "k:Cape May Warbler",
-      "weight": 0.8049,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:23",
-      "target": "a:forehead color: orange",
-      "weight": 1.0872,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:23",
-      "target": "a:bill shape: curved (up or down)",
-      "weight": 0.8208,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:23",
-      "target": "a:primary color: pink",
-      "weight": 0.6565,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:23",
-      "target": "a:upper tail color: rufous",
-      "weight": 0.5875,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:53",
-      "target": "c:23",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:156",
-      "target": "c:23",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:467",
-      "target": "c:23",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:23",
-      "target": "k:Elegant Tern",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:23",
-      "target": "k:Forsters Tern",
-      "weight": 0.6671,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:23",
-      "target": "k:White breasted Kingfisher",
-      "weight": 0.653,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:18",
-      "target": "a:throat color: purple",
-      "weight": 1.6787,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:18",
-      "target": "a:wing color: purple",
-      "weight": 1.3388,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:18",
-      "target": "a:belly color: yellow",
-      "weight": 1.3195,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:18",
-      "target": "a:upperparts color: purple",
-      "weight": 1.3072,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:159",
-      "target": "c:18",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:166",
-      "target": "c:18",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:197",
-      "target": "c:18",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:18",
-      "target": "k:Nashville Warbler",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:18",
-      "target": "k:Tennessee Warbler",
-      "weight": 0.8574,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:18",
-      "target": "k:Orange crowned Warbler",
-      "weight": 0.7973,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:14",
-      "target": "a:under tail color: green",
-      "weight": 2.5807,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:14",
-      "target": "a:primary color: pink",
-      "weight": 1.8282,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:14",
-      "target": "a:back color: green",
-      "weight": 1.7175,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:14",
-      "target": "a:nape color: green",
-      "weight": 1.6785,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:96",
-      "target": "c:14",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:422",
-      "target": "c:14",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:14",
       "target": "k:Red breasted Merganser",
-      "weight": 1.0,
+      "weight": 0.7946,
       "kind": "affinity"
     },
     {
-      "source": "c:14",
-      "target": "k:White breasted Kingfisher",
-      "weight": 0.4651,
+      "source": "c:7",
+      "target": "k:Yellow breasted Chat",
+      "weight": 0.4171,
       "kind": "affinity"
     },
     {
-      "source": "c:14",
-      "target": "k:Green Jay",
-      "weight": 0.1965,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:15",
-      "target": "a:shape: owl-like",
-      "weight": 2.1739,
+      "source": "c:11",
+      "target": "a:belly color: blue",
+      "weight": 1.0825,
       "kind": "attribute"
     },
     {
-      "source": "c:15",
-      "target": "a:upperparts color: purple",
-      "weight": 1.6885,
+      "source": "c:11",
+      "target": "a:breast color: blue",
+      "weight": 0.9792,
       "kind": "attribute"
     },
     {
-      "source": "c:15",
-      "target": "a:wing color: purple",
-      "weight": 1.6885,
+      "source": "c:11",
+      "target": "a:underparts color: blue",
+      "weight": 0.9773,
       "kind": "attribute"
     },
     {
-      "source": "c:15",
-      "target": "a:throat color: purple",
-      "weight": 1.6885,
+      "source": "c:11",
+      "target": "a:upper tail color: blue",
+      "weight": 0.8066,
       "kind": "attribute"
     },
     {
-      "source": "u:neurons:118",
-      "target": "c:15",
+      "source": "u:neurons:78",
+      "target": "c:11",
       "weight": 1.0,
       "kind": "membership"
     },
     {
-      "source": "u:neurons:253",
-      "target": "c:15",
+      "source": "u:neurons:182",
+      "target": "c:11",
       "weight": 1.0,
       "kind": "membership"
     },
     {
-      "source": "u:neurons:258",
-      "target": "c:15",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:15",
-      "target": "k:Common Raven",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:15",
-      "target": "k:White necked Raven",
-      "weight": 0.7038,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:15",
-      "target": "k:Blue Jay",
-      "weight": 0.6202,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:0",
-      "target": "a:wing color: yellow",
-      "weight": 0.9648,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:0",
-      "target": "a:back color: rufous",
-      "weight": 0.8742,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:0",
-      "target": "a:upper tail color: rufous",
-      "weight": 0.8191,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:0",
-      "target": "a:belly color: yellow",
-      "weight": 0.8034,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:146",
-      "target": "c:0",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:293",
-      "target": "c:0",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:437",
-      "target": "c:0",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:502",
-      "target": "c:0",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:0",
+      "source": "c:11",
       "target": "k:American Goldfinch",
       "weight": 1.0,
       "kind": "affinity"
     },
     {
-      "source": "c:0",
-      "target": "k:European Goldfinch",
-      "weight": 0.7071,
+      "source": "c:11",
+      "target": "k:Florida Jay",
+      "weight": 0.29,
       "kind": "affinity"
     },
     {
-      "source": "c:0",
-      "target": "k:Blue winged Warbler",
-      "weight": 0.2274,
+      "source": "c:11",
+      "target": "k:Common Raven",
+      "weight": 0.2763,
       "kind": "affinity"
     },
     {
-      "source": "c:13",
-      "target": "a:head pattern: masked",
-      "weight": 0.7918,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:13",
-      "target": "a:bill color: white",
-      "weight": 0.6759,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:13",
-      "target": "a:bill shape: dagger",
-      "weight": 0.5329,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:13",
-      "target": "a:crown color: white",
-      "weight": 0.5229,
-      "kind": "attribute"
-    },
-    {
-      "source": "u:neurons:30",
-      "target": "c:13",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "u:neurons:300",
-      "target": "c:13",
-      "weight": 1.0,
-      "kind": "membership"
-    },
-    {
-      "source": "c:13",
-      "target": "k:White Pelican",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:13",
-      "target": "k:Brown Pelican",
-      "weight": 0.1364,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:13",
-      "target": "k:Artic Tern",
-      "weight": 0.1147,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:12",
-      "target": "a:shape: swallow-like",
-      "weight": 1.3727,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:12",
-      "target": "a:wing shape: long-wings",
-      "weight": 1.2953,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:12",
-      "target": "a:shape: gull-like",
-      "weight": 1.1734,
-      "kind": "attribute"
-    },
-    {
-      "source": "c:12",
+      "source": "c:4",
       "target": "a:bill shape: hooked seabird",
-      "weight": 1.1522,
+      "weight": 1.1324,
       "kind": "attribute"
+    },
+    {
+      "source": "c:4",
+      "target": "a:wing shape: long-wings",
+      "weight": 1.1198,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:4",
+      "target": "a:shape: gull-like",
+      "weight": 1.0139,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:4",
+      "target": "a:primary color: pink",
+      "weight": 0.7881,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:97",
+      "target": "c:4",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:130",
+      "target": "c:4",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:131",
+      "target": "c:4",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:274",
+      "target": "c:4",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:349",
+      "target": "c:4",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:430",
+      "target": "c:4",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:4",
+      "target": "k:Black footed Albatross",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:4",
+      "target": "k:Sooty Albatross",
+      "weight": 0.634,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:4",
+      "target": "k:Red legged Kittiwake",
+      "weight": 0.5823,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:5",
+      "target": "a:shape: long-legged-like",
+      "weight": 1.8069,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:5",
+      "target": "a:size: very large (32 - 72 in)",
+      "weight": 1.6807,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:5",
+      "target": "a:bill shape: hooked seabird",
+      "weight": 1.4067,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:5",
+      "target": "a:eye color: blue",
+      "weight": 1.3284,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:0",
+      "target": "c:5",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:37",
+      "target": "c:5",
+      "weight": 1.0,
+      "kind": "membership"
     },
     {
       "source": "u:neurons:194",
-      "target": "c:12",
+      "target": "c:5",
       "weight": 1.0,
       "kind": "membership"
     },
     {
-      "source": "u:neurons:499",
-      "target": "c:12",
+      "source": "u:neurons:366",
+      "target": "c:5",
       "weight": 1.0,
       "kind": "membership"
     },
     {
-      "source": "c:12",
-      "target": "k:Sooty Albatross",
-      "weight": 1.0,
-      "kind": "affinity"
-    },
-    {
-      "source": "c:12",
+      "source": "c:5",
       "target": "k:Brown Pelican",
-      "weight": 0.9199,
+      "weight": 1.0,
       "kind": "affinity"
     },
     {
-      "source": "c:12",
-      "target": "k:Black footed Albatross",
-      "weight": 0.5827,
+      "source": "c:5",
+      "target": "k:Frigatebird",
+      "weight": 0.6439,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:5",
+      "target": "k:Brandt Cormorant",
+      "weight": 0.5906,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:3",
+      "target": "a:throat color: purple",
+      "weight": 1.7048,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:3",
+      "target": "a:upperparts color: purple",
+      "weight": 1.7048,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:3",
+      "target": "a:wing color: purple",
+      "weight": 1.7048,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:3",
+      "target": "a:primary color: purple",
+      "weight": 1.3223,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:393",
+      "target": "c:3",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:395",
+      "target": "c:3",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:417",
+      "target": "c:3",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:479",
+      "target": "c:3",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:3",
+      "target": "k:Pacific Loon",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:3",
+      "target": "k:Horned Grebe",
+      "weight": 0.7355,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:3",
+      "target": "k:Western Grebe",
+      "weight": 0.7182,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:18",
+      "target": "a:eye color: rufous",
+      "weight": 0.6815,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:18",
+      "target": "a:leg color: blue",
+      "weight": 0.5414,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:18",
+      "target": "a:shape: hawk-like",
+      "weight": 0.5412,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:18",
+      "target": "a:breast color: black",
+      "weight": 0.5252,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:280",
+      "target": "c:18",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:302",
+      "target": "c:18",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:438",
+      "target": "c:18",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:18",
+      "target": "k:Red winged Blackbird",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:18",
+      "target": "k:Groove billed Ani",
+      "weight": 0.9747,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:18",
+      "target": "k:Shiny Cowbird",
+      "weight": 0.8002,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:0",
+      "target": "a:head pattern: crested",
+      "weight": 1.043,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:0",
+      "target": "a:forehead color: yellow",
+      "weight": 0.749,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:0",
+      "target": "a:bill shape: specialized",
+      "weight": 0.6889,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:0",
+      "target": "a:under tail color: rufous",
+      "weight": 0.6258,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:91",
+      "target": "c:0",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:191",
+      "target": "c:0",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:256",
+      "target": "c:0",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:351",
+      "target": "c:0",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:378",
+      "target": "c:0",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:511",
+      "target": "c:0",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:0",
+      "target": "k:Horned Puffin",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:0",
+      "target": "k:Hooded Oriole",
+      "weight": 0.8652,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:0",
+      "target": "k:Green Jay",
+      "weight": 0.7889,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:17",
+      "target": "a:primary color: pink",
+      "weight": 1.8264,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:17",
+      "target": "a:crown color: pink",
+      "weight": 1.6819,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:17",
+      "target": "a:leg color: pink",
+      "weight": 1.3868,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:17",
+      "target": "a:throat color: purple",
+      "weight": 1.0135,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:93",
+      "target": "c:17",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:172",
+      "target": "c:17",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:418",
+      "target": "c:17",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:17",
+      "target": "k:Field Sparrow",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:17",
+      "target": "k:Purple Finch",
+      "weight": 0.9494,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:17",
+      "target": "k:Dark eyed Junco",
+      "weight": 0.9059,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:21",
+      "target": "a:crown color: white",
+      "weight": 1.8997,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:21",
+      "target": "a:forehead color: white",
+      "weight": 1.6153,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:21",
+      "target": "a:nape color: white",
+      "weight": 1.3719,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:21",
+      "target": "a:leg color: white",
+      "weight": 1.3506,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:33",
+      "target": "c:21",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:286",
+      "target": "c:21",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:423",
+      "target": "c:21",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:21",
+      "target": "k:California Gull",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:21",
+      "target": "k:Laysan Albatross",
+      "weight": 0.8986,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:21",
+      "target": "k:Western Gull",
+      "weight": 0.7862,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:23",
+      "target": "a:bill color: rufous",
+      "weight": 1.1592,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:23",
+      "target": "a:primary color: pink",
+      "weight": 0.8023,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:23",
+      "target": "a:under tail color: green",
+      "weight": 0.7584,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:23",
+      "target": "a:bill shape: hooked seabird",
+      "weight": 0.5944,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:79",
+      "target": "c:23",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:226",
+      "target": "c:23",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:304",
+      "target": "c:23",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:23",
+      "target": "k:Ivory Gull",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:23",
+      "target": "k:Northern Fulmar",
+      "weight": 0.5842,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:23",
+      "target": "k:Ring billed Gull",
+      "weight": 0.3631,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:15",
+      "target": "a:belly color: blue",
+      "weight": 2.6753,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:15",
+      "target": "a:underparts color: blue",
+      "weight": 2.5628,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:15",
+      "target": "a:breast color: blue",
+      "weight": 2.1398,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:15",
+      "target": "a:upperparts color: purple",
+      "weight": 2.0596,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:101",
+      "target": "c:15",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:382",
+      "target": "c:15",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:15",
+      "target": "k:Mallard",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:15",
+      "target": "k:Florida Jay",
+      "weight": 0.792,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:15",
+      "target": "k:Gadwall",
+      "weight": 0.7381,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:13",
+      "target": "a:throat color: green",
+      "weight": 1.5415,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:13",
+      "target": "a:wing color: purple",
+      "weight": 1.2697,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:13",
+      "target": "a:upperparts color: purple",
+      "weight": 1.2697,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:13",
+      "target": "a:shape: owl-like",
+      "weight": 1.0864,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:134",
+      "target": "c:13",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:477",
+      "target": "c:13",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:13",
+      "target": "k:Boat tailed Grackle",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:13",
+      "target": "k:Cape Glossy Starling",
+      "weight": 0.8631,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:13",
+      "target": "k:Rusty Blackbird",
+      "weight": 0.6963,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:2",
+      "target": "a:belly color: blue",
+      "weight": 3.1993,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:2",
+      "target": "a:underparts color: blue",
+      "weight": 3.0553,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:2",
+      "target": "a:breast color: blue",
+      "weight": 2.6606,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:2",
+      "target": "a:back color: blue",
+      "weight": 2.1371,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:46",
+      "target": "c:2",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:146",
+      "target": "c:2",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:251",
+      "target": "c:2",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:287",
+      "target": "c:2",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:312",
+      "target": "c:2",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:421",
+      "target": "c:2",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:2",
+      "target": "k:Green Violetear",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:2",
+      "target": "k:Rufous Hummingbird",
+      "weight": 0.4145,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:2",
+      "target": "k:Indigo Bunting",
+      "weight": 0.3073,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:16",
+      "target": "a:crown color: white",
+      "weight": 1.9393,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:16",
+      "target": "a:forehead color: white",
+      "weight": 1.6286,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:16",
+      "target": "a:nape color: white",
+      "weight": 1.4392,
+      "kind": "attribute"
+    },
+    {
+      "source": "c:16",
+      "target": "a:throat color: white",
+      "weight": 1.1765,
+      "kind": "attribute"
+    },
+    {
+      "source": "u:neurons:164",
+      "target": "c:16",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:193",
+      "target": "c:16",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:368",
+      "target": "c:16",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "u:neurons:372",
+      "target": "c:16",
+      "weight": 1.0,
+      "kind": "membership"
+    },
+    {
+      "source": "c:16",
+      "target": "k:Red breasted Merganser",
+      "weight": 1.0,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:16",
+      "target": "k:Elegant Tern",
+      "weight": 0.8758,
+      "kind": "affinity"
+    },
+    {
+      "source": "c:16",
+      "target": "k:White Pelican",
+      "weight": 0.8124,
       "kind": "affinity"
     }
   ]

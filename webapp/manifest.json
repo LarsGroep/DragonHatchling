@@ -218,6 +218,7 @@
     "Winter Wren",
     "Common Yellowthroat"
   ],
+  "explain": "explain.json",
   "activation_outputs": [
     {
       "layer": "neurons",
