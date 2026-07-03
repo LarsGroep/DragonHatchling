@@ -40,34 +40,54 @@ def cluster_concepts(
     class_names: Sequence[str],
     n_concepts: int = 8,
     min_units: int = 2,
+    activity_threshold: float = 0.02,
 ) -> List[Concept]:
-    """Agglomerative clustering of units by Hebbian correlation distance."""
+    """Cluster units into concepts by their Hebbian co-activation fingerprint.
+
+    Dead and near-dead units (mean activation below ``activity_threshold`` ×
+    the most active unit) are excluded first — with wide sparse neuron
+    spaces they otherwise dominate the geometry and everything alive chains
+    into one giant cluster.  The remaining units are clustered by Ward
+    agglomeration on the rows of the correlation matrix (each unit's
+    "who do I fire with" fingerprint), which produces balanced clusters
+    where average-linkage on raw correlation distance degenerates.
+
+    Class affinity is normalized per concept relative to its strongest
+    class (top class = 1.0), so scores stay meaningful for datasets with
+    hundreds of classes.
+    """
     from sklearn.cluster import AgglomerativeClustering
 
     corr = memory.correlation(layer).numpy()
     corr = np.nan_to_num(corr, nan=0.0)
-    n_units = corr.shape[0]
-    n_clusters = min(n_concepts, n_units)
-    dist = 1.0 - np.clip(corr, 0.0, 1.0)
-    np.fill_diagonal(dist, 0.0)
-    labels = AgglomerativeClustering(
-        n_clusters=n_clusters, metric="precomputed", linkage="average"
-    ).fit_predict(dist)
-
-    affinity = memory.class_affinity(layer).numpy()   # [classes, units]
     mean_act = memory.stats[layer].mean_act.numpy()
 
+    active = np.where(mean_act > activity_threshold * max(mean_act.max(), 1e-12))[0]
+    if len(active) < max(min_units * 2, 4):        # degenerate memory; keep all
+        active = np.arange(corr.shape[0])
+    n_clusters = max(1, min(n_concepts, len(active) // min_units, len(active)))
+
+    fingerprints = corr[np.ix_(active, active)]
+    if n_clusters == 1 or len(active) <= n_clusters:
+        labels = np.zeros(len(active), dtype=int)
+    else:
+        labels = AgglomerativeClustering(
+            n_clusters=n_clusters, linkage="ward"
+        ).fit_predict(fingerprints)
+
+    affinity = memory.class_affinity(layer).numpy()   # [classes, units]
+
     concepts: List[Concept] = []
-    for cid in range(n_clusters):
-        units = np.where(labels == cid)[0]
+    for cid in range(labels.max() + 1):
+        units = active[labels == cid]
         if len(units) < min_units:
             continue
         sub = corr[np.ix_(units, units)]
         off_diag = sub[~np.eye(len(units), dtype=bool)]
         coherence = float(off_diag.mean()) if off_diag.size else 0.0
         cls_scores = affinity[:, units].mean(axis=1)
-        total = cls_scores.sum()
-        norm = cls_scores / total if total > 0 else cls_scores
+        peak = cls_scores.max()
+        norm = cls_scores / peak if peak > 0 else cls_scores
         order = np.argsort(-norm)
         top = [(class_names[i], float(norm[i])) for i in order[:3] if norm[i] > 0]
         label = " / ".join(name for name, _ in top[:2]) or f"concept {cid}"

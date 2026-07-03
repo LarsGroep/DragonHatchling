@@ -213,7 +213,9 @@ function loadGraph(doc) {
     .filter(e => e.s && e.t);
   const m = doc.meta || {};
   document.getElementById("meta").textContent =
-    [m.dataset, m.backbone, m.layer, `${nodes.length} nodes / ${edges.length} edges`]
+    [m.dataset, m.backbone, m.layer,
+     m.val_acc ? `val acc ${(100 * m.val_acc).toFixed(1)}%` : null,
+     `${nodes.length} nodes / ${edges.length} edges`]
       .filter(Boolean).join(" · ");
   selected = null; highlightCluster = null;
   clearInference();
@@ -299,13 +301,36 @@ function visibleEdges() {
 }
 
 // ------------------------------------------------------------- simulation
-function reheat() { alpha = 1; requestAnimationFrame(tick); }
+let needsFit = false;
+function reheat() { alpha = 1; needsFit = true; requestAnimationFrame(tick); }
 document.getElementById("reheat").onclick = reheat;
+
+function fitView() {
+  if (!nodes.length) return;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const n of nodes) {
+    x0 = Math.min(x0, n.x); y0 = Math.min(y0, n.y);
+    x1 = Math.max(x1, n.x); y1 = Math.max(y1, n.y);
+  }
+  const pad = 60;
+  const k = Math.min(2, (W - pad) / Math.max(x1 - x0, 1), (H - pad) / Math.max(y1 - y0, 1));
+  view.k = Math.max(0.2, k);
+  view.x = W / 2 - view.k * (x0 + x1) / 2;
+  view.y = H / 2 - view.k * (y0 + y1) / 2;
+}
 
 function tick() {
   const W = canvas.clientWidth, H = canvas.clientHeight;
   const active = visibleEdges();
-  // spring forces along edges
+  // spring forces along edges, normalized by endpoint degree so that a
+  // high-degree hub (a concept with hundreds of member units) cannot
+  // collapse the whole layout into itself
+  const degree = new Map();
+  for (const e of active) {
+    degree.set(e.s, (degree.get(e.s) || 0) + 1);
+    degree.set(e.t, (degree.get(e.t) || 0) + 1);
+  }
   for (const e of active) {
     const rest = e.kind === "coactivation" ? 120 - 70 * (e.weight ?? 0.5)
                : e.kind === "membership" ? 46
@@ -314,8 +339,10 @@ function tick() {
     const dx = e.t.x - e.s.x, dy = e.t.y - e.s.y;
     const d = Math.hypot(dx, dy) || 1;
     const f = k * (d - rest) / d;
-    e.s.vx += f * dx; e.s.vy += f * dy;
-    e.t.vx -= f * dx; e.t.vy -= f * dy;
+    const ws = 1 / Math.sqrt(degree.get(e.s) || 1);
+    const wt = 1 / Math.sqrt(degree.get(e.t) || 1);
+    e.s.vx += f * dx * ws; e.s.vy += f * dy * ws;
+    e.t.vx -= f * dx * wt; e.t.vy -= f * dy * wt;
   }
   // pairwise repulsion (fine for a few hundred nodes)
   for (let i = 0; i < nodes.length; i++) {
@@ -343,6 +370,7 @@ function tick() {
     n.vx *= 0.6; n.vy *= 0.6;
   }
   alpha *= 0.985;
+  if (alpha <= 0.02 && needsFit) { needsFit = false; fitView(); }
   draw();
   if (alpha > 0.02) requestAnimationFrame(tick);
 }
@@ -565,13 +593,44 @@ async function initInference() {
   infstatus.textContent = "model loads on first use";
 }
 
+async function fetchModelWithProgress(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`model fetch failed (${r.status})`);
+  const total = +r.headers.get("Content-Length") || 0;
+  const reader = r.body.getReader();
+  const chunks = [];
+  let got = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    got += value.length;
+    infstatus.textContent = total
+      ? `downloading model… ${(got / 1e6).toFixed(0)} / ${(total / 1e6).toFixed(0)} MB`
+      : `downloading model… ${(got / 1e6).toFixed(0)} MB`;
+  }
+  const buf = new Uint8Array(got);
+  let off = 0;
+  for (const c of chunks) { buf.set(c, off); off += c.length; }
+  // A deploy that skipped `git lfs pull` serves the tiny pointer file
+  // instead of the model — catch it with a readable error.
+  if (got < 1000 && new TextDecoder().decode(buf.slice(0, 40)).startsWith("version https://git-lfs")) {
+    throw new Error("model.onnx is a Git LFS pointer, not the model — run `git lfs pull` before deploying");
+  }
+  return buf;
+}
+
 function ensureSession() {
   if (!sessionPromise) {
-    infstatus.textContent = "downloading model…";
     ort.env.wasm.wasmPaths = new URL("vendor/", location.href).href;
     ort.env.wasm.numThreads = 1;   // single wasm file, no cross-origin-isolation needs
-    sessionPromise = ort.InferenceSession.create(manifest.model)
-      .then(s => { session = s; return s; });
+    sessionPromise = fetchModelWithProgress(manifest.model)
+      .then(buf => {
+        infstatus.textContent = "initializing model…";
+        return ort.InferenceSession.create(buf);
+      })
+      .then(s => { session = s; return s; })
+      .catch(e => { sessionPromise = null; throw e; });
   }
   return sessionPromise;
 }

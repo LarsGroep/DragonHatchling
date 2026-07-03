@@ -57,5 +57,10 @@ python3 -m http.server 8000   # any static server works
 
 ```bash
 cd webapp
+git lfs pull                  # if model.onnx is tracked with Git LFS!
 npx vercel deploy --prod      # no build step; it's a static site
 ```
+
+If the deployed `model.onnx` is a Git LFS *pointer* instead of the real
+model (a deploy that skipped `git lfs pull`), the app shows an explicit
+error when you try to classify an image.
