@@ -31,6 +31,7 @@ class Concept:
     class_affinity: Dict[str, float]    # class name -> normalized affinity
     label: str = ""                     # human-readable name
     exemplars: List[int] = field(default_factory=list)  # probe-set indices
+    attributes: Dict[str, float] = field(default_factory=dict)  # attr -> corr
 
 
 def cluster_concepts(
@@ -86,20 +87,19 @@ def cluster_concepts(
 
 
 @torch.no_grad()
-def find_exemplars(
-    concepts: List[Concept],
-    memory: HebbianFeatureMemory,
+def probe_activations(
     model: nn.Module,
     probe_images: torch.Tensor,
     layers: Optional[Dict[str, nn.Module]] = None,
-    top_k: int = 6,
+    memory: Optional[HebbianFeatureMemory] = None,
     batch_size: int = 64,
-) -> List[Concept]:
-    """Attach, per concept, the probe images that activate it most.
+) -> Dict[str, torch.Tensor]:
+    """Pooled, rectified activations of the observed layers on a probe set.
 
-    Runs the probe set through the model once, capturing the observed layers'
-    pooled activations, then scores each image by the mean activation of each
-    concept's member units.  Fills ``Concept.exemplars`` in place.
+    Returns ``{layer_name: [n_images, units]}``.  If a memory is given its
+    statistics are paused during the pass (probing must not contaminate
+    training statistics) and wide layers are subsampled to the same tracked
+    units the memory uses, so indices line up with concept ``units``.
     """
     if layers is None:
         layers = model.hebbian_layers()
@@ -116,7 +116,6 @@ def find_exemplars(
     was_training = model.training
     model.eval()
     try:
-        # Pause the memory so probing doesn't contaminate training statistics.
         pause = memory.paused() if memory is not None else None
         if pause:
             pause.__enter__()
@@ -133,12 +132,41 @@ def find_exemplars(
             model.train()
 
     acts = {name: torch.cat(chunks) for name, chunks in captured.items()}
-    for concept in concepts:
-        a = acts[concept.layer]
-        st = memory.stats[concept.layer]
-        if st.unit_index is not None:
-            a = a[:, st.unit_index]
-        score = a[:, concept.units].mean(dim=1)
-        k = min(top_k, a.shape[0])
-        concept.exemplars = score.topk(k).indices.tolist()
+    if memory is not None:
+        for name, a in acts.items():
+            st = memory.stats.get(name)
+            if st is not None and st.unit_index is not None:
+                acts[name] = a[:, st.unit_index]
+    return acts
+
+
+def concept_scores(
+    concepts: Sequence[Concept],
+    acts: Dict[str, torch.Tensor],
+) -> torch.Tensor:
+    """Per-image concept activation: ``[n_images, n_concepts]``."""
+    cols = [acts[c.layer][:, c.units].mean(dim=1) for c in concepts]
+    return torch.stack(cols, dim=1)
+
+
+def find_exemplars(
+    concepts: List[Concept],
+    memory: HebbianFeatureMemory,
+    model: nn.Module,
+    probe_images: torch.Tensor,
+    layers: Optional[Dict[str, nn.Module]] = None,
+    top_k: int = 6,
+    batch_size: int = 64,
+) -> List[Concept]:
+    """Attach, per concept, the probe images that activate it most.
+
+    Runs the probe set through the model once, capturing the observed layers'
+    pooled activations, then scores each image by the mean activation of each
+    concept's member units.  Fills ``Concept.exemplars`` in place.
+    """
+    acts = probe_activations(model, probe_images, layers, memory, batch_size)
+    scores = concept_scores(concepts, acts)
+    for i, concept in enumerate(concepts):
+        k = min(top_k, scores.shape[0])
+        concept.exemplars = scores[:, i].topk(k).indices.tolist()
     return concepts

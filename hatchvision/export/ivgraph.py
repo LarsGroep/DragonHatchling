@@ -10,12 +10,14 @@ Schema (``format: "ivgraph", version: "1.0"``)::
         {"id": "u:<layer>:<unit>", "type": "unit",    "label", "cluster",
          "activation", "size"},
         {"id": "c:<cid>",          "type": "concept", "label", "cluster",
-         "coherence", "importance", "classes": {name: affinity}, "size"},
-        {"id": "k:<class>",        "type": "class",   "label", "size"}
+         "coherence", "importance", "classes": {name: affinity},
+         "attributes": {name: effect}?, "size"},
+        {"id": "k:<class>",        "type": "class",   "label", "size"},
+        {"id": "a:<attribute>",    "type": "attribute", "label", "size"}
       ],
       "edges": [
         {"source", "target", "weight", "kind": "coactivation" | "membership"
-                                              | "affinity"}
+                                              | "affinity" | "attribute"}
       ]
     }
 
@@ -70,19 +72,31 @@ def build_ivgraph(
         )
 
     used_classes = set()
+    used_attributes = set()
     for c in concepts:
-        nodes.append(
-            {
-                "id": f"c:{c.concept_id}",
-                "type": "concept",
-                "label": c.label,
-                "cluster": c.concept_id,
-                "coherence": round(c.coherence, 4),
-                "importance": round(c.importance, 5),
-                "classes": {k: round(v, 4) for k, v in c.class_affinity.items()},
-                "size": 1.6,
-            }
-        )
+        node = {
+            "id": f"c:{c.concept_id}",
+            "type": "concept",
+            "label": c.label,
+            "cluster": c.concept_id,
+            "coherence": round(c.coherence, 4),
+            "importance": round(c.importance, 5),
+            "classes": {k: round(v, 4) for k, v in c.class_affinity.items()},
+            "size": 1.6,
+        }
+        if c.attributes:
+            node["attributes"] = {k: round(v, 4) for k, v in c.attributes.items()}
+        nodes.append(node)
+        for attr, score in c.attributes.items():
+            used_attributes.add(attr)
+            edges.append(
+                {
+                    "source": f"c:{c.concept_id}",
+                    "target": f"a:{attr}",
+                    "weight": round(score, 4),
+                    "kind": "attribute",
+                }
+            )
         for u in c.units:
             edges.append(
                 {
@@ -107,6 +121,11 @@ def build_ivgraph(
 
     for cls in sorted(used_classes):
         nodes.append({"id": f"k:{cls}", "type": "class", "label": cls, "size": 2.0})
+
+    for attr in sorted(used_attributes):
+        nodes.append(
+            {"id": f"a:{attr}", "type": "attribute", "label": attr, "size": 1.2}
+        )
 
     tracked = set(tracked_units)
     for i, j, w in memory.top_edges(layer, k=max_edges):

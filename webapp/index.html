@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>IVGraph — Hebbian Concept Explorer</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='5' cy='6' r='3' fill='%232a78d6'/><circle cx='11' cy='10' r='2.4' fill='%23eda100'/><path d='M5 6L11 10' stroke='%23898781'/></svg>">
 <style>
   :root {
     --surface-1: #fcfcfb;
@@ -16,6 +17,7 @@
     --border: rgba(11,11,11,0.10);
     --c1:#2a78d6; --c2:#1baf7a; --c3:#eda100; --c4:#008300;
     --c5:#4a3aa7; --c6:#e34948; --c7:#e87ba4; --c8:#eb6834;
+    --live: #eda100;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -29,6 +31,7 @@
       --border: rgba(255,255,255,0.10);
       --c1:#3987e5; --c2:#199e70; --c3:#c98500; --c4:#008300;
       --c5:#9085e9; --c6:#e66767; --c7:#d55181; --c8:#d95926;
+      --live: #ffc233;
     }
   }
   * { box-sizing: border-box; margin: 0; }
@@ -54,12 +57,13 @@
     border-radius: 6px; padding: 4px 10px; cursor: pointer;
   }
   button:hover, .filebtn:hover { border-color: var(--text-muted); }
+  button:disabled { opacity: 0.5; cursor: default; }
   main { flex: 1; display: flex; min-height: 0; }
   #stage { flex: 1; position: relative; background: var(--surface-1); }
-  canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; }
-  canvas.dragging { cursor: grabbing; }
+  canvas#canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: grab; }
+  canvas#canvas.dragging { cursor: grabbing; }
   aside {
-    width: 300px; border-left: 1px solid var(--border); background: var(--surface-1);
+    width: 320px; border-left: 1px solid var(--border); background: var(--surface-1);
     overflow-y: auto; padding: 14px; flex-shrink: 0;
   }
   aside h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .04em;
@@ -81,7 +85,7 @@
   #tooltip {
     position: absolute; pointer-events: none; display: none; z-index: 5;
     background: var(--surface-1); border: 1px solid var(--baseline);
-    border-radius: 6px; padding: 6px 9px; font-size: 12px; max-width: 240px;
+    border-radius: 6px; padding: 6px 9px; font-size: 12px; max-width: 260px;
     box-shadow: 0 2px 10px rgba(0,0,0,.15); color: var(--text-secondary);
   }
   #tooltip b { color: var(--text-primary); }
@@ -96,6 +100,23 @@
   th { color: var(--text-muted); font-weight: 600; }
   td { color: var(--text-secondary); font-variant-numeric: tabular-nums; }
   .hint { color: var(--text-muted); font-size: 12px; margin-top: 4px; }
+  /* inference panel */
+  #inference { display: none; }
+  #infrow { display: flex; gap: 10px; align-items: flex-start; }
+  #preview {
+    width: 84px; height: 84px; border-radius: 8px; border: 1px solid var(--border);
+    object-fit: cover; background: var(--page); display: none; flex-shrink: 0;
+  }
+  #infstatus { color: var(--text-muted); font-size: 12px; margin-top: 6px; }
+  .pred { display: flex; align-items: center; gap: 8px; font-size: 12px;
+          color: var(--text-secondary); padding: 2px 0; }
+  .pred .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pred .bar { height: 6px; border-radius: 3px; background: var(--c1);
+               min-width: 2px; }
+  .pred:first-child .name { color: var(--text-primary); font-weight: 600; }
+  .pred .pct { color: var(--text-muted); font-variant-numeric: tabular-nums;
+               width: 44px; text-align: right; }
+  .lit { color: var(--live); }
 </style>
 </head>
 <body>
@@ -110,6 +131,7 @@
     <label><input type="checkbox" id="showCoact" checked> co-activation</label>
     <label><input type="checkbox" id="showMember" checked> membership</label>
     <label><input type="checkbox" id="showAffinity" checked> class affinity</label>
+    <label><input type="checkbox" id="showAttr" checked> attributes</label>
     <label><input type="checkbox" id="showLabels" checked> labels</label>
     <button id="reheat">re-layout</button>
     <label class="filebtn">open JSON…
@@ -120,9 +142,22 @@
   <div id="stage">
     <canvas id="canvas"></canvas>
     <div id="tooltip"></div>
-    <div id="drop">drop an IVGraph .json file to load it</div>
+    <div id="drop">drop an IVGraph .json — or an image to classify</div>
   </div>
   <aside>
+    <div id="inference">
+      <h2>Classify an image</h2>
+      <div id="infrow">
+        <img id="preview" alt="">
+        <div style="flex:1">
+          <label class="filebtn" style="display:inline-block">upload image…
+            <input type="file" id="imgfile" accept="image/*" hidden></label>
+          <button id="clearinf" style="display:none">clear</button>
+          <div id="infstatus">model not loaded yet</div>
+        </div>
+      </div>
+      <div id="preds"></div>
+    </div>
     <h2>Concepts</h2>
     <div id="concepts"></div>
     <h2>Selection</h2>
@@ -130,11 +165,12 @@
       reposition, scroll to zoom, drag the background to pan.</div></div>
     <h2>Concept table</h2>
     <div style="overflow-x:auto"><table id="table">
-      <thead><tr><th>concept</th><th>units</th><th>coh.</th><th>top class</th></tr></thead>
+      <thead><tr><th>concept</th><th>units</th><th>coh.</th><th>evidence</th></tr></thead>
       <tbody></tbody>
     </table></div>
   </aside>
 </main>
+<script src="vendor/ort.min.js"></script>
 <script>
 "use strict";
 const PALETTE = ["c1","c2","c3","c4","c5","c6","c7","c8"];
@@ -152,6 +188,7 @@ let view = { x: 0, y: 0, k: 1 };
 let alpha = 0;
 let selected = null, hovered = null, highlightCluster = null;
 let dragNode = null, panning = null;
+let liveMode = false;       // an image's activations are being displayed
 
 function loadGraph(doc) {
   graph = doc;
@@ -162,8 +199,11 @@ function loadGraph(doc) {
     const r = Math.min(W, H) * 0.35 * (0.4 + 0.6 * Math.random());
     const node = Object.assign({}, n, {
       x: W / 2 + r * Math.cos(angle), y: H / 2 + r * Math.sin(angle),
-      vx: 0, vy: 0,
-      r: n.type === "class" ? 9 : n.type === "concept" ? 7 + 2 * (n.size || 1) : 3 + 3 * (n.size || 1),
+      vx: 0, vy: 0, live: 0,
+      r: n.type === "class" ? 9
+       : n.type === "concept" ? 7 + 2 * (n.size || 1)
+       : n.type === "attribute" ? 6
+       : 3 + 3 * (n.size || 1),
     });
     byId.set(n.id, node);
     return node;
@@ -176,6 +216,7 @@ function loadGraph(doc) {
     [m.dataset, m.backbone, m.layer, `${nodes.length} nodes / ${edges.length} edges`]
       .filter(Boolean).join(" · ");
   selected = null; highlightCluster = null;
+  clearInference();
   view = { x: 0, y: 0, k: 1 };
   buildSidebar();
   renderDetails();
@@ -187,13 +228,17 @@ function concepts() { return nodes.filter(n => n.type === "concept"); }
 function buildSidebar() {
   const list = document.getElementById("concepts");
   list.innerHTML = "";
-  for (const c of concepts()) {
+  const cs = concepts();
+  if (liveMode) cs.sort((a, b) => (b.live || 0) - (a.live || 0));
+  for (const c of cs) {
     const row = document.createElement("div");
     row.className = "concept-row";
     row.dataset.cluster = c.cluster;
     const units = edges.filter(e => e.kind === "membership" && e.t === c).length;
+    const meta = liveMode ? `<span class="lit">${(100 * (c.live || 0)).toFixed(0)}%</span>`
+                          : `${units} units`;
     row.innerHTML = `<span class="swatch" style="background:${clusterColor(c.cluster)}"></span>
-      <span>${c.label}</span><span class="meta">${units} units</span>`;
+      <span>${c.label}</span><span class="meta">${meta}</span>`;
     row.onclick = () => {
       highlightCluster = highlightCluster === c.cluster ? null : c.cluster;
       selected = highlightCluster === null ? null : c;
@@ -204,13 +249,15 @@ function buildSidebar() {
   }
   const tbody = document.querySelector("#table tbody");
   tbody.innerHTML = "";
-  for (const c of concepts()) {
+  for (const c of cs) {
     const units = edges.filter(e => e.kind === "membership" && e.t === c).length;
+    const attrs = Object.keys(c.attributes || {});
     const top = Object.entries(c.classes || {}).sort((a, b) => b[1] - a[1])[0];
+    const evidence = attrs.length ? attrs.slice(0, 2).join(", ")
+      : top ? `${top[0]} (${top[1].toFixed(2)})` : "—";
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${c.label}</td><td>${units}</td>
-      <td>${(c.coherence ?? 0).toFixed(2)}</td>
-      <td>${top ? `${top[0]} (${top[1].toFixed(2)})` : "—"}</td>`;
+      <td>${(c.coherence ?? 0).toFixed(2)}</td><td>${evidence}</td>`;
     tbody.appendChild(tr);
   }
 }
@@ -227,6 +274,10 @@ function renderDetails() {
   if (n.activation !== undefined) rows.push(["activation", n.activation.toFixed(4)]);
   if (n.coherence !== undefined) rows.push(["coherence", n.coherence.toFixed(3)]);
   if (n.importance !== undefined) rows.push(["importance", n.importance.toFixed(4)]);
+  if (liveMode && n.live !== undefined && n.type !== "class")
+    rows.push(["fires on image", `${(100 * n.live).toFixed(0)}%`]);
+  if (n.attributes) rows.push(["attributes", Object.entries(n.attributes)
+    .map(([k, v]) => `${k} (${v.toFixed(2)})`).join(", ")]);
   if (n.classes) rows.push(["classes", Object.entries(n.classes)
     .map(([k, v]) => `${k} ${v.toFixed(2)}`).join(", ")]);
   const deg = edges.filter(e => e.s === n || e.t === n).length;
@@ -242,6 +293,7 @@ function visibleEdges() {
     coactivation: document.getElementById("showCoact").checked,
     membership: document.getElementById("showMember").checked,
     affinity: document.getElementById("showAffinity").checked,
+    attribute: document.getElementById("showAttr").checked,
   };
   return edges.filter(e => kinds[e.kind] !== false && (e.weight ?? 1) >= (e.kind === "coactivation" ? th : 0));
 }
@@ -256,7 +308,8 @@ function tick() {
   // spring forces along edges
   for (const e of active) {
     const rest = e.kind === "coactivation" ? 120 - 70 * (e.weight ?? 0.5)
-               : e.kind === "membership" ? 46 : 120;
+               : e.kind === "membership" ? 46
+               : e.kind === "attribute" ? 70 : 120;
     const k = e.kind === "coactivation" ? 0.02 * (e.weight ?? 0.5) : 0.03;
     const dx = e.t.x - e.s.x, dy = e.t.y - e.s.y;
     const d = Math.hypot(dx, dy) || 1;
@@ -305,7 +358,23 @@ function resize() {
 window.addEventListener("resize", resize);
 
 function dimmed(n) {
-  return highlightCluster !== null && n.cluster !== highlightCluster && n.type !== "class";
+  return highlightCluster !== null && n.cluster !== highlightCluster
+    && n.type !== "class" && n.type !== "attribute";
+}
+function nodeAlpha(n) {
+  if (dimmed(n)) return 0.2;
+  if (!liveMode) return 1;
+  if (n.type === "class") return 0.25 + 0.75 * (n.live || 0);
+  return 0.15 + 0.85 * (n.live || 0);
+}
+
+function drawDiamond(n) {
+  ctx.beginPath();
+  ctx.moveTo(n.x, n.y - n.r);
+  ctx.lineTo(n.x + n.r, n.y);
+  ctx.lineTo(n.x, n.y + n.r);
+  ctx.lineTo(n.x - n.r, n.y);
+  ctx.closePath();
 }
 
 function draw() {
@@ -322,21 +391,28 @@ function draw() {
     const hi = highlightCluster !== null &&
       (e.s.cluster === highlightCluster || e.t.cluster === highlightCluster);
     const dim = highlightCluster !== null && !hi;
+    const liveBoost = liveMode ? Math.max(e.s.live || 0, e.t.live || 0) : 1;
     ctx.beginPath();
     ctx.moveTo(e.s.x, e.s.y);
     ctx.lineTo(e.t.x, e.t.y);
     if (e.kind === "membership") {
       ctx.strokeStyle = clusterColor(e.t.cluster ?? e.s.cluster);
-      ctx.globalAlpha = dim ? 0.06 : 0.3;
+      ctx.globalAlpha = (dim ? 0.06 : 0.3) * (liveMode ? 0.3 + 0.7 * liveBoost : 1);
       ctx.lineWidth = 1;
     } else if (e.kind === "affinity") {
       ctx.strokeStyle = css("text-muted");
-      ctx.globalAlpha = dim ? 0.08 : 0.5;
+      ctx.globalAlpha = (dim ? 0.08 : 0.5) * (liveMode ? 0.3 + 0.7 * liveBoost : 1);
       ctx.lineWidth = 1 + 2 * (e.weight ?? 0.3);
       ctx.setLineDash([4, 3]);
+    } else if (e.kind === "attribute") {
+      ctx.strokeStyle = css("live");
+      ctx.globalAlpha = (dim ? 0.08 : 0.45) * (liveMode ? 0.3 + 0.7 * liveBoost : 1);
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 3]);
     } else {
       ctx.strokeStyle = css("baseline");
-      ctx.globalAlpha = (dim ? 0.05 : 0.15) + 0.5 * (e.weight ?? 0);
+      ctx.globalAlpha = ((dim ? 0.05 : 0.15) + 0.5 * (e.weight ?? 0))
+        * (liveMode ? 0.25 + 0.75 * liveBoost : 1);
       ctx.lineWidth = 0.5 + 1.5 * (e.weight ?? 0);
     }
     ctx.stroke();
@@ -345,11 +421,22 @@ function draw() {
   }
 
   for (const n of nodes) {
-    ctx.globalAlpha = dimmed(n) ? 0.2 : 1;
+    ctx.globalAlpha = nodeAlpha(n);
+    if (liveMode && (n.live || 0) > 0.55 && n.type !== "class") {
+      ctx.shadowColor = css("live");
+      ctx.shadowBlur = 14 * n.live;
+    }
     if (n.type === "class") {
       // classes are neutral squares — never confused with cluster hues
-      ctx.fillStyle = css("text-secondary");
+      ctx.fillStyle = liveMode && (n.live || 0) > 0.3 ? css("live") : css("text-secondary");
       ctx.fillRect(n.x - n.r * 0.8, n.y - n.r * 0.8, n.r * 1.6, n.r * 1.6);
+    } else if (n.type === "attribute") {
+      drawDiamond(n);
+      ctx.fillStyle = css("surface-1");
+      ctx.fill();
+      ctx.strokeStyle = css("live");
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
     } else {
       ctx.beginPath();
       ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2);
@@ -361,11 +448,12 @@ function draw() {
         ctx.stroke();
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.r + 2.5, 0, Math.PI * 2);
-        ctx.strokeStyle = clusterColor(n.cluster ?? 0);
+        ctx.strokeStyle = liveMode && (n.live || 0) > 0.55 ? css("live") : clusterColor(n.cluster ?? 0);
         ctx.lineWidth = 1.2;
         ctx.stroke();
       }
     }
+    ctx.shadowBlur = 0;
     if (n === selected || n === hovered) {
       ctx.beginPath();
       ctx.arc(n.x, n.y, n.r + 5, 0, Math.PI * 2);
@@ -373,7 +461,7 @@ function draw() {
       ctx.lineWidth = 1;
       ctx.stroke();
     }
-    if (showLabels && (n.type === "concept" || n.type === "class")) {
+    if (showLabels && (n.type === "concept" || n.type === "class" || n.type === "attribute")) {
       ctx.font = `${n.type === "class" ? "600 " : ""}11px system-ui, sans-serif`;
       ctx.fillStyle = dimmed(n) ? css("text-muted") : css("text-primary");
       ctx.textAlign = "center";
@@ -421,15 +509,17 @@ canvas.addEventListener("pointermove", ev => {
       tooltip.style.display = "block";
       tooltip.style.left = (ev.offsetX + 14) + "px";
       tooltip.style.top = (ev.offsetY + 14) + "px";
+      const live = liveMode && n.type !== "class"
+        ? `<br>fires on image: ${(100 * (n.live || 0)).toFixed(0)}%` : "";
       const extra = n.type === "unit" ? `activation ${n.activation?.toFixed(3) ?? "—"}`
-        : n.type === "concept" ? `coherence ${n.coherence?.toFixed(2) ?? "—"}` : "class";
-      tooltip.innerHTML = `<b>${n.label}</b><br>${extra}`;
+        : n.type === "concept" ? `coherence ${n.coherence?.toFixed(2) ?? "—"}`
+        : n.type === "attribute" ? "visual attribute" : "class";
+      tooltip.innerHTML = `<b>${n.label}</b><br>${extra}${live}`;
     } else tooltip.style.display = "none";
     draw();
   }
 });
 canvas.addEventListener("pointerup", ev => {
-  if (dragNode && !ev.movementX && !ev.movementY) {}
   canvas.classList.remove("dragging");
   dragNode = null; panning = null;
 });
@@ -451,13 +541,161 @@ canvas.addEventListener("wheel", ev => {
   draw();
 }, { passive: false });
 
-for (const id of ["threshold", "showCoact", "showMember", "showAffinity", "showLabels"]) {
+for (const id of ["threshold", "showCoact", "showMember", "showAffinity", "showAttr", "showLabels"]) {
   document.getElementById(id).addEventListener("input", () => {
     document.getElementById("thvalue").textContent =
       (+document.getElementById("threshold").value).toFixed(2);
     alpha = Math.max(alpha, 0.3); requestAnimationFrame(tick); draw();
   });
 }
+
+// ------------------------------------------------------------- inference
+// Loads manifest.json + model.onnx (exported by hatchvision's
+// export_onnx_bundle) and runs classification fully in the browser.
+let manifest = null, session = null, sessionPromise = null;
+const infstatus = document.getElementById("infstatus");
+
+async function initInference() {
+  try {
+    const r = await fetch("manifest.json");
+    if (!r.ok) return;             // no bundle deployed — viewer-only mode
+    manifest = await r.json();
+  } catch { return; }
+  document.getElementById("inference").style.display = "block";
+  infstatus.textContent = "model loads on first use";
+}
+
+function ensureSession() {
+  if (!sessionPromise) {
+    infstatus.textContent = "downloading model…";
+    ort.env.wasm.wasmPaths = new URL("vendor/", location.href).href;
+    ort.env.wasm.numThreads = 1;   // single wasm file, no cross-origin-isolation needs
+    sessionPromise = ort.InferenceSession.create(manifest.model)
+      .then(s => { session = s; return s; });
+  }
+  return sessionPromise;
+}
+
+function preprocess(img) {
+  // Mirror hatchvision eval transforms: small inputs are resized square;
+  // larger ones are resized (shorter side = 1.14 * size) then center-cropped.
+  const S = manifest.image_size;
+  const work = document.createElement("canvas");
+  work.width = S; work.height = S;
+  const wctx = work.getContext("2d");
+  if (S <= 64) {
+    wctx.drawImage(img, 0, 0, S, S);
+  } else {
+    const scale = (S * 1.14) / Math.min(img.naturalWidth, img.naturalHeight);
+    const w = img.naturalWidth * scale, h = img.naturalHeight * scale;
+    wctx.drawImage(img, (S - w) / 2, (S - h) / 2, w, h);
+  }
+  const { data } = wctx.getImageData(0, 0, S, S);
+  const C = manifest.in_channels;
+  const out = new Float32Array(C * S * S);
+  for (let p = 0; p < S * S; p++) {
+    if (C === 1) {
+      const g = (data[p * 4] + data[p * 4 + 1] + data[p * 4 + 2]) / (3 * 255);
+      out[p] = (g - manifest.mean[0]) / manifest.std[0];
+    } else {
+      for (let c = 0; c < 3; c++) {
+        out[c * S * S + p] =
+          (data[p * 4 + c] / 255 - manifest.mean[c]) / manifest.std[c];
+      }
+    }
+  }
+  return new ort.Tensor("float32", out, [1, C, S, S]);
+}
+
+function softmax(v) {
+  const m = Math.max(...v);
+  const e = v.map(x => Math.exp(x - m));
+  const s = e.reduce((a, b) => a + b, 0);
+  return e.map(x => x / s);
+}
+
+function applyActivations(results, probs) {
+  for (const n of nodes) n.live = 0;
+  for (const spec of manifest.activation_outputs) {
+    const t = results[spec.output];
+    if (!t) continue;
+    const v = Array.from(t.data);
+    const max = Math.max(...v, 1e-8);
+    for (let i = 0; i < v.length; i++) {
+      const node = byId.get(spec.node_prefix + i);
+      if (node) node.live = v[i] / max;
+    }
+  }
+  // concepts glow with the mean of their member units
+  for (const c of concepts()) {
+    const members = edges.filter(e => e.kind === "membership" && e.t === c);
+    if (members.length)
+      c.live = members.reduce((a, e) => a + (e.s.live || 0), 0) / members.length;
+  }
+  // attributes inherit their strongest firing concept
+  for (const n of nodes) {
+    if (n.type !== "attribute") continue;
+    n.live = Math.max(0, ...edges
+      .filter(e => e.kind === "attribute" && e.t === n)
+      .map(e => e.s.live || 0));
+  }
+  // classes light up with predicted probability
+  manifest.class_names.forEach((name, i) => {
+    const node = byId.get("k:" + name);
+    if (node) node.live = probs[i];
+  });
+  liveMode = true;
+}
+
+function renderPrediction(probs, ms) {
+  const order = probs.map((p, i) => [p, i]).sort((a, b) => b[0] - a[0]).slice(0, 5);
+  const el = document.getElementById("preds");
+  el.innerHTML = order.map(([p, i]) => `
+    <div class="pred">
+      <span class="name" title="${manifest.class_names[i]}">${manifest.class_names[i]}</span>
+      <span class="bar" style="width:${Math.round(90 * p)}px"></span>
+      <span class="pct">${(100 * p).toFixed(1)}%</span>
+    </div>`).join("");
+  infstatus.textContent = `inference ${ms.toFixed(0)} ms · graph shows what fired`;
+  document.getElementById("clearinf").style.display = "inline-block";
+}
+
+async function classifyImage(file) {
+  if (!manifest) return;
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = async () => {
+    const preview = document.getElementById("preview");
+    preview.src = url; preview.style.display = "block";
+    try {
+      await ensureSession();
+      infstatus.textContent = "running…";
+      const t0 = performance.now();
+      const results = await session.run({ images: preprocess(img) });
+      const ms = performance.now() - t0;
+      const probs = softmax(Array.from(results.logits.data));
+      applyActivations(results, probs);
+      renderPrediction(probs, ms);
+      buildSidebar(); renderDetails(); draw();
+    } catch (e) {
+      infstatus.textContent = "inference failed: " + e.message;
+    }
+  };
+  img.src = url;
+}
+
+function clearInference() {
+  liveMode = false;
+  for (const n of nodes) n.live = 0;
+  document.getElementById("preds").innerHTML = "";
+  document.getElementById("preview").style.display = "none";
+  document.getElementById("clearinf").style.display = "none";
+  if (manifest) infstatus.textContent = session ? "model ready" : "model loads on first use";
+}
+document.getElementById("clearinf").onclick = () => { clearInference(); buildSidebar(); draw(); };
+document.getElementById("imgfile").addEventListener("change", ev => {
+  if (ev.target.files[0]) classifyImage(ev.target.files[0]);
+});
 
 // ------------------------------------------------------------- loading
 function readFile(file) {
@@ -474,16 +712,21 @@ window.addEventListener("dragleave", ev => { if (!ev.relatedTarget) document.bod
 window.addEventListener("drop", ev => {
   ev.preventDefault();
   document.body.classList.remove("dropping");
-  if (ev.dataTransfer.files[0]) readFile(ev.dataTransfer.files[0]);
+  const f = ev.dataTransfer.files[0];
+  if (!f) return;
+  if (f.type.startsWith("image/")) classifyImage(f);
+  else readFile(f);
 });
 
 resize();
-fetch("sample-graph.json")
-  .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-  .then(loadGraph)
-  .catch(() => {
-    document.getElementById("meta").textContent = "no sample graph found — drop an IVGraph JSON to begin";
-  });
+initInference().then(() => {
+  const graphFile = (manifest && manifest.graph) || "sample-graph.json";
+  return fetch(graphFile)
+    .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+    .then(loadGraph);
+}).catch(() => {
+  document.getElementById("meta").textContent = "no graph found — drop an IVGraph JSON to begin";
+});
 </script>
 </body>
 </html>
