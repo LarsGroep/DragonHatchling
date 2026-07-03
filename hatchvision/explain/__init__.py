@@ -1,5 +1,15 @@
 from hatchvision.explain.gradcam import GradCAM, denormalize
-from hatchvision.explain.concepts import Concept, cluster_concepts, find_exemplars
+from hatchvision.explain.concepts import (
+    Concept,
+    cluster_concepts,
+    concept_scores,
+    find_exemplars,
+    probe_activations,
+)
+from hatchvision.explain.attributes import (
+    ground_concepts,
+    ground_concepts_from_class_attributes,
+)
 from hatchvision.explain.shap_explainer import ShapExplainer, shap_available
 
 __all__ = [
@@ -7,7 +17,11 @@ __all__ = [
     "denormalize",
     "Concept",
     "cluster_concepts",
+    "concept_scores",
     "find_exemplars",
+    "probe_activations",
+    "ground_concepts",
+    "ground_concepts_from_class_attributes",
     "ShapExplainer",
     "shap_available",
 ]

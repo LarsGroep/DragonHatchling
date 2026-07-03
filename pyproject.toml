@@ -17,8 +17,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+onnx = ["onnx>=1.15", "onnxruntime>=1.17"]
 shap = ["shap>=0.44"]
-dev = ["pytest>=7"]
+dev = ["pytest>=7", "onnx>=1.15", "onnxruntime>=1.17"]
 
 [tool.setuptools.packages.find]
 include = ["hatchvision*"]

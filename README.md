@@ -1,9 +1,10 @@
 # DragonHatchling · hatchvision
 
-A reusable PyTorch image-classification framework with pluggable encoder
-backbones — including an experimental **Baby Dragon Hatchling (BDH)**
-backbone — an optional **Hebbian feature memory** for explainability, and a
-pipeline that turns what a network learned into an interactive concept graph.
+A **universal image-classification + explainability tool** built on the Baby
+Dragon Hatchling (BDH) architecture: train a classifier on any image dataset,
+record what its neurons do with a **Hebbian feature memory**, translate the
+activation patterns into **named visual concepts**, and explore the result —
+including live in-browser inference — in an interactive concept graph.
 
 ```
 dataset loader ──▶ backbone ──▶ classifier head ──▶ training
@@ -14,43 +15,56 @@ dataset loader ──▶ backbone ──▶ classifier head ──▶ training
                         │
           concept clustering (units that fire together)
                         │
-              IVGraph JSON ──▶ webapp/ (Vercel viewer)
+        attribute grounding ("wing color: yellow", when the
+                        │       dataset has attribute annotations)
+                        ▼
+      graph.json + model.onnx + manifest.json  ──▶  webapp/
+                                     (upload an image, watch the graph fire)
 ```
 
-## Quick start
+## The universal workflow
+
+The same command works for every registered dataset — **swapping datasets
+means swapping the loader, nothing else**. Models, transforms, Hebbian
+tracking, concept naming, and the export all derive from the loader's
+`DatasetSpec`.
 
 ```bash
-pip install -r requirements.txt          # + `pip install shap` for SHAP
+pip install -r requirements.txt onnx    # onnx only needed for --export-bundle
 
-# train, record Hebbian statistics, export the concept graph
-python scripts/train.py --dataset cifar10 --backbone simple_cnn \
-    --epochs 3 --hebbian --export-graph webapp/sample-graph.json
+# a fast, self-contained demo (no downloads):
+python scripts/make_shapes_dataset.py --out data/shapes
+python scripts/train.py --dataset imagefolder --root data/shapes --image-size 64 \
+    --backbone simple_cnn --epochs 4 --export-bundle webapp
 
-# explore the graph
-cd webapp && python3 -m http.server 8000   # or: npx vercel deploy
+# the flagship experiment — CUB-200 birds (GPU recommended, see below):
+python scripts/train.py --dataset cub200 --root data/cub --backbone hybrid \
+    --epochs 12 --export-bundle exports/cub200
+
+# explore the exported graph + run inference in the browser
+cd webapp && python3 -m http.server 8000
 ```
 
-Or walk the whole pipeline interactively in
-[`notebooks/explainability_demo.ipynb`](notebooks/explainability_demo.ipynb):
-training → Grad-CAM → SHAP → Hebbian concept clusters → exemplar images →
-IVGraph export.
+`--export-bundle DIR` writes the three files the web app consumes:
+`graph.json` (Hebbian concept graph), `model.onnx` (classifier **plus neuron
+activation outputs**), and `manifest.json` (preprocessing + node mapping).
 
-## Swapping datasets
+### CUB-200 on Kaggle (GPU)
 
-**Changing datasets means changing the dataset loader — nothing else.**
-Models, transforms, heads, Hebbian tracking, Grad-CAM, and the export all
-derive from the loader's `DatasetSpec` (classes, image size, channels,
-normalization).
+[`notebooks/kaggle_cub200.ipynb`](notebooks/kaggle_cub200.ipynb) is a
+self-contained Kaggle notebook: attach a CUB-200-2011 dataset (e.g.
+`wenewone/cub2002011`), enable GPU, *Run All*. It trains the hybrid
+BDH model, grounds every Hebbian concept in CUB's 312 attribute annotations
+("wing color: yellow · bill shape: hooked"), and produces `bundle.zip` —
+unzip it into `webapp/` and redeploy to get a live bird classifier whose
+Hebbian graph lights up per image.
 
-```python
-data = build_loader("cifar10")                              # built-in
-data = build_loader("fashion_mnist")                        # grayscale? handled
-data = build_loader("imagefolder", root="/my/data")         # any train/val tree
-```
+## Datasets
 
-Built-ins: `cifar10`, `cifar100`, `fashion_mnist`, and `imagefolder` (any
-directory of `train/<class>/*`, `val/<class>/*`). For anything else, subclass
-`DatasetLoader` (two methods + a spec) and register it:
+Built-ins: `cifar10`, `cifar100`, `fashion_mnist`, `cub200` (with attribute
+annotations), and `imagefolder` (any `train/<class>/*`, `val/<class>/*`
+tree). For anything else, subclass `DatasetLoader` (two methods + a spec)
+and register it:
 
 ```python
 @register_loader("galaxies")
@@ -58,80 +72,86 @@ class GalaxyLoader(DatasetLoader):
     ...
 ```
 
-## Swapping backbones
+A loader can optionally expose per-image **attribute annotations**
+(`attribute_names()` / `val_attribute_matrix()`); if it does, concept
+grounding switches on automatically — that's the only thing that
+distinguishes `cub200` from any other dataset.
+
+## Backbones
 
 Backbones implement one small interface — `forward(x) -> [B, feature_dim]`,
-plus `cam_layer()` (for Grad-CAM) and `hebbian_layers()` (what the Hebbian
-memory observes) — so encoders are fully interchangeable:
+`cam_layer()` (Grad-CAM), `hebbian_layers()` (what the Hebbian memory
+observes) — so encoders are fully interchangeable:
 
 ```python
 model = create_model("simple_cnn", data.spec)   # fast demo CNN
 model = create_model("resnet18",  data.spec)    # torchvision, CIFAR-aware stem
-model = create_model("bdh",       data.spec)    # experimental BDH encoder
+model = create_model("bdh",       data.spec)    # pure BDH, from scratch
+model = create_model("hybrid",    data.spec)    # frozen pretrained encoder + BDH neurons
 ```
 
-New encoders register with `@register_backbone("name")`.
-
-### The Baby Dragon Hatchling backbone (experimental)
+### Pure BDH (`bdh`)
 
 `hatchvision/models/backbones/bdh.py` adapts the BDH architecture
 (["The Dragon Hatchling"](https://arxiv.org/abs/2509.26507)) to images:
 patch tokens are lifted into a high-dimensional **sparse, positive neuron
-space** (ReLU), mixed with **linear attention** (positive query/key kernels),
-through an optionally **weight-shared universal layer**. Those sparse,
-positive "neurons" are exactly what Hebbian co-activation analysis wants,
-which makes this backbone the most interpretable one in the registry. If the
-official `bdh` package is installed it is detected
-(`OFFICIAL_BDH_AVAILABLE`); the vision adaptation here is self-contained.
+space** (ReLU), mixed with **linear attention** (positive query/key
+kernels), through an optionally **weight-shared universal layer**.
+Scientifically faithful, trains from scratch — expect modest accuracy on
+fine-grained datasets.
 
-## Hebbian feature memory
+### Hybrid (`hybrid`) — the practical default for CUB-200
+
+A frozen pretrained torchvision encoder (default `resnet50`) feeds a
+BDH-style sparse positive neuron lift. Only the lift + head train (fast,
+even on CPU), accuracy is competitive, and the Hebbian memory observes the
+same kind of sparse positive "neurons" as pure BDH — so the explainability
+pipeline is identical for both. Configure with
+`--encoder resnet18|resnet34|resnet50`, `--neuron-dim`, `--unfreeze-encoder`.
+
+## Hebbian feature memory → named concepts
 
 `HebbianFeatureMemory` hooks the backbone's advertised layers and maintains
 an EMA of neuron co-activation ("fire together, wire together") plus
-class-conditional firing rates. It is **pure observation**: everything is
-detached, so training with or without it is bit-identical — enforced by
-`tests/test_framework.py::test_hebbian_memory_does_not_affect_training`.
+class-conditional firing rates. It is **pure observation**: training with or
+without it is bit-identical (enforced by a test).
 
-```python
-memory = HebbianFeatureMemory(model, num_classes=data.spec.num_classes)
-Trainer(model, TrainConfig(epochs=3), hebbian_memory=memory).fit(train, val)
+The explainability pipeline then:
 
-memory.correlation("stage3")     # co-activation matrix
-memory.class_affinity("stage3")  # which classes each unit fires for
-```
+1. **clusters** co-activating units into concepts (`cluster_concepts`),
+2. attaches the probe images each concept fires on (`find_exemplars`),
+3. **grounds** concepts in dataset attributes when available
+   (`ground_concepts`) — measuring how much more a concept fires on images
+   *with* an attribute than without, and naming it after its top attributes.
 
-## Explainability
+Plus pixel-level tools: **Grad-CAM** (no dependencies) and **SHAP**
+(optional `shap` extra).
 
-- **Grad-CAM** (`hatchvision.explain.GradCAM`) — pixel-level saliency for any
-  backbone via its `cam_layer()`. No dependencies.
-- **SHAP** (`hatchvision.explain.ShapExplainer`) — expected-gradients pixel
-  attribution; optional `shap` extra.
-- **Concepts** (`cluster_concepts`, `find_exemplars`) — clusters the Hebbian
-  co-activation matrix into concepts, labels them by class affinity, and
-  attaches the probe images that activate them most.
+## Web app (`webapp/`)
 
-## IVGraph export & web viewer
-
-`export_ivgraph(...)` writes the unit/concept/class graph as IVGraph JSON
-(schema documented in `hatchvision/export/ivgraph.py`). The static app in
-[`webapp/`](webapp/README.md) renders it — force layout, cluster
-highlighting, tooltips, edge filters, light/dark — and deploys to Vercel
-with `npx vercel deploy` (no build step).
+A zero-build static site (Vercel-ready) that renders the concept graph —
+force layout, cluster highlighting, edge filters, light/dark — and, when a
+bundle is present, runs **inference fully in the browser** via onnxruntime-web
+(vendored, no CDN): upload a photo, get top-5 predictions, and watch the
+units/concepts/attributes that fired light up. See
+[`webapp/README.md`](webapp/README.md).
 
 ## Layout
 
 ```
 hatchvision/
-  data/        DatasetSpec, DatasetLoader interface, built-in loaders
-  models/      backbone registry (simple_cnn, resnet*, bdh) + classifier head
+  data/        DatasetSpec, loader registry (cifar10/100, fashion_mnist,
+               cub200 + attributes, imagefolder)
+  models/      backbone registry (simple_cnn, resnet*, bdh, hybrid) + head
   hebbian/     HebbianFeatureMemory (observation-only forward hooks)
-  explain/     GradCAM, ShapExplainer, concept clustering & exemplars
-  export/      IVGraph JSON builder
+  explain/     GradCAM, SHAP, concept clustering, attribute grounding
+  export/      IVGraph JSON + ONNX inference bundle
   engine/      Trainer / TrainConfig
-scripts/       train.py CLI (train → evaluate → export graph)
-notebooks/     explainability_demo.ipynb (end-to-end walkthrough)
-webapp/        static IVGraph viewer (Vercel-ready)
-tests/         smoke tests for every component
+scripts/       train.py CLI · make_shapes_dataset.py (demo data)
+notebooks/     kaggle_cub200.ipynb (GPU training → bundle.zip)
+               explainability_demo.ipynb (interactive walkthrough)
+webapp/        static graph viewer + in-browser inference (Vercel-ready)
+tests/         end-to-end smoke tests for every component
 ```
 
 ## Tests

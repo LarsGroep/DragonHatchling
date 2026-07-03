@@ -1,0 +1,42 @@
+{
+  "format": "hatchvision-bundle",
+  "version": "1.0",
+  "model": "model.onnx",
+  "graph": "graph.json",
+  "dataset": "shapes",
+  "image_size": 64,
+  "in_channels": 3,
+  "mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "class_names": [
+    "circle",
+    "cross",
+    "ring",
+    "square",
+    "star",
+    "triangle"
+  ],
+  "activation_outputs": [
+    {
+      "layer": "stage2",
+      "output": "act_stage2",
+      "units": 64,
+      "node_prefix": "u:stage2:"
+    },
+    {
+      "layer": "stage3",
+      "output": "act_stage3",
+      "units": 128,
+      "node_prefix": "u:stage3:"
+    }
+  ],
+  "backbone": "simple_cnn"
+}
