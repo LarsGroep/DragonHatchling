@@ -57,7 +57,20 @@ self-contained Kaggle notebook: attach a CUB-200-2011 dataset (e.g.
 BDH model, grounds every Hebbian concept in CUB's 312 attribute annotations
 ("wing color: yellow · bill shape: hooked"), and produces `bundle.zip` —
 unzip it into `webapp/` and redeploy to get a live bird classifier whose
-Hebbian graph lights up per image.
+Hebbian graph lights up per image. The bundle also contains
+`hebbian_state.pt` (the raw co-activation statistics), so clustering and
+grounding can be **re-run in seconds without retraining**:
+
+```bash
+python scripts/rebuild_graph.py --state hebbian_state.pt \
+    --manifest manifest.json --dataset cub200 --root data/cub \
+    --n-concepts 24 --out graph.json
+```
+
+Models export as **fp16 ONNX** by default in the notebook (half the
+in-browser download, identical top-5 predictions). If `webapp/model.onnx`
+is tracked with Git LFS, run `git lfs pull` before deploying — the app
+detects a deployed LFS pointer and says so, but it can't fix it.
 
 ## Datasets
 

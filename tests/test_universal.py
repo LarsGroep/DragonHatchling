@@ -198,6 +198,51 @@ def test_ground_concepts_shape_mismatch_raises():
         )
 
 
+def test_cluster_concepts_does_not_collapse():
+    """Regression: on wide sparse layers (real CUB run) average-linkage
+    chained 489/512 units into ONE concept. Simulate that regime — block
+    structure + dead units + noise — and require balanced clusters."""
+    from hatchvision.explain import cluster_concepts
+    from hatchvision.hebbian.memory import HebbianFeatureMemory, _LayerStats
+
+    g = torch.Generator().manual_seed(0)
+    n_units, n_blocks, n_samples = 256, 8, 400
+    # 30% dead units; live units belong to soft co-activation blocks
+    acts = torch.zeros(n_samples, n_units)
+    live = torch.arange(int(n_units * 0.7))
+    for s in range(n_samples):
+        block = s % n_blocks
+        members = live[live % n_blocks == block]
+        acts[s, members] = torch.rand(len(members), generator=g)
+        noise = torch.randint(0, len(live), (10,), generator=g)
+        acts[s, live[noise]] += 0.3 * torch.rand(10, generator=g)
+
+    memory = HebbianFeatureMemory.__new__(HebbianFeatureMemory)
+    memory.num_classes = 4
+    memory.stats = {}
+    a_hat = acts / (acts.norm(dim=1, keepdim=True) + 1e-8)
+    memory.stats["layer"] = _LayerStats(
+        dim=n_units,
+        coact=a_hat.t() @ a_hat / n_samples,
+        mean_act=a_hat.mean(dim=0),
+        class_act=torch.rand(4, n_units, generator=g),
+        class_count=torch.full((4,), 100.0),
+        updates=n_samples,
+    )
+
+    concepts = cluster_concepts(memory, "layer", ("a", "b", "c", "d"), n_concepts=8)
+    assert len(concepts) >= 4, "should find several concepts, not one blob"
+    sizes = [len(c.units) for c in concepts]
+    total_clustered = sum(sizes)
+    assert max(sizes) <= 0.6 * total_clustered, f"degenerate mega-cluster: {sizes}"
+    dead = set(range(int(n_units * 0.7), n_units))
+    for c in concepts:
+        assert not (set(c.units) & dead), "dead units must be excluded"
+    # class affinity is max-normalized: strongest class scores 1.0
+    for c in concepts:
+        assert abs(max(c.class_affinity.values()) - 1.0) < 1e-6
+
+
 # -------------------------------------------------------------- ONNX bundle
 
 

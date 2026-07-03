@@ -215,6 +215,24 @@ class HebbianFeatureMemory:
             },
         }
 
+    @classmethod
+    def from_state(cls, state: dict) -> "HebbianFeatureMemory":
+        """Rehydrate a memory from ``state_dict()`` without a model.
+
+        The result observes nothing (no hooks) but supports all analysis:
+        correlation, class affinity, concept clustering, graph export.
+        Lets saved training statistics be re-analyzed post hoc — e.g. by
+        ``scripts/rebuild_graph.py`` — without retraining.
+        """
+        mem = cls.__new__(cls)
+        mem.enabled = False
+        mem._labels = None
+        mem._handles = []
+        mem.stats = {}
+        mem.load_state_dict(state)
+        mem.max_units = max((st.dim for st in mem.stats.values()), default=256)
+        return mem
+
     def load_state_dict(self, state: dict) -> None:
         self.num_classes = state["num_classes"]
         self.momentum = state["momentum"]

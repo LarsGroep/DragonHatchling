@@ -82,12 +82,16 @@ def export_onnx_bundle(
     model_file: str = "model.onnx",
     manifest_file: str = "manifest.json",
     opset: int = 17,
+    fp16: bool = False,
     extra_meta: Optional[Dict] = None,
 ) -> Path:
     """Write ``model.onnx`` + ``manifest.json`` into ``out_dir``.
 
     The IVGraph JSON is exported separately (``export_ivgraph``); pass its
     filename via ``graph_file`` so the manifest can reference it.
+    ``fp16=True`` halves the file by storing weights as float16 while
+    keeping float32 inputs/outputs (requires ``onnxconverter-common``) —
+    recommended for in-browser bundles of pretrained encoders.
     Returns the manifest path.
     """
     out_dir = Path(out_dir)
@@ -128,6 +132,18 @@ def export_onnx_bundle(
     finally:
         wrapper.remove_hooks()
         model.train(was_training)
+
+    if fp16:
+        try:
+            import onnx
+            from onnxconverter_common import float16
+        except ImportError as e:
+            raise ImportError(
+                "fp16 export needs: pip install onnx onnxconverter-common"
+            ) from e
+        m = onnx.load(str(onnx_path))
+        m = float16.convert_float_to_float16(m, keep_io_types=True)
+        onnx.save(m, str(onnx_path))
 
     mean, std = spec.normalization()
     manifest = {
