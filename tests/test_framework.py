@@ -122,3 +122,34 @@ def test_concepts_and_ivgraph_export(tmp_path):
         assert e["source"] in node_ids and e["target"] in node_ids
     # round-trips through JSON
     json.loads(json.dumps(doc))
+
+
+def test_ivgraph_carries_neuron_coactivation_network():
+    """The exported graph must contain the unit-level co-activation edges the
+    web app's 'Neurons' view draws — including intra-concept links that the
+    global top-K ranking would otherwise drop."""
+    model = create_model("simple_cnn", SPEC)
+    memory = HebbianFeatureMemory(model, num_classes=SPEC.num_classes, max_units=32)
+    Trainer(model, TrainConfig(epochs=1, log_every=0), memory).fit(synthetic_loader())
+    layer = memory.layer_names[-1]
+    concepts = cluster_concepts(memory, layer, SPEC.class_names, n_concepts=4)
+
+    doc = build_ivgraph(memory, concepts, layer, SPEC.class_names)
+    coact = [e for e in doc["edges"] if e["kind"] == "coactivation"]
+    assert coact, "no co-activation edges — neuron network would be edgeless"
+
+    # de-duplicated undirected pairs
+    pairs = {frozenset((e["source"], e["target"])) for e in coact}
+    assert len(pairs) == len(coact)
+
+    # at least one edge lives strictly inside a concept's own units
+    def unit_id(u):
+        return f"u:{layer}:{u}"
+
+    intra = False
+    for c in concepts:
+        uset = {unit_id(u) for u in c.units}
+        if any(e["source"] in uset and e["target"] in uset for e in coact):
+            intra = True
+            break
+    assert intra, "expected at least one intra-concept co-activation edge"

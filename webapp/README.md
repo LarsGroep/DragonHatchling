@@ -50,7 +50,14 @@ the dataset has — detail is revealed on demand rather than drawn all at once.
   **attributes** (gold diamonds, e.g. *wing color: yellow*) and the **species**
   it responds to (squares); everything else dims. Click again to collapse.
 - **Full graph** toggle expands every concept at once (dense; for overview).
-- Drag to pan, scroll to zoom, drag a node to reposition, `re-layout` to
+- **Neurons** toggle shows the **full Hebbian network** at the unit level:
+  every tracked neuron as a dot **colored by the concept it belongs to**,
+  linked by co-activation (real Hebbian edge weights when the graph carries
+  them, otherwise concept co-membership). Hover a neuron to trace its
+  co-firing links and see its concept; click to focus its neighborhood.
+  After you classify an image the neurons **light up by how strongly they
+  fire**, so you watch the raw network activate.
+- Drag to pan, scroll to zoom, drag a node to reposition, `Layout` to
   re-run the force layout and auto-fit.
 
 ## Classify + explain

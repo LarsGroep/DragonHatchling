@@ -382,6 +382,7 @@
     <div class="seg" id="viewseg" title="Graph detail">
       <button data-view="concepts" class="on">Concepts</button>
       <button data-view="full">Full graph</button>
+      <button data-view="network" title="Full neuron-level Hebbian co-activation network">Neurons</button>
     </div>
     <label><input type="checkbox" id="showLabels" checked> labels</label>
     <button id="tourbtn" class="primary" title="Guided walkthrough: Hebbian activation regions + SHAP influence">▶&nbsp;Demo tour</button>
@@ -601,6 +602,7 @@ function buildModel(document_) {
   selected = null; expanded = null; clearInference(false);
   setRegionClass(-1);
   seedLayout();
+  buildNetwork();
   buildConceptList();
   renderDetails();
   reheat();
@@ -612,6 +614,196 @@ let alpha = 0, needsFit = false;
 let selected = null, hovered = null, expanded = null; // expanded concept id
 let dragNode = null, panning = null;
 let showFull = false;   // "full graph" view = show all concepts' satellites at once (dense)
+
+/* ═══════════ full Hebbian neuron network (unit-level view) ═══════════ */
+let networkMode = false;
+let units = [], unitById = new Map(), netEdges = [], netNeighbors = new Map();
+let selectedUnit = null, hoveredUnit = null;
+let unitLiveMap = new Map();     // unit id → normalized firing (0..1) after classify
+
+// Build the neuron-level network from the graph doc: every tracked unit is a
+// node colored by the concept it belongs to; edges are explicit Hebbian
+// co-activation links when the graph carries them, always augmented with
+// concept co-membership (units are clustered precisely because they co-fire),
+// so the network is meaningful and connected on every bundle.
+function buildNetwork() {
+  units = (doc.nodes || []).filter(n => n.type === "unit").map(n => {
+    const m = /ch\s+(\d+)/.exec(n.label || "");
+    return {
+      id: n.id, cluster: n.cluster ?? 0, activation: n.activation || 0,
+      size: n.size || 0.6, ch: m ? m[1] : "", concept: null,
+      x: 0, y: 0, vx: 0, vy: 0, live: 0,
+    };
+  });
+  unitById = new Map(units.map(u => [u.id, u]));
+  for (const c of concepts) for (const mu of c.units) {
+    const u = unitById.get(mu.id); if (u) u.concept = c;
+  }
+
+  const seen = new Set();
+  netEdges = [];
+  const addEdge = (aId, bId, w, kind) => {
+    const a = unitById.get(aId), b = unitById.get(bId);
+    if (!a || !b || a === b) return;
+    const key = aId < bId ? aId + "|" + bId : bId + "|" + aId;
+    if (seen.has(key)) return;
+    seen.add(key);
+    netEdges.push({ a, b, w: clamp(w, 0.05, 1), kind });
+  };
+  for (const e of (doc.edges || []))
+    if (e.kind === "coactivation") addEdge(e.source, e.target, e.weight || 0.5, "coact");
+  for (const c of concepts)
+    for (let i = 0; i < c.units.length; i++)
+      for (let j = i + 1; j < c.units.length; j++)
+        addEdge(c.units[i].id, c.units[j].id, 0.55, "member");
+
+  netNeighbors = new Map(units.map(u => [u.id, new Set()]));
+  for (const e of netEdges) {
+    netNeighbors.get(e.a.id).add(e.b.id);
+    netNeighbors.get(e.b.id).add(e.a.id);
+  }
+  selectedUnit = hoveredUnit = null;
+  seedNetworkLayout();
+}
+
+function seedNetworkLayout() {
+  const W = canvas.clientWidth || 900, H = canvas.clientHeight || 600;
+  const R = Math.min(W, H) * 0.38, nC = Math.max(1, concepts.length);
+  const angleOf = new Map(concepts.map((c, i) => [c.cluster, (i / nC) * Math.PI * 2]));
+  for (const u of units) {
+    const ang = angleOf.has(u.cluster) ? angleOf.get(u.cluster) : Math.random() * Math.PI * 2;
+    const rr = R * (0.45 + 0.55 * Math.random());
+    u.x = W / 2 + rr * Math.cos(ang) + (Math.random() - 0.5) * 46;
+    u.y = H / 2 + rr * Math.sin(ang) + (Math.random() - 0.5) * 46;
+    u.vx = u.vy = 0;
+  }
+}
+
+function unitRadius(u) {
+  const base = 3.2 + 6.5 * (u.size || 0.5);
+  return liveMode ? base * (0.55 + 0.95 * (u.live || 0)) : base;
+}
+
+function networkTick() {
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  for (const e of netEdges) {
+    const rest = e.kind === "coact" ? 74 - 42 * e.w : 50;
+    const k = (e.kind === "coact" ? 0.022 : 0.03) * (0.4 + e.w);
+    const dx = e.b.x - e.a.x, dy = e.b.y - e.a.y, d = Math.hypot(dx, dy) || 1;
+    const f = k * (d - rest) / d;
+    e.a.vx += f * dx; e.a.vy += f * dy; e.b.vx -= f * dx; e.b.vy -= f * dy;
+  }
+  for (let i = 0; i < units.length; i++) {
+    const a = units[i];
+    for (let j = i + 1; j < units.length; j++) {
+      const b = units[j];
+      let dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy;
+      if (d2 > 40000) continue;
+      d2 = Math.max(d2, 40);
+      const f = 1000 / d2, d = Math.sqrt(d2); dx /= d; dy /= d;
+      a.vx -= f * dx; a.vy -= f * dy; b.vx += f * dx; b.vy += f * dy;
+    }
+  }
+  for (const u of units) {
+    u.vx += (W / 2 - u.x) * 0.0019; u.vy += (H / 2 - u.y) * 0.0019;
+    if (u !== dragNode) { u.x += u.vx * alpha; u.y += u.vy * alpha; }
+    u.vx *= 0.8; u.vy *= 0.8;
+  }
+  alpha *= 0.973;
+  if (alpha <= 0.02 && needsFit) { needsFit = false; fitNetwork(); }
+  draw();
+  if (alpha > 0.02) requestAnimationFrame(tick);
+}
+
+function fitNetwork() {
+  if (!units.length) return;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const u of units) { x0 = Math.min(x0, u.x); y0 = Math.min(y0, u.y); x1 = Math.max(x1, u.x); y1 = Math.max(y1, u.y); }
+  const pad = 70;
+  const k = clamp(Math.min((W - pad) / Math.max(x1 - x0, 1), (H - pad) / Math.max(y1 - y0, 1)), 0.25, 3);
+  view.k = k; view.x = W / 2 - k * (x0 + x1) / 2; view.y = H / 2 - k * (y0 + y1) / 2;
+}
+
+function drawNetwork(W, H) {
+  ctx.save();
+  ctx.translate(view.x, view.y); ctx.scale(view.k, view.k);
+  const showLabels = $("showLabels").checked;
+  const focus = selectedUnit || hoveredUnit;
+  const nbr = focus ? netNeighbors.get(focus.id) : null;
+
+  ctx.lineCap = "round";
+  for (const e of netEdges) {
+    const inFocus = !focus || e.a === focus || e.b === focus;
+    let al = (e.kind === "coact" ? 0.16 : 0.10) + 0.28 * e.w;
+    if (liveMode) al *= 0.28 + 0.72 * Math.max(e.a.live || 0, e.b.live || 0);
+    if (focus && !inFocus) al *= 0.1;
+    ctx.globalAlpha = clamp(al, 0, 0.72);
+    ctx.strokeStyle = (focus && inFocus) ? css("accent") : css("baseline");
+    ctx.lineWidth = (0.4 + 1.3 * e.w) * (focus && inFocus ? 1.5 : 1);
+    ctx.beginPath(); ctx.moveTo(e.a.x, e.a.y); ctx.lineTo(e.b.x, e.b.y); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+
+  const order = liveMode ? [...units].sort((a, b) => (a.live || 0) - (b.live || 0)) : units;
+  for (const u of order) {
+    const r = unitRadius(u);
+    const near = focus && (u === focus || (nbr && nbr.has(u.id)));
+    ctx.globalAlpha = (focus && !near) ? 0.2 : 1;
+    if (liveMode && (u.live || 0) > 0.5) {
+      const g = ctx.createRadialGradient(u.x, u.y, r * 0.5, u.x, u.y, r + 10 * u.live);
+      g.addColorStop(0, `rgba(229,138,0,${0.4 * u.live})`); g.addColorStop(1, "rgba(229,138,0,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(u.x, u.y, r + 10 * u.live, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(u.x, u.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = clusterColor(u.cluster); ctx.fill();
+    ctx.lineWidth = 1.2; ctx.strokeStyle = css("surface-1"); ctx.stroke();
+    if (near) {
+      ctx.beginPath(); ctx.arc(u.x, u.y, r + 2.5, 0, Math.PI * 2);
+      ctx.strokeStyle = u === focus ? css("text-primary") : css("accent");
+      ctx.lineWidth = 1.4; ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  if (focus && showLabels) {
+    const cn = focus.concept ? focus.concept.label : "unclustered";
+    const label = `ch ${focus.ch} · ${cn}`;
+    ctx.font = "600 11px system-ui, sans-serif"; ctx.textAlign = "center";
+    const tw = ctx.measureText(label).width, r = unitRadius(focus);
+    ctx.globalAlpha = 0.94; ctx.fillStyle = css("surface-1");
+    ctx.fillRect(focus.x - tw / 2 - 4, focus.y - r - 20, tw + 8, 15);
+    ctx.globalAlpha = 1; ctx.fillStyle = css("text-primary");
+    ctx.fillText(label, focus.x, focus.y - r - 9);
+  }
+  ctx.restore();
+
+  // corner overlay: node/edge counts + live hint
+  ctx.save();
+  ctx.font = "11px system-ui, sans-serif"; ctx.textAlign = "left";
+  ctx.fillStyle = css("text-muted");
+  const txt = `${units.length} neurons · ${netEdges.length} co-activation links` +
+    (liveMode ? " · lit = firing on image" : "");
+  ctx.fillText(txt, 14, H - 26);
+  ctx.restore();
+}
+
+function pickUnit(px, py) {
+  const p = toWorld(px, py);
+  let best = null, bd = Infinity;
+  for (const u of units) {
+    const d = Math.hypot(u.x - p.x, u.y - p.y);
+    if (d < unitRadius(u) + 5 && d < bd) { best = { unit: u }; bd = d; }
+  }
+  return best;
+}
+
+function selectUnit(u) {
+  selectedUnit = u;
+  if (u && u.concept) selectConcept(u.concept, false);
+  else if (!u) selectConcept(null);
+  draw();
+}
 
 function seedLayout() {
   const W = canvas.clientWidth || 900, H = canvas.clientHeight || 600;
@@ -660,6 +852,7 @@ function fitView() {
 
 function tick() {
   if (!doc) return;
+  if (networkMode) return networkTick();
   const W = canvas.clientWidth, H = canvas.clientHeight;
   const E = doc._conEdges || [];
   // spring along concept-similarity edges
@@ -718,6 +911,7 @@ function draw() {
   const W = canvas.clientWidth, H = canvas.clientHeight;
   ctx.clearRect(0, 0, W, H);
   if (!doc) return;
+  if (networkMode) { drawNetwork(W, H); return; }
   ctx.save();
   ctx.translate(view.x, view.y); ctx.scale(view.k, view.k);
   const showLabels = $("showLabels").checked;
@@ -862,6 +1056,7 @@ function drawSatellite(s, label) {
 /* ─────────────────────────── picking / interaction ───────────────── */
 function toWorld(px, py) { return { x: (px - view.x) / view.k, y: (py - view.y) / view.k }; }
 function pick(px, py) {
+  if (networkMode) return pickUnit(px, py);
   const p = toWorld(px, py);
   let best = null, bd = Infinity;
   // satellites first (they sit on top when expanded)
@@ -882,7 +1077,8 @@ function pick(px, py) {
 
 canvas.addEventListener("pointerdown", ev => {
   const hit = pick(ev.offsetX, ev.offsetY);
-  if (hit && hit.concept) { dragNode = hit.concept; alpha = Math.max(alpha, 0.25); requestAnimationFrame(tick); }
+  const node = hit && (hit.concept || hit.unit);
+  if (node) { dragNode = node; alpha = Math.max(alpha, 0.25); requestAnimationFrame(tick); }
   else panning = { x: ev.offsetX - view.x, y: ev.offsetY - view.y };
   canvas.classList.add("dragging"); canvas.setPointerCapture(ev.pointerId);
   moved = false;
@@ -898,6 +1094,7 @@ canvas.addEventListener("pointermove", ev => {
   } else {
     const hit = pick(ev.offsetX, ev.offsetY);
     hovered = hit && hit.concept ? hit.concept : null;
+    hoveredUnit = hit && hit.unit ? hit.unit : null;
     showTooltip(hit, ev.clientX, ev.clientY);
     draw();
   }
@@ -906,13 +1103,15 @@ canvas.addEventListener("pointerup", ev => {
   canvas.classList.remove("dragging");
   if (!moved) {
     const hit = pick(ev.offsetX, ev.offsetY);
-    if (hit && hit.concept) selectConcept(hit.concept, true);
+    if (hit && hit.unit) selectUnit(selectedUnit === hit.unit ? null : hit.unit);
+    else if (hit && hit.concept) selectConcept(hit.concept, true);
     else if (hit && hit.sat) { /* keep selection */ }
+    else if (networkMode) selectUnit(null);
     else { expanded = null; selectConcept(null); }
   }
   dragNode = null; panning = null;
 });
-canvas.addEventListener("pointerleave", () => { hovered = null; tooltip.style.display = "none"; draw(); });
+canvas.addEventListener("pointerleave", () => { hovered = null; hoveredUnit = null; tooltip.style.display = "none"; draw(); });
 canvas.addEventListener("wheel", ev => {
   ev.preventDefault();
   const k = clamp(view.k * Math.exp(-ev.deltaY * 0.0015), 0.2, 6);
@@ -936,6 +1135,13 @@ function showTooltip(hit, cx, cy) {
     html = s.kind === "attribute"
       ? `<b>${s.label}</b><br>visual attribute · effect ${(+s.weight).toFixed(2)}`
       : `<b>${s.label}</b><br>species · affinity ${(+s.weight).toFixed(2)}`;
+  } else if (hit.unit) {
+    const u = hit.unit, cn = u.concept ? u.concept.label : "unclustered";
+    const links = (netNeighbors.get(u.id) || new Set()).size;
+    html = `<b>neuron ch ${u.ch}</b>` +
+      `<br>concept: <span style="color:${clusterColor(u.cluster)}">${cn}</span>` +
+      `<br>${links} co-firing link${links === 1 ? "" : "s"} · mean act ${u.activation.toFixed(3)}` +
+      (liveMode ? `<br>fires on image: ${(100 * (u.live || 0)).toFixed(0)}%` : "");
   }
   tooltip.innerHTML = html;
   tooltip.style.display = "block";
@@ -1171,10 +1377,15 @@ function renderMatch() {
 /* ─────────────────────────── view controls ───────────────────────── */
 $("viewseg").addEventListener("click", ev => {
   const b = ev.target.closest("button"); if (!b) return;
-  showFull = b.dataset.view === "full";
+  const v = b.dataset.view;
+  networkMode = v === "network";
+  showFull = v === "full";
   [...$("viewseg").children].forEach(x => x.classList.toggle("on", x === b));
-  if (showFull) expanded = null;
-  draw();
+  if (showFull || networkMode) expanded = null;
+  $("stageHint").textContent = networkMode
+    ? "each dot = one neuron, colored by concept · hover to trace co-firing · click to focus"
+    : "drag to pan · scroll to zoom · click a concept to expand";
+  if (networkMode) { seedNetworkLayout(); reheat(); } else draw();
 });
 $("showLabels").addEventListener("change", draw);
 $("file").addEventListener("change", e => { if (e.target.files[0]) readGraph(e.target.files[0]); });
@@ -1283,6 +1494,8 @@ function applyActivations(results, probs) {
     if (!c.units.length) continue;
     c.live = c.units.reduce((a, u) => a + (unitLive.get(u.id) || 0), 0) / c.units.length;
   }
+  unitLiveMap = unitLive;
+  for (const u of units) u.live = unitLive.get(u.id) || 0;
   liveMode = true;
 }
 
@@ -1358,7 +1571,7 @@ async function classifyImage(file) {
       buildConceptList(); renderDetails();
       // focus the top-firing concept
       const topC = [...concepts].sort((a, b) => b.live - a.live)[0];
-      if (topC && topC.live > 0.1) { expanded = topC.id; selected = topC; centerOn(topC); }
+      if (!networkMode && topC && topC.live > 0.1) { expanded = topC.id; selected = topC; centerOn(topC); }
       draw(); renderDetails();
     } catch (e) { infstatus.textContent = "inference failed: " + e.message; flash("Inference failed: " + e.message); }
   };
@@ -1490,6 +1703,8 @@ function drawSaliency(drop, G, mx, rgb) {
 function clearInference(clearImg) {
   liveMode = false;
   for (const c of concepts) { c.live = 0; c.phi = null; }
+  for (const u of units) u.live = 0;
+  unitLiveMap = new Map();
   lastProbs = null; lastPredIdx = -1; lastTensor = null;
   lastActs = null; lastLogits = null; shapTarget = -1; salData = null;
   $("preds").innerHTML = ""; $("whySec").style.display = "none";
