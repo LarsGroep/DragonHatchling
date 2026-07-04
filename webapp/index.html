@@ -283,6 +283,24 @@
     border: 1px solid var(--baseline); border-radius: 9px; padding: 5px 8px; max-width: 172px; display: none;
     cursor: pointer; }
 
+  /* visual-encoding legend on the stage */
+  #stageLegend { position: absolute; right: 14px; bottom: 12px; z-index: 5;
+    background: color-mix(in srgb, var(--surface-1) 82%, transparent); backdrop-filter: blur(8px);
+    border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--elev-1);
+    padding: 8px 11px; font-size: 11px; color: var(--text-secondary);
+    display: flex; flex-direction: column; gap: 4px; pointer-events: none; }
+  #stageLegend .li { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+  #stageLegend .g { width: 13px; height: 13px; flex-shrink: 0; display: grid; place-items: center; }
+  #stageLegend .g i { display: block; }
+  #stageLegend .g .dot { width: 10px; height: 10px; border-radius: 50%;
+    background: conic-gradient(var(--c1), var(--c3), var(--c2), var(--c5), var(--c1)); }
+  #stageLegend .g .dia { width: 8px; height: 8px; border: 1.5px solid var(--live); transform: rotate(45deg); border-radius: 1px; }
+  #stageLegend .g .sq { width: 8px; height: 8px; background: var(--text-muted); border-radius: 1px; }
+  #stageLegend .g .glow { width: 9px; height: 9px; border-radius: 50%; background: var(--live);
+    box-shadow: 0 0 6px 2px color-mix(in srgb, var(--live) 55%, transparent); }
+  #stageLegend .g .ring { width: 9px; height: 9px; border-radius: 50%; border: 1.5px dashed var(--accent); }
+  @media (max-width: 860px) { #stageLegend { display: none; } }
+
   /* region badge on the stage */
   #regionBadge { position: absolute; left: 14px; top: 12px; display: none; z-index: 5;
     background: color-mix(in srgb, var(--surface-1) 82%, transparent); backdrop-filter: blur(8px);
@@ -396,6 +414,7 @@
   <div id="stage">
     <canvas id="canvas"></canvas>
     <div id="regionBadge">activation region of <b></b></div>
+    <div id="stageLegend"></div>
     <div class="stage-hint" id="stageHint">drag to pan · scroll to zoom · click a concept to expand</div>
     <div id="globaldrop">drop an image to classify — or a graph .json to load</div>
     <div id="tourCard">
@@ -907,10 +926,32 @@ function conceptRadius(c) {
   return liveMode ? base * (0.55 + 0.9 * (c.live || 0)) : base;
 }
 
+/* visual-encoding legend: tells the viewer what every mark means; adapts to
+   the active view + live/region state. Cheap enough to refresh from draw()
+   because the DOM is only touched when the content actually changes. */
+let _legendCache = "";
+function renderLegend() {
+  const li = (glyph, txt) => `<span class="li"><span class="g">${glyph}</span>${txt}</span>`;
+  const rows = [];
+  if (networkMode) {
+    rows.push(li('<i class="dot"></i>', "neuron · color = its concept"));
+    rows.push(li('<i class="ring" style="border-style:solid;border-color:var(--baseline)"></i>', "line = co-fires together"));
+  } else {
+    rows.push(li('<i class="dot"></i>', "concept (co-firing neurons)"));
+    rows.push(li('<i class="dia"></i>', "grounded visual attribute"));
+    rows.push(li('<i class="sq"></i>', "class it responds to"));
+  }
+  if (liveMode) rows.push(li('<i class="glow"></i>', "fires on this image"));
+  if (regionClass >= 0) rows.push(li('<i class="ring"></i>', `region of ${classNames[regionClass] || "class"}`));
+  const html = rows.join("");
+  if (html !== _legendCache) { _legendCache = html; $("stageLegend").innerHTML = html; }
+}
+
 function draw() {
   const W = canvas.clientWidth, H = canvas.clientHeight;
   ctx.clearRect(0, 0, W, H);
   if (!doc) return;
+  renderLegend();
   if (networkMode) { drawNetwork(W, H); return; }
   ctx.save();
   ctx.translate(view.x, view.y); ctx.scale(view.k, view.k);
@@ -1415,6 +1456,9 @@ async function initInference() {
     if (!r.ok) { $("classifySec").querySelector("#dropzone .small").textContent =
       "no model bundle deployed — graph exploration only"; $("salbtn").disabled = true; return; }
     manifest = await r.json();
+    // dataset-aware prompt: only CUB is birds; any other bundle is generic
+    $("dropzone").querySelector(".big").textContent =
+      manifest.dataset === "cub200" ? "Drop a bird photo" : "Drop an image to classify";
   } catch { return; }
 }
 
