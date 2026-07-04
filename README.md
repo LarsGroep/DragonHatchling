@@ -85,9 +85,11 @@ detects a deployed LFS pointer and says so, but it can't fix it.
 ## Datasets
 
 Built-ins: `cifar10`, `cifar100`, `fashion_mnist`, `cub200` (with attribute
-annotations), and `imagefolder` (any `train/<class>/*`, `val/<class>/*`
-tree). For anything else, subclass `DatasetLoader` (two methods + a spec)
-and register it:
+annotations), `isic` (skin-lesion dermoscopy — HAM10000 / ISIC-2019 CSVs or
+folder-per-class, auto-detected, with a leakage-free `lesion_id`-grouped
+split), and `imagefolder` (any `train/<class>/*`, `val/<class>/*` tree). For
+anything else, subclass `DatasetLoader` (two methods + a spec) and register
+it:
 
 ```python
 @register_loader("galaxies")
@@ -198,7 +200,8 @@ hatchvision/
   export/      IVGraph JSON + ONNX inference bundle
   engine/      Trainer / TrainConfig
 scripts/       train.py CLI · make_shapes_dataset.py (demo data)
-notebooks/     kaggle_cub200.ipynb (GPU training → bundle.zip)
+notebooks/     kaggle_cub200.ipynb (birds → bundle.zip)
+               kaggle_isic.ipynb   (skin lesions → bundle.zip)
                explainability_demo.ipynb (interactive walkthrough)
 webapp/        static graph viewer + in-browser inference (Vercel-ready)
 tests/         end-to-end smoke tests for every component
