@@ -91,10 +91,25 @@ several times faster inference and saliency. Without the headers the app still
 works, single-threaded (auto-detected via `crossOriginIsolated`). All
 resources are same-origin, so isolation doesn't block anything.
 
-## Deploying your own bundle
+## Swapping datasets — no redeploy needed
+
+**The fast path: drag `bundle.zip` onto the page.** Any training run's bundle
+(`scripts/train.py --export-bundle` zipped up, or Kaggle's `bundle.zip`)
+loads **directly in the browser** — unzipped client-side, model and all, and
+becomes the active dataset immediately. It's persisted in IndexedDB so it
+survives reloads, and the **header switcher** moves between the deployed
+bundle and any stored ones (🗑 removes one). Loose files work too: select
+`manifest.json + graph.json + model.onnx + explain.json` together via
+**⤒ Load bundle…**. Nothing is uploaded anywhere — it stays in your browser.
+
+That makes the swap-a-dataset loop: train → download bundle.zip → drop it on
+the deployed site. Done.
+
+## Deploying a bundle as the site default
 
 ```bash
-# any dataset — one command, produces graph.json + model.onnx + manifest.json:
+# any dataset — one command, produces graph.json + model.onnx + manifest.json
+# + explain.json + hebbian_state.pt:
 python scripts/train.py --dataset imagefolder --root data/mydata \
     --backbone hybrid --epochs 10 --export-bundle webapp
 

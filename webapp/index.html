@@ -283,6 +283,11 @@
     border: 1px solid var(--baseline); border-radius: 9px; padding: 5px 8px; max-width: 172px; display: none;
     cursor: pointer; }
 
+  /* header bundle switcher */
+  select.hsel { font: inherit; font-size: 12px; font-weight: 550; color: var(--text-primary);
+    background: var(--surface-1); border: 1px solid var(--baseline); border-radius: 9px;
+    padding: 5px 8px; max-width: 200px; cursor: pointer; }
+
   /* visual-encoding legend on the stage */
   #stageLegend { position: absolute; right: 14px; bottom: 12px; z-index: 5;
     background: color-mix(in srgb, var(--surface-1) 82%, transparent); backdrop-filter: blur(8px);
@@ -406,7 +411,10 @@
     <button id="tourbtn" class="primary" title="Guided walkthrough: Hebbian activation regions + SHAP influence">▶&nbsp;Demo tour</button>
     <button id="reheat" class="ghost" title="Re-run layout">⟳ Layout</button>
     <button id="themebtn" class="ghost icon-btn" title="Toggle theme">◐</button>
-    <label class="filebtn">Open graph… <input type="file" id="file" accept=".json,application/json" hidden></label>
+    <select id="bundleSel" class="hsel" title="Active dataset bundle — stored bundles live in this browser"></select>
+    <button id="bundleDel" class="ghost icon-btn" title="Remove this stored bundle" style="display:none">🗑</button>
+    <label class="filebtn" title="Load a training bundle (bundle.zip — or manifest.json + graph.json + model.onnx + explain.json) straight into the browser; no redeploy needed">
+      ⤒ Load bundle… <input type="file" id="file" accept=".zip,.json,.onnx,application/zip,application/json" multiple hidden></label>
   </div>
 </header>
 <div class="banner" id="banner"></div>
@@ -416,7 +424,7 @@
     <div id="regionBadge">activation region of <b></b></div>
     <div id="stageLegend"></div>
     <div class="stage-hint" id="stageHint">drag to pan · scroll to zoom · click a concept to expand</div>
-    <div id="globaldrop">drop an image to classify — or a graph .json to load</div>
+    <div id="globaldrop">drop an image to classify · a bundle.zip to swap datasets · a graph .json to view</div>
     <div id="tourCard">
       <div class="prog"><i></i></div>
       <div class="inner">
@@ -1429,7 +1437,7 @@ $("viewseg").addEventListener("click", ev => {
   if (networkMode) { seedNetworkLayout(); reheat(); } else draw();
 });
 $("showLabels").addEventListener("change", draw);
-$("file").addEventListener("change", e => { if (e.target.files[0]) readGraph(e.target.files[0]); });
+$("file").addEventListener("change", e => handleBundleInput(e.target.files));
 
 // theme toggle (auto → light → dark cycle)
 $("themebtn").onclick = () => {
@@ -1451,15 +1459,11 @@ let manifest = null, session = null, sessionPromise = null;
 const infstatus = $("infstatus");
 
 async function initInference() {
+  // fetch the deployed manifest; all UI state derives from applyManifestUI()
   try {
     const r = await fetch("manifest.json", { cache: "no-cache" });
-    if (!r.ok) { $("classifySec").querySelector("#dropzone .small").textContent =
-      "no model bundle deployed — graph exploration only"; $("salbtn").disabled = true; return; }
-    manifest = await r.json();
-    // dataset-aware prompt: only CUB is birds; any other bundle is generic
-    $("dropzone").querySelector(".big").textContent =
-      manifest.dataset === "cub200" ? "Drop a bird photo" : "Drop an image to classify";
-  } catch { return; }
+    if (r.ok) manifest = await r.json();
+  } catch { /* graph-only deployment */ }
 }
 
 async function fetchModelWithProgress(url) {
@@ -1490,7 +1494,13 @@ function ensureSession() {
     // otherwise fall back to a single thread automatically.
     ort.env.wasm.numThreads = (self.crossOriginIsolated)
       ? Math.min(8, navigator.hardwareConcurrency || 4) : 1;
-    sessionPromise = fetchModelWithProgress(manifest.model)
+    // model bytes come from the active in-browser bundle when one is loaded,
+    // otherwise from the deployed model.onnx next to the page
+    const bytes = (bundleSource && bundleSource.model)
+      ? (infstatus.textContent = "loading model from stored bundle…",
+         bundleSource.model.arrayBuffer().then(b => new Uint8Array(b)))
+      : fetchModelWithProgress(manifest.model);
+    sessionPromise = Promise.resolve(bytes)
       .then(buf => { infstatus.textContent = "initializing model…"; return ort.InferenceSession.create(buf); })
       .then(s => { session = s; return s; })
       .catch(e => { sessionPromise = null; throw e; });
@@ -1591,7 +1601,11 @@ function renderWhy(predIdx) {
 }
 
 async function classifyImage(file) {
-  if (!manifest) { flash("No model bundle is deployed — you can still explore the concept graph."); return; }
+  if (!canClassify()) {
+    flash(manifest ? "This bundle has no model.onnx — graph exploration only."
+                   : "No model bundle is deployed — you can still explore the concept graph.");
+    return;
+  }
   if (!file.type.startsWith("image/")) { flash("That doesn't look like an image file."); return; }
   const url = URL.createObjectURL(file);
   const img = new Image();
@@ -1779,10 +1793,11 @@ window.addEventListener("dragenter", e => { e.preventDefault(); dragDepth++; doc
 window.addEventListener("dragleave", e => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove("dropping"); } });
 window.addEventListener("drop", e => {
   e.preventDefault(); dragDepth = 0; document.body.classList.remove("dropping");
-  const f = e.dataTransfer.files[0]; if (!f) return;
-  if (f.type.startsWith("image/")) classifyImage(f);
+  const fs = e.dataTransfer.files, f = fs[0]; if (!f) return;
+  if (fs.length === 1 && f.type.startsWith("image/")) classifyImage(f);
+  else if (fs.length > 1 || /\.zip$/i.test(f.name)) handleBundleInput(fs);
   else if (f.name.endsWith(".json") || f.type.includes("json")) readGraph(f);
-  else flash("Drop an image (to classify) or an IVGraph .json (to load a graph).");
+  else flash("Drop an image (classify), a bundle.zip (swap dataset), or an IVGraph .json.");
 });
 
 let bannerTimer = null;
@@ -1829,7 +1844,7 @@ const TOUR = [
   {
     id: "upload", target: "#classifySec",
     title: "Classify an image",
-    avail: () => !!manifest,
+    avail: () => canClassify(),
     body: "Drop any photo into the panel on the right — inference runs <b>entirely in your " +
       "browser</b>. The tour continues automatically once the prediction lands.",
     enter() { $("classifySec").scrollIntoView({ block: "nearest" }); },
@@ -1931,25 +1946,234 @@ $("tourNext").onclick = () => tourGo(1);
 $("tourBack").onclick = () => tourGo(-1);
 $("tourExit").onclick = endTour;
 
+/* ═════════ bundle manager: swap datasets in-browser, no redeploy ═════════ */
+// Drop a training run's bundle.zip (or its loose files) onto the page and it
+// becomes the active dataset immediately — manifest, graph, explain pack and
+// model all served from memory, persisted in IndexedDB so it survives
+// reloads. The header switcher moves between the deployed bundle and any
+// stored ones. Inference already runs fully client-side, so nothing here
+// needs a server round-trip.
+let bundleSource = null;   // null = deployed files; else {name, model: Blob|null}
+
+function canClassify() { return !!manifest && (!bundleSource || !!bundleSource.model); }
+
+/* -- minimal zip reader: central directory + DecompressionStream inflate -- */
+async function unzip(buf) {
+  const dv = new DataView(buf), u8 = new Uint8Array(buf);
+  let eocd = -1;
+  for (let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 22 - 65557); i--)
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  if (eocd < 0) throw new Error("not a zip file");
+  const count = dv.getUint16(eocd + 10, true);
+  let off = dv.getUint32(eocd + 16, true);
+  const out = new Map();
+  for (let n = 0; n < count; n++) {
+    if (dv.getUint32(off, true) !== 0x02014b50) break;
+    const method = dv.getUint16(off + 10, true);
+    const csize = dv.getUint32(off + 20, true);
+    const nameLen = dv.getUint16(off + 28, true);
+    const extraLen = dv.getUint16(off + 30, true);
+    const cmtLen = dv.getUint16(off + 32, true);
+    const lho = dv.getUint32(off + 42, true);
+    const name = new TextDecoder().decode(u8.subarray(off + 46, off + 46 + nameLen));
+    off += 46 + nameLen + extraLen + cmtLen;
+    if (name.endsWith("/")) continue;
+    const lnl = dv.getUint16(lho + 26, true), lel = dv.getUint16(lho + 28, true);
+    const raw = buf.slice(lho + 30 + lnl + lel, lho + 30 + lnl + lel + csize);
+    if (method === 0) out.set(name, new Blob([raw]));
+    else if (method === 8) {
+      if (typeof DecompressionStream === "undefined")
+        throw new Error("this browser cannot unzip — needs DecompressionStream (Chrome 103+/Firefox 113+/Safari 16.4+)");
+      out.set(name, await new Response(
+        new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).blob());
+    } else throw new Error("unsupported zip compression method " + method);
+  }
+  return out;
+}
+// find a file by basename regardless of any folder prefix inside the archive
+function bundleFile(files, base) {
+  for (const [n, b] of files) if (n === base || n.endsWith("/" + base)) return b;
+  return null;
+}
+
+/* -- IndexedDB persistence -- */
+function idb() {
+  return new Promise((res, rej) => {
+    const rq = indexedDB.open("hatchling", 1);
+    rq.onupgradeneeded = () => rq.result.createObjectStore("bundles", { keyPath: "name" });
+    rq.onsuccess = () => res(rq.result);
+    rq.onerror = () => rej(rq.error);
+  });
+}
+async function idbPut(rec) {
+  const d = await idb();
+  return new Promise((res, rej) => {
+    const tx = d.transaction("bundles", "readwrite");
+    tx.objectStore("bundles").put(rec);
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  });
+}
+async function idbGet(name) {
+  const d = await idb();
+  return new Promise((res, rej) => {
+    const rq = d.transaction("bundles").objectStore("bundles").get(name);
+    rq.onsuccess = () => res(rq.result || null); rq.onerror = () => rej(rq.error);
+  });
+}
+async function idbDel(name) {
+  const d = await idb();
+  return new Promise((res, rej) => {
+    const tx = d.transaction("bundles", "readwrite");
+    tx.objectStore("bundles").delete(name);
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  });
+}
+async function idbList() {
+  const d = await idb();
+  return new Promise((res, rej) => {
+    const rq = d.transaction("bundles").objectStore("bundles").getAllKeys();
+    rq.onsuccess = () => res(rq.result.map(String)); rq.onerror = () => rej(rq.error);
+  });
+}
+
+/* -- applying bundles -- */
+function resetSession() { session = null; sessionPromise = null; }
+
+function applyManifestUI() {
+  $("salbtn").disabled = !canClassify();
+  $("dropzone").querySelector(".big").textContent =
+    manifest && manifest.dataset === "cub200" ? "Drop a bird photo" : "Drop an image to classify";
+  $("dropzone").querySelector(".small").textContent = !manifest
+    ? "no model bundle deployed — graph exploration only"
+    : (bundleSource && !bundleSource.model)
+      ? "this bundle has no model.onnx — graph exploration only"
+      : "or click to choose · runs entirely in your browser";
+}
+
+async function applyBundle(rec, { persist } = {}) {
+  manifest = rec.manifest;
+  explain = rec.explain || null;
+  bundleSource = { name: rec.name, model: rec.model || null };
+  resetSession();
+  applyManifestUI();
+  buildModel(rec.graph);
+  $("meta").textContent += " · local bundle";
+  localStorage.setItem("hatchling.bundle", rec.name);
+  if (persist) {
+    try { await idbPut(rec); }
+    catch (e) { flash("Bundle is active but could not be stored for reloads: " + e.message); }
+  }
+  await refreshBundleSel();
+}
+
+async function loadDeployed() {
+  bundleSource = null; manifest = null; explain = null;
+  resetSession();
+  localStorage.removeItem("hatchling.bundle");
+  await initInference();
+  try {
+    const r = await fetch((manifest && manifest.explain) || "explain.json", { cache: "no-cache" });
+    if (r.ok) { const d = await r.json(); if (d && d.format === "hatchvision-explain") explain = d; }
+  } catch { /* explain pack is optional */ }
+  applyManifestUI();
+  try {
+    const r = await fetch((manifest && manifest.graph) || "graph.json", { cache: "no-cache" });
+    if (!r.ok) throw new Error();
+    buildModel(await r.json());
+  } catch {
+    try { buildModel(await (await fetch("sample-graph.json")).json()); }
+    catch { $("meta").textContent = "no graph found — drop an IVGraph JSON or a bundle.zip to begin"; }
+  }
+  await refreshBundleSel();
+}
+
+// files: Map/entries of name→Blob (from a zip or a multi-file selection)
+async function loadBundle(files) {
+  const mfB = bundleFile(files, "manifest.json");
+  const manifestObj = mfB ? JSON.parse(await mfB.text()) : null;
+  const gB = bundleFile(files, (manifestObj && manifestObj.graph) || "graph.json");
+  if (!gB) throw new Error("no graph.json in the bundle");
+  const graphObj = JSON.parse(await gB.text());
+  if (graphObj.format !== "ivgraph") throw new Error("graph.json is not an IVGraph document");
+  if (!manifestObj) { buildModel(graphObj); flash("Graph loaded (no manifest.json — view only, not stored)."); return; }
+
+  let explainObj = null;
+  const eB = bundleFile(files, manifestObj.explain || "explain.json");
+  if (eB) {
+    try { const d = JSON.parse(await eB.text()); if (d.format === "hatchvision-explain") explainObj = d; }
+    catch { /* optional */ }
+  }
+  let modelB = bundleFile(files, manifestObj.model || "model.onnx");
+  if (modelB && modelB.size < 2000 &&
+      (await modelB.slice(0, 40).text()).startsWith("version https://git-lfs")) {
+    modelB = null;
+    flash("model.onnx in this bundle is a Git LFS pointer — loading without inference.");
+  }
+  const ds = manifestObj.dataset || (graphObj.meta && graphObj.meta.dataset) || "bundle";
+  const name = `${ds} · ${new Date().toISOString().slice(0, 16).replace("T", " ")}`;
+  await applyBundle(
+    { name, manifest: manifestObj, graph: graphObj, explain: explainObj, model: modelB, created: Date.now() },
+    { persist: true });
+  flash(`Bundle “${name}” is live — stored in this browser, switch or remove it in the header.`);
+}
+
+async function handleBundleInput(fileList) {
+  const files = [...fileList];
+  if (!files.length) return;
+  try {
+    if (files.length === 1 && /\.zip$/i.test(files[0].name)) {
+      infstatus.textContent = "unpacking bundle…";
+      await loadBundle(await unzip(await files[0].arrayBuffer()));
+    } else if (files.length === 1 && /\.json$/i.test(files[0].name)) {
+      readGraph(files[0]);                       // lone IVGraph: quick view (old behavior)
+    } else {
+      await loadBundle(new Map(files.map(f => [f.name, f])));
+    }
+  } catch (e) { flash("Could not load bundle: " + e.message); }
+  finally { $("file").value = ""; infstatus.textContent = ""; }
+}
+
+async function refreshBundleSel() {
+  const sel = $("bundleSel");
+  let names = [];
+  try { names = await idbList(); } catch { /* IDB unavailable (private mode) */ }
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+  sel.innerHTML = `<option value="">deployed bundle</option>` +
+    names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join("");
+  sel.value = bundleSource ? bundleSource.name : "";
+  $("bundleDel").style.display = bundleSource ? "" : "none";
+}
+$("bundleSel").onchange = async () => {
+  const v = $("bundleSel").value;
+  try {
+    if (!v) await loadDeployed();
+    else {
+      const rec = await idbGet(v);
+      if (rec) await applyBundle(rec);
+      else { flash("Stored bundle not found."); await refreshBundleSel(); }
+    }
+  } catch (e) { flash("Could not switch bundle: " + e.message); }
+};
+$("bundleDel").onclick = async () => {
+  if (!bundleSource) return;
+  try { await idbDel(bundleSource.name); } catch { /* nothing to remove */ }
+  flash(`Removed stored bundle “${bundleSource.name}”.`);
+  await loadDeployed();
+};
+
 /* ─────────────────────────── boot ────────────────────────────────── */
 document.body.classList.toggle("darkblend", isDark());
 resize();
-initInference().then(() => {
-  // demo explain pack (class activation regions + SHAP influence) — optional
-  const exFile = (manifest && manifest.explain) || "explain.json";
-  return fetch(exFile, { cache: "no-cache" })
-    .then(r => (r.ok ? r.json() : null))
-    .then(d => { if (d && d.format === "hatchvision-explain") explain = d; })
-    .catch(() => {});
-}).then(() => {
-  const graphFile = (manifest && manifest.graph) || "graph.json";
-  return fetch(graphFile, { cache: "no-cache" })
-    .then(r => { if (!r.ok) throw new Error(); return r.json(); })
-    .then(buildModel);
-}).catch(() => {
-  return fetch("sample-graph.json").then(r => r.json()).then(buildModel)
-    .catch(() => { $("meta").textContent = "no graph found — drop an IVGraph JSON to begin"; });
-});
+(async () => {
+  const want = localStorage.getItem("hatchling.bundle");
+  if (want) {
+    try {
+      const rec = await idbGet(want);
+      if (rec) { await applyBundle(rec); return; }
+    } catch { /* fall through to deployed */ }
+  }
+  await loadDeployed();
+})();
 </script>
 </body>
 </html>

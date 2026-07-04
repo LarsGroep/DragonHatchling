@@ -70,6 +70,13 @@ python scripts/rebuild_graph.py --state hebbian_state.pt \
     --n-concepts 24 --out graph.json
 ```
 
+**Swapping datasets without redeploying:** the web app also accepts a
+`bundle.zip` **dragged straight onto the page** — it's unzipped client-side,
+stored in the browser (IndexedDB), and becomes the active dataset instantly;
+a header switcher toggles between the deployed bundle and stored ones. So
+the iteration loop is just *train → download bundle.zip → drop it on the
+site*.
+
 Models export as **fp16 ONNX** by default in the notebook (half the
 in-browser download, identical top-5 predictions). If `webapp/model.onnx`
 is tracked with Git LFS, run `git lfs pull` before deploying — the app
