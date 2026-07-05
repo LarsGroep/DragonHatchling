@@ -196,7 +196,7 @@ def main() -> None:
         if args.export_hierarchy:
             from hatchvision.explain import attach_patches, node_patch_uris
             from hatchvision.export import export_hierarchy_pack
-            from hatchvision.hebbian import build_concept_tree
+            from hatchvision.hebbian import TreeRoutedHead, build_concept_tree
 
             tree = build_concept_tree(
                 memory, layer, data.spec.class_names, max_depth=args.max_depth
@@ -208,9 +208,19 @@ def main() -> None:
             )
             attach_patches(tree, patches)
             out_dir = Path(args.export_bundle or Path(graph_path).parent)
+            # Carry the tree-router's settings into hierarchy.json so the
+            # browser reproduces TreeRoutedHead's soft routing exactly (the
+            # prototype head's own temperature is stored separately as
+            # config.temperature by build_hierarchy_pack).
+            router = TreeRoutedHead(tree, data.spec.class_names)
             hier_path = export_hierarchy_pack(
                 memory, layer, data.spec.class_names, tree,
                 out_dir / "hierarchy.json",
+                config={"routing": {
+                    "temperature": router.temperature,
+                    "use_importance_prior": router.use_importance_prior,
+                    "mode": router.mode,
+                }},
             )
             print(f"hierarchy pack exported to {hier_path}")
 
