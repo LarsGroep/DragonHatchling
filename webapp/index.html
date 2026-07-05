@@ -359,6 +359,80 @@
   #details dd { color: var(--text-primary); word-break: break-word; }
   .muted { color: var(--text-muted); font-size: 12px; line-height: 1.55; }
 
+  /* ── Hebbian classifier: three-way verdict ── */
+  .verdict-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; margin-top: 4px; }
+  .vcard { border: 1px solid var(--border); border-radius: var(--r-sm); padding: 8px 9px; background: var(--surface-2);
+    display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .vcard .vk { font-size: 9.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); font-weight: 700; }
+  .vcard .vv { font-size: 12.5px; font-weight: 700; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .vcard .vp { font-size: 10.5px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+  .vcard.agree { border-color: color-mix(in srgb, var(--pos) 45%, var(--border)); }
+  .vcard.disagree { border-color: color-mix(in srgb, var(--neg) 55%, var(--border));
+    background: color-mix(in srgb, var(--neg) 9%, var(--surface-2)); }
+  .vcard .vtag { font-size: 9px; font-weight: 700; letter-spacing: .03em; padding: 0 5px; border-radius: 20px; align-self: flex-start; }
+  .vcard.disagree .vtag { background: color-mix(in srgb, var(--neg) 20%, var(--surface-1)); color: var(--neg); }
+  .verdict-note { font-size: 11px; color: var(--text-muted); margin-top: 9px; line-height: 1.5; }
+  .verdict-note.dis { color: var(--neg); }
+  .leaf-dist { margin-top: 10px; }
+  .leaf-dist .ld-row { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 2px 0; }
+  .leaf-dist .ld-row .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .leaf-dist .ld-row .track { width: 74px; height: 6px; border-radius: 20px; background: var(--surface-2); overflow: hidden; flex-shrink: 0; }
+  .leaf-dist .ld-row .fill { height: 100%; border-radius: 20px; background: var(--c5); }
+  .leaf-dist .ld-row .pct { width: 40px; text-align: right; font-variant-numeric: tabular-nums; color: var(--text-muted); font-size: 11px; }
+
+  /* ── concept decision tree ── */
+  #treeView { margin-top: 4px; max-height: 460px; overflow: auto; }
+  .tnode { border-left: 2px solid var(--border); margin-left: 6px; padding-left: 8px; }
+  .tnode.root { border-left: none; margin-left: 0; padding-left: 0; }
+  .trow { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 9px; cursor: pointer;
+    transition: background .12s; margin: 1px 0; }
+  .trow:hover { background: var(--surface-2); }
+  .trow.sel { background: var(--accent-weak); box-shadow: inset 2.5px 0 0 var(--accent); }
+  .trow.on-path { background: color-mix(in srgb, var(--accent) 13%, var(--surface-1)); }
+  .trow.leaf-hit { box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .trow .tw { width: 15px; text-align: center; color: var(--text-muted); font-size: 11px; flex-shrink: 0; user-select: none; }
+  .trow .patches { display: flex; gap: 3px; flex-shrink: 0; }
+  .trow .patches img { width: 26px; height: 26px; border-radius: 5px; object-fit: cover;
+    box-shadow: 0 0 0 1px var(--border); image-rendering: auto; }
+  .trow .tlabel { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: 12px; color: var(--text-secondary); }
+  .trow .tlabel b { color: var(--text-primary); font-weight: 650; }
+  .trow .tprob { font-size: 10px; font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 650;
+    background: var(--accent-weak); padding: 0 6px; border-radius: 20px; flex-shrink: 0; }
+  .sib-bars { display: flex; flex-direction: column; gap: 2px; margin: 2px 0 4px 29px; }
+  .sib-bars .sb { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--text-muted); }
+  .sib-bars .sb .nm { width: 84px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
+  .sib-bars .sb .track { flex: 1; height: 5px; border-radius: 20px; background: var(--surface-2); overflow: hidden; }
+  .sib-bars .sb .fill { height: 100%; background: var(--accent); border-radius: 20px; }
+  .sib-bars .sb.win .fill { background: var(--live); }
+  .sib-bars .sb .pv { width: 32px; text-align: right; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+
+  /* ── few-shot enrollment ── */
+  #enrollBody { display: none; margin-top: 4px; }
+  #enrollBody.show { display: block; }
+  #enrollName { width: 100%; font: inherit; font-size: 12.5px; color: var(--text-primary);
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; padding: 8px 10px; margin-bottom: 7px; }
+  #enrollName:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--ring); background: var(--surface-1); }
+  #enrollDrop { border: 1.5px dashed var(--baseline); border-radius: var(--r); padding: 14px; text-align: center;
+    color: var(--text-secondary); cursor: pointer; font-size: 12px; }
+  #enrollDrop:hover, #enrollDrop.hot { border-color: var(--accent); background: var(--surface-2); }
+  #enrollThumbs { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  #enrollThumbs img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; box-shadow: 0 0 0 1px var(--border); }
+  #enrollActions { display: flex; gap: 7px; margin-top: 9px; align-items: center; }
+  #enrollStatus { font-size: 11px; color: var(--text-muted); margin-top: 7px; min-height: 14px; }
+  .enroll-list { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+  .enroll-item { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 6px 8px;
+    border: 1px solid var(--border); border-radius: 9px; background: var(--surface-2); }
+  .enroll-item .en { flex: 1; font-weight: 650; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .enroll-item .ec { color: var(--text-muted); font-size: 10.5px; background: var(--surface-1); padding: 1px 6px; border-radius: 20px; }
+  .enroll-item button { padding: 2px 7px; font-size: 10.5px; }
+  .free-banner { margin-top: 10px; padding: 9px 11px; border-radius: var(--r-sm); font-size: 12px; line-height: 1.45;
+    background: color-mix(in srgb, var(--pos) 14%, var(--surface-1)); border: 1px solid color-mix(in srgb, var(--pos) 40%, var(--border));
+    color: var(--text-primary); }
+  .free-banner b { color: var(--pos); }
+  .proto-only-tag { font-size: 9px; font-weight: 700; letter-spacing: .03em; color: var(--c5);
+    background: color-mix(in srgb, var(--c5) 16%, var(--surface-1)); padding: 0 5px; border-radius: 20px; margin-left: 6px; }
+
   #tooltip {
     position: fixed; pointer-events: none; display: none; z-index: 40;
     background: color-mix(in srgb, var(--surface-1) 94%, transparent); backdrop-filter: blur(10px);
@@ -467,6 +541,14 @@
       <div id="attrbars" style="margin-top:10px"></div>
     </div>
 
+    <div class="sec" id="verdictSec" style="display:none">
+      <h2>Three-way verdict</h2>
+      <div class="why" id="verdictIntro"></div>
+      <div class="verdict-grid" id="verdictGrid"></div>
+      <div class="verdict-note" id="verdictNote"></div>
+      <div class="leaf-dist" id="leafDist"></div>
+    </div>
+
     <div class="sec" id="shapSec" style="display:none">
       <h2>SHAP influence</h2>
       <div class="why" id="shapIntro"></div>
@@ -497,6 +579,36 @@
     <div class="sec">
       <h2>Concepts <span class="count" id="conceptCount"></span></h2>
       <div id="concepts"></div>
+    </div>
+
+    <div class="sec" id="treeSec" style="display:none">
+      <h2>Concept decision tree
+        <label style="margin-left:auto;text-transform:none;letter-spacing:0;font-weight:550;color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;gap:5px;font-size:11px">
+          <input type="checkbox" id="treeNames"> names</label>
+      </h2>
+      <div class="why muted" id="treeIntro">Root → sub-clusters → leaves of the Hebbian co-activation
+        hierarchy. Each node is shown by the pixels it responds to; click a node to highlight its neurons.</div>
+      <div id="treeView"></div>
+    </div>
+
+    <div class="sec" id="enrollSec" style="display:none">
+      <h2>Add a class <span class="count">train-free</span>
+        <button id="enrollToggle" class="ghost" style="margin-left:auto;padding:3px 9px;font-size:11px">＋ new</button>
+      </h2>
+      <div class="why muted">Teach the prototype head a brand-new class from a few images — no gradients,
+        no retraining. Averaged in your browser and stored with this bundle.</div>
+      <div id="enrollBody">
+        <input id="enrollName" type="text" placeholder="class name (e.g. my_logo)" autocomplete="off">
+        <div id="enrollDrop">＋ drop or click to add 3–10 example images
+          <input type="file" id="enrollFile" accept="image/*" multiple hidden></div>
+        <div id="enrollThumbs"></div>
+        <div id="enrollActions">
+          <button id="enrollSave" class="primary" disabled>Learn class</button>
+          <button id="enrollCancel" class="ghost">cancel</button>
+        </div>
+        <div id="enrollStatus"></div>
+      </div>
+      <div class="enroll-list" id="enrollList"></div>
     </div>
 
     <div class="sec">
@@ -537,6 +649,14 @@ let regionClass = -1;       // class whose Hebbian activation region is shown
 let shapTarget = -1;        // class the SHAP panel explains
 let lastActs = null;        // raw activation outputs of the last inference
 let lastLogits = null;      // raw logits of the last inference
+let hierarchy = null;       // hierarchy.json: concept tree + class prototypes
+let hierarchySpec = null;   // activation_outputs entry matching hierarchy.layer
+let treeNodeById = new Map();     // node_id → tree node (flat index)
+let treeSelNode = null;     // selected tree node id
+let lastPath = null;        // {path:[node_id], sib:{node_id:{scores,probs,winner}}, leaf}
+let enrolled = [];          // [{name, mean:[U], count}] client-side prototypes
+let enrollBundleKey = "__deployed__";
+let enrollShots = [];       // pending {url, tensor-not-stored} thumbs during enroll
 
 /* ─────────────────── graph → concept model ───────────────────────── */
 function buildModel(document_) {
@@ -628,6 +748,7 @@ function buildModel(document_) {
 
   selected = null; expanded = null; clearInference(false);
   setRegionClass(-1);
+  refreshHierarchyUI();
   seedLayout();
   buildNetwork();
   buildConceptList();
@@ -772,11 +893,13 @@ function drawNetwork(W, H) {
   }
   ctx.globalAlpha = 1;
 
+  const hiActive = treeUnitHi.size > 0;
   const order = liveMode ? [...units].sort((a, b) => (a.live || 0) - (b.live || 0)) : units;
   for (const u of order) {
     const r = unitRadius(u);
     const near = focus && (u === focus || (nbr && nbr.has(u.id)));
-    ctx.globalAlpha = (focus && !near) ? 0.2 : 1;
+    const hi = hiActive && treeUnitHi.has(u.id);
+    ctx.globalAlpha = (focus && !near) ? 0.2 : (hiActive && !hi ? 0.16 : 1);
     if (liveMode && (u.live || 0) > 0.5) {
       const g = ctx.createRadialGradient(u.x, u.y, r * 0.5, u.x, u.y, r + 10 * u.live);
       g.addColorStop(0, `rgba(229,138,0,${0.4 * u.live})`); g.addColorStop(1, "rgba(229,138,0,0)");
@@ -789,6 +912,11 @@ function drawNetwork(W, H) {
       ctx.beginPath(); ctx.arc(u.x, u.y, r + 2.5, 0, Math.PI * 2);
       ctx.strokeStyle = u === focus ? css("text-primary") : css("accent");
       ctx.lineWidth = 1.4; ctx.stroke();
+    }
+    if (hi) {
+      ctx.beginPath(); ctx.arc(u.x, u.y, r + 3, 0, Math.PI * 2);
+      ctx.strokeStyle = css("accent"); ctx.lineWidth = 1.8;
+      ctx.setLineDash([3, 2]); ctx.stroke(); ctx.setLineDash([]);
     }
     ctx.globalAlpha = 1;
   }
@@ -1429,6 +1557,7 @@ $("viewseg").addEventListener("click", ev => {
   const v = b.dataset.view;
   networkMode = v === "network";
   showFull = v === "full";
+  treeUnitHi = new Set();
   [...$("viewseg").children].forEach(x => x.classList.toggle("on", x === b));
   if (showFull || networkMode) expanded = null;
   $("stageHint").textContent = networkMode
@@ -1571,6 +1700,7 @@ function renderPrediction(probs, ms) {
   setShapTarget(lastPredIdx);
   renderMatch();
   refreshSalTargets();
+  runHebbianClassify();
   tourNotify("classified");
 }
 
@@ -1767,7 +1897,9 @@ function clearInference(clearImg) {
   lastActs = null; lastLogits = null; shapTarget = -1; salData = null;
   $("preds").innerHTML = ""; $("whySec").style.display = "none";
   $("shapSec").style.display = "none"; $("matchSec").style.display = "none";
+  $("verdictSec").style.display = "none";
   $("saltarget").style.display = "none";
+  lastPath = null; window.__hebbian = null; if (hierReady()) renderTree();
   if (clearImg !== false) {
     $("imgwrap").classList.remove("show"); $("dropzone").style.display = "block";
     $("imgtools").style.display = "none"; $("salcanvas").style.opacity = 0; infstatus.textContent = "";
@@ -1999,10 +2131,29 @@ function bundleFile(files, base) {
 /* -- IndexedDB persistence -- */
 function idb() {
   return new Promise((res, rej) => {
-    const rq = indexedDB.open("hatchling", 1);
-    rq.onupgradeneeded = () => rq.result.createObjectStore("bundles", { keyPath: "name" });
+    const rq = indexedDB.open("hatchling", 2);
+    rq.onupgradeneeded = () => {
+      const db = rq.result;
+      if (!db.objectStoreNames.contains("bundles")) db.createObjectStore("bundles", { keyPath: "name" });
+      if (!db.objectStoreNames.contains("enrollments")) db.createObjectStore("enrollments", { keyPath: "key" });
+    };
     rq.onsuccess = () => res(rq.result);
     rq.onerror = () => rej(rq.error);
+  });
+}
+async function idbPutEnroll(rec) {
+  const d = await idb();
+  return new Promise((res, rej) => {
+    const tx = d.transaction("enrollments", "readwrite");
+    tx.objectStore("enrollments").put(rec);
+    tx.oncomplete = res; tx.onerror = () => rej(tx.error);
+  });
+}
+async function idbGetEnroll(key) {
+  const d = await idb();
+  return new Promise((res, rej) => {
+    const rq = d.transaction("enrollments").objectStore("enrollments").get(key);
+    rq.onsuccess = () => res(rq.result || null); rq.onerror = () => rej(rq.error);
   });
 }
 async function idbPut(rec) {
@@ -2053,9 +2204,12 @@ function applyManifestUI() {
 async function applyBundle(rec, { persist } = {}) {
   manifest = rec.manifest;
   explain = rec.explain || null;
+  hierarchy = rec.hierarchy || null;
   bundleSource = { name: rec.name, model: rec.model || null };
+  enrollBundleKey = rec.name;
   resetSession();
   applyManifestUI();
+  await loadEnrolled();
   buildModel(rec.graph);
   $("meta").textContent += " · local bundle";
   localStorage.setItem("hatchling.bundle", rec.name);
@@ -2067,7 +2221,8 @@ async function applyBundle(rec, { persist } = {}) {
 }
 
 async function loadDeployed() {
-  bundleSource = null; manifest = null; explain = null;
+  bundleSource = null; manifest = null; explain = null; hierarchy = null;
+  enrollBundleKey = "__deployed__";
   resetSession();
   localStorage.removeItem("hatchling.bundle");
   await initInference();
@@ -2075,6 +2230,11 @@ async function loadDeployed() {
     const r = await fetch((manifest && manifest.explain) || "explain.json", { cache: "no-cache" });
     if (r.ok) { const d = await r.json(); if (d && d.format === "hatchvision-explain") explain = d; }
   } catch { /* explain pack is optional */ }
+  try {
+    const r = await fetch((manifest && manifest.hierarchy) || "hierarchy.json", { cache: "no-cache" });
+    if (r.ok) { const d = await r.json(); if (d && d.format === "hatchvision-hierarchy") hierarchy = d; }
+  } catch { /* hierarchy pack is optional */ }
+  await loadEnrolled();
   applyManifestUI();
   try {
     const r = await fetch((manifest && manifest.graph) || "graph.json", { cache: "no-cache" });
@@ -2103,6 +2263,12 @@ async function loadBundle(files) {
     try { const d = JSON.parse(await eB.text()); if (d.format === "hatchvision-explain") explainObj = d; }
     catch { /* optional */ }
   }
+  let hierObj = null;
+  const hB = bundleFile(files, manifestObj.hierarchy || "hierarchy.json");
+  if (hB) {
+    try { const d = JSON.parse(await hB.text()); if (d.format === "hatchvision-hierarchy") hierObj = d; }
+    catch { /* optional */ }
+  }
   let modelB = bundleFile(files, manifestObj.model || "model.onnx");
   if (modelB && modelB.size < 2000 &&
       (await modelB.slice(0, 40).text()).startsWith("version https://git-lfs")) {
@@ -2112,7 +2278,7 @@ async function loadBundle(files) {
   const ds = manifestObj.dataset || (graphObj.meta && graphObj.meta.dataset) || "bundle";
   const name = `${ds} · ${new Date().toISOString().slice(0, 16).replace("T", " ")}`;
   await applyBundle(
-    { name, manifest: manifestObj, graph: graphObj, explain: explainObj, model: modelB, created: Date.now() },
+    { name, manifest: manifestObj, graph: graphObj, explain: explainObj, hierarchy: hierObj, model: modelB, created: Date.now() },
     { persist: true });
   flash(`Bundle “${name}” is live — stored in this browser, switch or remove it in the header.`);
 }
@@ -2160,6 +2326,400 @@ $("bundleDel").onclick = async () => {
   flash(`Removed stored bundle “${bundleSource.name}”.`);
   await loadDeployed();
 };
+
+/* ════════════ Hebbian classifier: concept tree + prototype head ═══════════
+   Everything in this block is driven by hierarchy.json and degrades to
+   hidden panels when the file is absent (resolveHierarchy leaves hierarchy
+   null and refreshHierarchyUI hides #treeSec / #verdictSec / #enrollSec). */
+
+let treeUnitHi = new Set();     // unit ids highlighted from a tree-node click
+
+function classIdx(name) { return classNames.indexOf(name); }
+
+// resolve hierarchy.json against the active manifest + graph; index its nodes
+function resolveHierarchy() {
+  hierarchySpec = null; treeNodeById = new Map(); treeSelNode = null; lastPath = null;
+  if (hierarchy && manifest && manifest.activation_outputs) {
+    hierarchySpec = manifest.activation_outputs.find(s => s.layer === hierarchy.layer) || null;
+  }
+  if (hierarchy && hierarchy.tree) {
+    (function idx(n) { treeNodeById.set(n.node_id, n); (n.children || []).forEach(idx); })(hierarchy.tree);
+  }
+}
+
+function hierReady() {
+  return !!(hierarchy && hierarchy.tree && hierarchy.prototypes && hierarchySpec
+            && classNames.length);
+}
+
+// L2-normalized activation vector over the hierarchy's tracked units (a / (‖a‖+1e-8))
+function hierActVector() {
+  if (!hierReady() || !lastActs) return null;
+  const a = lastActs[hierarchySpec.output];
+  if (!a) return null;
+  let ss = 0; for (let i = 0; i < a.length; i++) ss += a[i] * a[i];
+  const inv = 1 / (Math.sqrt(ss) + 1e-8);
+  const out = new Float32Array(a.length);
+  for (let i = 0; i < a.length; i++) out[i] = a[i] * inv;
+  return out;
+}
+
+// prototype head: temperature-scaled cosine to every class prototype + enrolled
+function protoPredict(aHat) {
+  const temp = (hierarchy.config && hierarchy.config.temperature) || 0.1;
+  const items = [];
+  for (const name of Object.keys(hierarchy.prototypes)) {
+    const p = hierarchy.prototypes[name];
+    let dot = 0; for (let i = 0; i < p.length; i++) dot += aHat[i] * p[i];
+    items.push({ name, sim: dot, logit: dot / temp, enrolled: false });
+  }
+  for (const e of enrolled) {
+    // prototype = L2-normalize(mean of normalized shot activations)
+    let ss = 0; for (let i = 0; i < e.mean.length; i++) ss += e.mean[i] * e.mean[i];
+    const inv = 1 / (Math.sqrt(ss) + 1e-8);
+    let dot = 0; for (let i = 0; i < e.mean.length; i++) dot += aHat[i] * e.mean[i] * inv;
+    items.push({ name: e.name, sim: dot, logit: dot / temp, enrolled: true });
+  }
+  const mx = Math.max(...items.map(x => x.logit));
+  let z = 0; for (const it of items) { it.prob = Math.exp(it.logit - mx); z += it.prob; }
+  for (const it of items) it.prob /= z;
+  items.sort((a, b) => b.prob - a.prob);
+  return items;
+}
+
+// mean member-unit activation of a node on the normalized vector
+function nodeScore(node, aHat) {
+  if (!node.units || !node.units.length) return 0;
+  let s = 0; for (const u of node.units) s += aHat[u] || 0;
+  return s / node.units.length;
+}
+function childScores(node, aHat) {
+  const useImp = !(hierarchy.config && hierarchy.config.routing
+                   && hierarchy.config.routing.use_importance_prior === false);
+  return (node.children || []).map(ch => {
+    let s = nodeScore(ch, aHat);
+    if (useImp) s = s / ((ch.importance || 0) + 1e-8);
+    return s;
+  });
+}
+function softmaxArr(v, t) {
+  const m = Math.max(...v); const e = v.map(x => Math.exp((x - m) / t));
+  const s = e.reduce((a, b) => a + b, 0); return e.map(x => x / s);
+}
+
+// faithful port of TreeRoutedHead._soft_dist → distribution over classNames
+function softRoute(aHat) {
+  const t = (hierarchy.config && hierarchy.config.routing
+             && hierarchy.config.routing.temperature) || 0.25;
+  const dist = new Float64Array(classNames.length);
+  (function descend(node, weight) {
+    if (!node.children || !node.children.length) {
+      for (const [nm, sc] of Object.entries(node.class_affinity || {})) {
+        const k = classIdx(nm); if (k >= 0) dist[k] += sc * weight;
+      }
+      return;
+    }
+    const probs = softmaxArr(childScores(node, aHat), t);
+    node.children.forEach((ch, i) => descend(ch, weight * probs[i]));
+  })(hierarchy.tree, 1.0);
+  return dist;
+}
+
+// hard route (argmax at each junction) → path + per-junction sibling probs
+function hardPath(aHat) {
+  const t = (hierarchy.config && hierarchy.config.routing
+             && hierarchy.config.routing.temperature) || 0.25;
+  const path = [hierarchy.tree.node_id]; const sib = {};
+  let node = hierarchy.tree;
+  while (node.children && node.children.length) {
+    const sc = childScores(node, aHat);
+    const probs = softmaxArr(sc, t);
+    let best = 0; for (let i = 1; i < sc.length; i++) if (sc[i] > sc[best]) best = i;
+    sib[node.node_id] = { probs, winner: node.children[best].node_id };
+    node = node.children[best];
+    path.push(node.node_id);
+  }
+  return { path, sib, leaf: node };
+}
+
+// run the gradient-free heads on the last inference and render the verdict
+function runHebbianClassify() {
+  if (!hierReady() || lastPredIdx < 0) { $("verdictSec").style.display = "none"; lastPath = null; renderTree(); return; }
+  const aHat = hierActVector();
+  if (!aHat) { $("verdictSec").style.display = "none"; return; }
+  const proto = protoPredict(aHat);
+  const soft = softRoute(aHat);
+  const path = hardPath(aHat);
+  lastPath = path;
+  // expose for verification (Python-vs-JS routing diff)
+  window.__hebbian = {
+    layer: hierarchy.layer,
+    protoTop: proto[0].name, protoProbs: proto.map(p => [p.name, p.prob]),
+    softDist: Array.from(soft), classNames: classNames.slice(),
+    path: path.path, leaf: path.leaf.node_id,
+    acts: Array.from(lastActs[hierarchySpec.output]),   // raw act_<layer> for verification
+  };
+  renderVerdict(proto, soft, path);
+  renderTree();
+}
+
+function renderVerdict(proto, soft, path) {
+  const sec = $("verdictSec"); sec.style.display = "block";
+  const gradTop = classNames[lastPredIdx] || ("class " + lastPredIdx);
+  const gradP = lastProbs ? lastProbs[lastPredIdx] : 0;
+  const protoTop = proto[0];
+  // tree top-1 = argmax of the soft-routing distribution (TreeRoutedHead.predict)
+  let treeIdx = 0; for (let i = 1; i < soft.length; i++) if (soft[i] > soft[treeIdx]) treeIdx = i;
+  const treeSum = soft.reduce((a, b) => a + b, 0) || 1;
+  const treeTop = classNames[treeIdx] || ("class " + treeIdx);
+  const agreeGP = protoTop.name === gradTop;
+  const agreeGT = treeTop === gradTop;
+  $("verdictIntro").innerHTML = "Three gradient-free readouts of the same activation — "
+    + "the trained head, the <b>cosine prototype</b> head, and the <b>tree router</b>. "
+    + "Where they disagree is where the interpretable path and the logits part ways.";
+  const card = (k, name, sub, cls, tag) =>
+    `<div class="vcard ${cls}">${tag ? `<span class="vtag">${tag}</span>` : ""}
+      <span class="vk">${k}</span><span class="vv" title="${name}">${name}</span>
+      <span class="vp">${sub}</span></div>`;
+  $("verdictGrid").innerHTML =
+    card("gradient head", gradTop, `${(100 * gradP).toFixed(1)}%`, "", "") +
+    card("prototype head", protoTop.name, `${(100 * protoTop.prob).toFixed(1)}%${protoTop.enrolled ? " · enrolled" : ""}`,
+         agreeGP ? "agree" : "disagree", agreeGP ? "" : "≠ grad") +
+    card("tree router", treeTop, `${(100 * soft[treeIdx] / treeSum).toFixed(1)}% of leaves`,
+         agreeGT ? "agree" : "disagree", agreeGT ? "" : "≠ grad");
+  const notes = [];
+  if (!agreeGP) notes.push(`Prototype head prefers <b>${protoTop.name}</b> over the trained head's <b>${gradTop}</b>.`);
+  if (!agreeGT) notes.push(`Soft tree routing lands on <b>${treeTop}</b> — coarser, and it reads a full leaf distribution rather than a single logit.`);
+  const note = $("verdictNote");
+  note.className = "verdict-note" + ((!agreeGP || !agreeGT) ? " dis" : "");
+  note.innerHTML = notes.length ? notes.join(" ")
+    : "All three heads agree on this image.";
+  // reached-leaf class distribution
+  const leaf = path.leaf, aff = Object.entries(leaf.class_affinity || {}).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const amx = Math.max(1e-9, ...aff.map(a => a[1]));
+  $("leafDist").innerHTML =
+    `<div class="why muted" style="margin-bottom:6px">Reached leaf <b>${leaf.node_id}</b> — its class affinities:</div>` +
+    aff.map(([nm, v]) => `<div class="ld-row"><span class="nm">${nm}</span>
+      <span class="track"><span class="fill" style="width:${Math.round(100 * v / amx)}%"></span></span>
+      <span class="pct">${v.toFixed(2)}</span></div>`).join("");
+}
+
+/* ── concept decision tree view ── */
+function refreshHierarchyUI() {
+  resolveHierarchy();
+  const ok = hierReady();
+  $("treeSec").style.display = ok ? "block" : "none";
+  $("enrollSec").style.display = ok ? "block" : "none";
+  if (!ok) { $("verdictSec").style.display = "none"; return; }
+  renderTree();
+  renderEnrollList();
+}
+
+function renderTree() {
+  const host = $("treeView"); if (!hierReady()) { host.innerHTML = ""; return; }
+  const showNames = $("treeNames").checked;
+  const onPath = new Set(lastPath ? lastPath.path : []);
+  const leafId = lastPath ? lastPath.leaf.node_id : null;
+  const frag = document.createDocumentFragment();
+
+  function build(node, depth, isRoot) {
+    const wrap = document.createElement("div");
+    wrap.className = "tnode" + (isRoot ? " root" : "");
+    const row = document.createElement("div");
+    row.className = "trow" + (node.node_id === treeSelNode ? " sel" : "")
+      + (onPath.has(node.node_id) ? " on-path" : "")
+      + (node.node_id === leafId ? " leaf-hit" : "");
+    const hasKids = node.children && node.children.length;
+    const affTop = Object.entries(node.class_affinity || {}).sort((a, b) => b[1] - a[1]);
+    const labelTxt = (node.label || (affTop.slice(0, 2).map(x => x[0]).join(" / ")) || "concept");
+    const patches = (node.patches || []).slice(0, 3);
+    const patchHtml = patches.length
+      ? `<span class="patches">${patches.map(p => `<img src="${p}" alt="patch" loading="lazy">`).join("")}</span>` : "";
+    const showLabel = showNames || !patches.length;
+    row.innerHTML =
+      `<span class="tw">${hasKids ? "▾" : "•"}</span>${patchHtml}` +
+      (showLabel ? `<span class="tlabel"><b>${labelTxt}</b> · ${node.units.length}u</span>`
+                 : `<span class="tlabel" style="flex:1"></span>`) +
+      (onPath.has(node.node_id) && node.node_id !== hierarchy.tree.node_id
+        ? `<span class="tprob">on path</span>` : "");
+    row.onclick = (ev) => { ev.stopPropagation(); selectTreeNode(node); toggleTreeKids(wrap); };
+    wrap.appendChild(row);
+    // sibling routing bars at this junction (from the last classification)
+    if (hasKids && lastPath && lastPath.sib[node.node_id]) {
+      const sinfo = lastPath.sib[node.node_id];
+      const sb = document.createElement("div"); sb.className = "sib-bars";
+      node.children.forEach((ch, i) => {
+        const p = sinfo.probs[i];
+        const nm = (ch.label || Object.keys(ch.class_affinity || { concept: 1 })[0] || "node");
+        const win = ch.node_id === sinfo.winner;
+        sb.innerHTML += `<div class="sb${win ? " win" : ""}"><span class="nm" title="${nm}">${win ? "▶ " : ""}${nm}</span>
+          <span class="track"><span class="fill" style="width:${Math.round(100 * p)}%"></span></span>
+          <span class="pv">${(100 * p).toFixed(0)}%</span></div>`;
+      });
+      wrap.appendChild(sb);
+    }
+    if (hasKids) {
+      const kids = document.createElement("div");
+      kids.className = "tkids";
+      // auto-expand along the active path or near the root
+      const open = onPath.has(node.node_id) || depth < 1;
+      kids.style.display = open ? "block" : "none";
+      node.children.forEach(ch => kids.appendChild(build(ch, depth + 1, false)));
+      wrap.appendChild(kids);
+    }
+    return wrap;
+  }
+  host.innerHTML = "";
+  frag.appendChild(build(hierarchy.tree, 0, true));
+  host.appendChild(frag);
+}
+function toggleTreeKids(wrap) {
+  const kids = wrap.querySelector(":scope > .tkids");
+  if (kids) kids.style.display = kids.style.display === "none" ? "block" : "none";
+}
+
+function selectTreeNode(node) {
+  treeSelNode = node.node_id;
+  // highlight member units in the neuron graph
+  const prefix = hierarchy.node_prefix || (`u:${hierarchy.layer}:`);
+  treeUnitHi = new Set(node.units.map(i => prefix + i));
+  if (!networkMode) {
+    networkMode = true; showFull = false;
+    [...$("viewseg").children].forEach(x => x.classList.toggle("on", x.dataset.view === "network"));
+    seedNetworkLayout(); reheat();
+  } else draw();
+  // node stats in the Selection panel
+  const affTop = Object.entries(node.class_affinity || {}).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  $("details").innerHTML = `<dl>
+    <dt>tree node</dt><dd><b>${node.node_id}</b>${node.node_id === (lastPath && lastPath.leaf.node_id) ? " (reached leaf)" : ""}</dd>
+    <dt>depth</dt><dd>${node.depth}</dd>
+    <dt>neurons</dt><dd>${node.units.length}</dd>
+    <dt>coherence</dt><dd>${(+node.coherence).toFixed(3)}</dd>
+    <dt>importance</dt><dd>${(+node.importance).toFixed(4)}</dd>
+    <dt>top classes</dt><dd>${affTop.map(([k, v]) => `${k} (${(+v).toFixed(2)})`).join("<br>") || "—"}</dd>
+    </dl><div class="muted" style="margin-top:8px">${node.units.length} neurons highlighted in the graph.</div>`;
+  renderTree();
+}
+$("treeNames").addEventListener("change", renderTree);
+
+/* ════════════════════ few-shot class enrollment ════════════════════ */
+function renderEnrollList() {
+  const host = $("enrollList");
+  if (!enrolled.length) { host.innerHTML = ""; return; }
+  host.innerHTML = enrolled.map((e, i) => `<div class="enroll-item">
+    <span class="en" title="${e.name}">${e.name}</span>
+    <span class="ec">${e.count} shot${e.count === 1 ? "" : "s"}</span>
+    <button data-i="${i}" class="en-del ghost">delete</button></div>`).join("")
+    + `<button id="enrollReset" class="ghost" style="align-self:flex-start;font-size:11px;padding:3px 9px">reset all</button>`;
+  host.querySelectorAll(".en-del").forEach(b => b.onclick = async () => {
+    enrolled.splice(+b.dataset.i, 1); await saveEnrolled(); renderEnrollList();
+    if (lastPredIdx >= 0) runHebbianClassify();
+  });
+  const rst = $("enrollReset");
+  if (rst) rst.onclick = async () => { enrolled = []; await saveEnrolled(); renderEnrollList(); if (lastPredIdx >= 0) runHebbianClassify(); };
+}
+
+$("enrollToggle").onclick = () => {
+  const b = $("enrollBody"); b.classList.toggle("show");
+  if (b.classList.contains("show")) $("enrollName").focus();
+};
+$("enrollCancel").onclick = () => { resetEnrollForm(); $("enrollBody").classList.remove("show"); };
+function resetEnrollForm() {
+  enrollShots = []; $("enrollName").value = ""; $("enrollThumbs").innerHTML = "";
+  $("enrollStatus").textContent = ""; $("enrollFile").value = ""; $("enrollSave").disabled = true;
+}
+const edz = $("enrollDrop");
+edz.onclick = () => $("enrollFile").click();
+$("enrollFile").addEventListener("change", e => addEnrollShots(e.target.files));
+edz.addEventListener("dragover", e => { e.preventDefault(); e.stopPropagation(); edz.classList.add("hot"); });
+edz.addEventListener("dragleave", () => edz.classList.remove("hot"));
+edz.addEventListener("drop", e => { e.preventDefault(); e.stopPropagation(); edz.classList.remove("hot"); addEnrollShots(e.dataTransfer.files); });
+
+function addEnrollShots(fileList) {
+  const files = [...fileList].filter(f => f.type.startsWith("image/"));
+  for (const f of files) {
+    if (enrollShots.length >= 10) break;
+    const url = URL.createObjectURL(f);
+    enrollShots.push({ file: f, url });
+    const img = document.createElement("img"); img.src = url; $("enrollThumbs").appendChild(img);
+  }
+  $("enrollSave").disabled = enrollShots.length < 1;
+  $("enrollStatus").textContent = `${enrollShots.length} image${enrollShots.length === 1 ? "" : "s"} ready`;
+}
+
+// activation vector (L2-normalized, tracked units) for one File via ONNX
+function imageToActVector(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file); const img = new Image();
+    img.onload = async () => {
+      try {
+        await ensureSession();
+        const S = manifest.image_size, C = manifest.in_channels;
+        const t = preprocess(img);
+        const res = await session.run({ images: new ort.Tensor("float32", t, [1, C, S, S]) });
+        const a = res[hierarchySpec.output].data;
+        let ss = 0; for (let i = 0; i < a.length; i++) ss += a[i] * a[i];
+        const inv = 1 / (Math.sqrt(ss) + 1e-8);
+        const out = new Float32Array(a.length);
+        for (let i = 0; i < a.length; i++) out[i] = a[i] * inv;
+        URL.revokeObjectURL(url); resolve(out);
+      } catch (e) { reject(e); }
+    };
+    img.onerror = () => reject(new Error("could not decode image")); img.src = url;
+  });
+}
+
+$("enrollSave").onclick = async () => {
+  const name = $("enrollName").value.trim();
+  if (!name) { $("enrollStatus").textContent = "give the class a name first"; return; }
+  if (!enrollShots.length) return;
+  if (!hierReady()) { $("enrollStatus").textContent = "no hierarchy in this bundle"; return; }
+  $("enrollSave").disabled = true;
+  const U = hierarchy.unit_ids.length;
+  // running mean of L2-normalized shot activations == HebbianPrototypeHead.enroll
+  const sum = new Float64Array(U); let n = 0;
+  try {
+    for (let i = 0; i < enrollShots.length; i++) {
+      $("enrollStatus").textContent = `learning… ${i + 1}/${enrollShots.length}`;
+      const v = await imageToActVector(enrollShots[i].file);
+      for (let k = 0; k < U; k++) sum[k] += v[k]; n++;
+    }
+  } catch (e) { $("enrollStatus").textContent = "failed: " + e.message; $("enrollSave").disabled = false; return; }
+  const existing = enrolled.find(e => e.name === name);
+  if (existing) {
+    const pn = existing.count;
+    for (let k = 0; k < U; k++) existing.mean[k] = (existing.mean[k] * pn + sum[k]) / Math.max(pn + n, 1e-8);
+    existing.count = pn + n;
+  } else {
+    const mean = new Array(U); for (let k = 0; k < U; k++) mean[k] = sum[k] / Math.max(n, 1e-8);
+    enrolled.push({ name, mean, count: n });
+  }
+  await saveEnrolled();
+  resetEnrollForm(); renderEnrollList();
+  flash(`Learned “${name}” from ${n} image${n === 1 ? "" : "s"} — no gradients, all in your browser.`);
+  if (lastPredIdx >= 0) runHebbianClassify();
+  // demo moment: explicit train-free banner in the verdict area
+  showFreeBanner(name, n);
+};
+
+function showFreeBanner(name, n) {
+  let el = $("freeBanner");
+  const host = $("enrollSec");
+  if (!el) { el = document.createElement("div"); el.id = "freeBanner"; el.className = "free-banner"; host.appendChild(el); }
+  el.innerHTML = `<b>train-free:</b> “${name}” was learned from ${n} image${n === 1 ? "" : "s"} in your browser — `
+    + `it now competes in the prototype verdict (no leaf affinity, so it stays out of the tree router).`;
+}
+
+/* -- enrollment persistence: per-bundle, IndexedDB store "enrollments" -- */
+async function saveEnrolled() {
+  try { await idbPutEnroll({ key: enrollBundleKey, classes: enrolled }); }
+  catch (e) { flash("Enrolled classes active but not stored: " + e.message); }
+}
+async function loadEnrolled() {
+  try { const rec = await idbGetEnroll(enrollBundleKey); enrolled = (rec && rec.classes) || []; }
+  catch { enrolled = []; }
+  renderEnrollList();
+}
 
 /* ─────────────────────────── boot ────────────────────────────────── */
 document.body.classList.toggle("darkblend", isDark());

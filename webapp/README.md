@@ -33,6 +33,41 @@ presenting the core ideas; every step is also available stand-alone:
 Steps degrade gracefully: without `explain.json` the tour covers only the
 graph, without a model bundle only the region steps.
 
+## Gradient-free Hebbian classifier (`hierarchy.json`)
+
+When the active bundle carries a `hierarchy.json` (written by
+`scripts/train.py --export-hierarchy`, picked up from the deployed dir or a
+dropped `bundle.zip` exactly like `explain.json`), three extra panels appear.
+They read only that file and hide themselves entirely when it is absent:
+
+1. **Concept decision tree** — a collapsible view of the `ConceptNode`
+   hierarchy (root → sub-clusters → leaves). Each node's identity is the
+   **pixel patches** it responds to (occlusion thumbnails baked into the
+   file); a *names* toggle switches to patches + text labels, and nodes
+   without patches fall back to text. Click a node to highlight its member
+   neurons (`u:<layer>:<i>`) in the Neurons graph and read its coherence,
+   importance, and top class affinities in the Selection panel.
+2. **Three-way verdict** — on every classification the app runs two
+   gradient-free heads in JS over the L2-normalized `act_<layer>` vector: a
+   **cosine prototype head** (temperature-softmax over the file's per-class
+   unit prototypes) and a **soft tree router** (a faithful port of
+   `TreeRoutedHead` — mean member-unit activation ÷ importance prior,
+   softmax over siblings, using the temperature/config from `hierarchy.json`).
+   The verdict shows trained-head vs prototype vs tree top-1 side by side and
+   styles disagreements; the tree view lights the root→leaf decision path with
+   per-junction sibling routing bars, and the reached leaf's class
+   distribution is listed.
+3. **Add a class (train-free)** — name a class, drop 3–10 images; each is run
+   through ONNX, its activation L2-normalized and averaged into a new
+   prototype (the same math as `HebbianPrototypeHead.enroll`) **added
+   client-side**. Enrolled classes persist per-bundle in IndexedDB (rename
+   count / delete / reset), join the prototype verdict immediately, and are
+   marked prototype-only — they carry no leaf affinity, so they honestly stay
+   out of the tree router.
+
+The JS routing and prototype math are validated to match the Python
+`TreeRoutedHead` / `HebbianPrototypeHead` to ~1e-6 on identical activations.
+
 All of it is dataset-agnostic — the same `explain.json` is produced by
 `scripts/train.py --export-bundle` for any registered dataset, and class
 fingerprints can be rebuilt from `hebbian_state.pt` via
@@ -116,9 +151,15 @@ python scripts/train.py --dataset imagefolder --root data/mydata \
 # or run notebooks/kaggle_cub200.ipynb on Kaggle and unzip bundle.zip here
 ```
 
-The app auto-loads `manifest.json` → `explain.json` → `graph.json` (falling
-back to `sample-graph.json`, then to drag-and-drop). With no bundle it stays
-a pure graph explorer; with no `explain.json` the region/SHAP panels hide.
+Add `--export-hierarchy` to also write `hierarchy.json` (concept tree with
+pixel patches + class prototypes) and unlock the tree / verdict / enrollment
+panels described above.
+
+The app auto-loads `manifest.json` → `explain.json` → `hierarchy.json` →
+`graph.json` (falling back to `sample-graph.json`, then to drag-and-drop).
+With no bundle it stays a pure graph explorer; with no `explain.json` the
+region/SHAP panels hide, and with no `hierarchy.json` the tree/verdict/
+enrollment panels hide.
 Iterate on clustering without retraining via `scripts/rebuild_graph.py`
 (uses the bundle's `hebbian_state.pt`; add `--explain-out explain.json` to
 refresh the class fingerprints too).
