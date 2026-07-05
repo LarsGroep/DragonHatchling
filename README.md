@@ -172,6 +172,65 @@ computes per-image, per-concept SHAP contributions from it live.
 Fingerprints can be rebuilt from `hebbian_state.pt` without retraining
 (`scripts/rebuild_graph.py --explain-out`).
 
+## Hebbian classification: prototype head, few-shot enrollment, concept tree
+
+The memory's statistics are strong enough to *be* the classifier — no
+gradients on the classification weights at all
+(`hatchvision/hebbian/heads.py` + `hatchvision/hebbian/hierarchy.py`):
+
+- **`HebbianPrototypeHead`** — one L2-normalized mean-firing prototype per
+  class; prediction is temperature-scaled cosine similarity. `enroll(name,
+  activations)` teaches it a **brand-new class from a handful of images**
+  (running mean, no retraining) — including classes the backbone never saw.
+  `from_activations` rebuilds all prototypes from one final-model pass,
+  which puts enrolled and trained classes on equal footing (the memory's
+  own prototypes average the network over the whole training run).
+- **`build_concept_tree`** — walks the Ward dendrogram of the co-activation
+  fingerprints into a `ConceptNode` hierarchy: coarse concepts split into
+  sub-concepts, children partition parents, coherence rises with depth.
+- **`TreeRoutedHead`** — decision-tree classification over that hierarchy:
+  route from the root by member-unit activation (hard or soft routing),
+  read the class distribution off the leaves; `decision_path` exposes the
+  route for UI display.
+- **`ConceptBottleneckHead`** — flat concepts → concept scores → classes
+  via class affinity (optionally a fitted logistic upper bound).
+- **`node_patch_uris`** (`hatchvision/explain/node_patches.py`) — gives every
+  tree node a **pixel identity**: occlusion-search its top exemplar images
+  and crop the region that drives the node, as base64 PNG data-URIs.
+
+Run the head-to-head experiment (gradient head vs. all Hebbian heads,
+plus the few-shot enrollment protocol):
+
+```bash
+# self-contained shapes demo (auto-generates the dataset)
+python scripts/eval_hebbian_heads.py --dataset shapes --epochs 4 \
+    --holdout-classes 1 --shots 5 --fit-logistic --out results_shapes.json
+
+# CIFAR-10 subset (imagefolder layout, e.g. the fast.ai PNG mirror)
+python scripts/eval_hebbian_heads.py --dataset imagefolder \
+    --root data/cifar10_small --image-size 32 --epochs 4 \
+    --holdout-classes 2 --shots 5 --out results_cifar10.json
+```
+
+`--holdout-classes N` retrains with N classes removed, enrolls them into the
+prototype head from `--shots K` validation images, and reports held-out
+accuracy plus seen-class accuracy before/after enrollment (interference).
+
+Export the browser-side classifier (`hierarchy.json`: concept tree with node
+patches, class prototypes, tracked unit ids) alongside the usual bundle:
+
+```bash
+python scripts/train.py --dataset imagefolder --root data/shapes \
+    --image-size 64 --backbone simple_cnn --epochs 4 \
+    --export-bundle webapp --export-hierarchy
+# or rebuild it later from saved statistics (keeps existing node patches):
+python scripts/rebuild_graph.py --state webapp/hebbian_state.pt \
+    --manifest webapp/manifest.json --out webapp/graph.json \
+    --hierarchy-out webapp/hierarchy.json
+```
+
+`graph.json` / `explain.json` are unchanged — `hierarchy.json` is additive.
+
 ## Web app (`webapp/`)
 
 A zero-build static site (Vercel-ready) that renders the concept graph —
