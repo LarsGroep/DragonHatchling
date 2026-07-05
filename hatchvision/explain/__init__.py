@@ -16,6 +16,7 @@ from hatchvision.explain.influence import (
     class_fingerprints,
     unit_class_influence,
 )
+from hatchvision.explain.node_patches import attach_patches, node_patch_uris
 
 __all__ = [
     "GradCAM",
@@ -32,4 +33,6 @@ __all__ = [
     "UnitInfluence",
     "class_fingerprints",
     "unit_class_influence",
+    "attach_patches",
+    "node_patch_uris",
 ]

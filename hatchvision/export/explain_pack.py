@@ -27,6 +27,8 @@ import torch
 from torch import nn
 
 from hatchvision.explain.influence import class_fingerprints, unit_class_influence
+from hatchvision.hebbian.heads import HebbianPrototypeHead
+from hatchvision.hebbian.hierarchy import ConceptNode
 from hatchvision.hebbian.memory import HebbianFeatureMemory
 
 
@@ -96,6 +98,72 @@ def export_explain_pack(
     doc = build_explain_pack(
         memory, layer, class_names, model=model, background=background, **kwargs
     )
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(doc, separators=(",", ":")))
+    return path
+
+
+def build_hierarchy_pack(
+    memory: HebbianFeatureMemory,
+    layer: str,
+    class_names: Sequence[str],
+    tree: ConceptNode,
+    prototype_head: Optional[HebbianPrototypeHead] = None,
+    config: Optional[Dict] = None,
+    prototype_decimals: int = 5,
+) -> Dict:
+    """Assemble ``hierarchy.json`` — the browser-side classifier document.
+
+    Contains everything a browser needs to (a) render the concept tree with
+    per-node pixel patches, (b) route an ONNX ``act_<layer>`` vector through
+    the tree, and (c) run the prototype head / enroll new classes client-side:
+
+    * ``tree`` — :meth:`ConceptNode.to_dict` of the root (with any attached
+      ``patches`` data-URIs);
+    * ``prototypes`` — ``{class_name: unit vector}`` (L2-normalized firing
+      prototype per class) for the gradient-free prototype head;
+    * ``layer`` / ``unit_ids`` — the tracked units, aligned with
+      ``act_<layer>`` and graph nodes ``u:<layer>:<i>``;
+    * ``config`` — temperature and routing settings.
+
+    This section is purely additive; ``graph.json`` / ``explain.json`` are
+    unchanged and remain valid on their own.
+    """
+    if prototype_head is None:
+        prototype_head = HebbianPrototypeHead.from_memory(memory, layer, class_names)
+    prototypes = {
+        name: _rounded(prototype_head.prototypes[i], prototype_decimals)
+        for i, name in enumerate(prototype_head.class_names)
+    }
+    doc: Dict = {
+        "format": "hatchvision-hierarchy",
+        "version": "1.0",
+        "layer": layer,
+        "node_prefix": f"u:{layer}:",
+        "unit_ids": memory.unit_ids(layer),
+        "num_classes": len(prototype_head.class_names),
+        "class_names": list(prototype_head.class_names),
+        "tree": tree.to_dict(),
+        "prototypes": prototypes,
+        "config": {
+            "temperature": prototype_head.temperature,
+            **(config or {}),
+        },
+    }
+    return doc
+
+
+def export_hierarchy_pack(
+    memory: HebbianFeatureMemory,
+    layer: str,
+    class_names: Sequence[str],
+    tree: ConceptNode,
+    path: Union[str, Path],
+    **kwargs,
+) -> Path:
+    """Build and write ``hierarchy.json``; returns the written path."""
+    doc = build_hierarchy_pack(memory, layer, class_names, tree, **kwargs)
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(doc, separators=(",", ":")))

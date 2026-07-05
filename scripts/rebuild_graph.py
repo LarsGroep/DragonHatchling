@@ -62,6 +62,15 @@ def main() -> None:
         "class fingerprints are rebuilt from the state, an existing file's "
         "shap section (which needs the model) is preserved",
     )
+    p.add_argument(
+        "--hierarchy-out",
+        default=None,
+        help="also (re)write the concept hierarchy pack here (e.g. "
+        "bundle/hierarchy.json): concept tree + class prototypes, rebuilt "
+        "from the state alone (node pixel patches need the model, so an "
+        "existing file's patches are preserved when the tree shape matches)",
+    )
+    p.add_argument("--max-depth", type=int, default=3, help="concept tree depth")
     args = p.parse_args()
 
     memory = HebbianFeatureMemory.from_state(
@@ -129,6 +138,57 @@ def main() -> None:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(doc, separators=(",", ":")))
         print(f"explain pack rebuilt at {out}")
+
+    if args.hierarchy_out:
+        from hatchvision.export import build_hierarchy_pack
+        from hatchvision.hebbian import build_concept_tree
+
+        tree = build_concept_tree(
+            memory,
+            layer,
+            class_names,
+            max_depth=args.max_depth,
+            min_units=args.min_units,
+            activity_threshold=args.activity_threshold,
+        )
+        doc = build_hierarchy_pack(memory, layer, class_names, tree)
+        out = Path(args.hierarchy_out)
+        if out.exists():
+            # node patches need the trained model + probe images; keep any
+            # existing ones whose node ids still exist in the rebuilt tree
+            try:
+                prev = json.loads(out.read_text())
+
+                def _patches(node, acc):
+                    if node.get("patches"):
+                        acc[node["node_id"]] = node["patches"]
+                    for c in node.get("children", []):
+                        _patches(c, acc)
+                    return acc
+
+                old = _patches(prev.get("tree", {}), {})
+
+                def _attach(node):
+                    if node["node_id"] in old:
+                        node["patches"] = old[node["node_id"]]
+                    for c in node.get("children", []):
+                        _attach(c)
+
+                if old:
+                    _attach(doc["tree"])
+                    print("kept existing node patches (rebuilding them needs the model)")
+            except (json.JSONDecodeError, OSError, KeyError):
+                pass
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(doc, separators=(",", ":")))
+        n_nodes = sum(1 for _ in _walk_dict(doc["tree"]))
+        print(f"hierarchy pack rebuilt at {out} ({n_nodes} nodes)")
+
+
+def _walk_dict(node: dict):
+    yield node
+    for c in node.get("children", []):
+        yield from _walk_dict(c)
 
 
 if __name__ == "__main__":

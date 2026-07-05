@@ -71,6 +71,14 @@ def main() -> None:
         help="write graph.json + model.onnx + manifest.json into this directory",
     )
     p.add_argument("--n-concepts", type=int, default=12)
+    p.add_argument(
+        "--export-hierarchy",
+        action="store_true",
+        help="with --export-bundle/--export-graph: also write hierarchy.json "
+        "(concept tree with pixel patches + class prototypes for the "
+        "browser-side gradient-free classifier)",
+    )
+    p.add_argument("--max-depth", type=int, default=3, help="concept tree depth")
     p.add_argument("--probe", type=int, default=512, help="probe images for exemplars/grounding")
     p.add_argument("--checkpoint", default=None, help="save model weights here")
     args = p.parse_args()
@@ -184,6 +192,27 @@ def main() -> None:
             torch.save(
                 memory.state_dict(), Path(args.export_bundle) / "hebbian_state.pt"
             )
+
+        if args.export_hierarchy:
+            from hatchvision.explain import attach_patches, node_patch_uris
+            from hatchvision.export import export_hierarchy_pack
+            from hatchvision.hebbian import build_concept_tree
+
+            tree = build_concept_tree(
+                memory, layer, data.spec.class_names, max_depth=args.max_depth
+            )
+            mean, std = data.spec.normalization()
+            patches = node_patch_uris(
+                tree, model, memory, probe[: min(64, probe.shape[0])], mean, std,
+                max_depth=args.max_depth,
+            )
+            attach_patches(tree, patches)
+            out_dir = Path(args.export_bundle or Path(graph_path).parent)
+            hier_path = export_hierarchy_pack(
+                memory, layer, data.spec.class_names, tree,
+                out_dir / "hierarchy.json",
+            )
+            print(f"hierarchy pack exported to {hier_path}")
 
 
 if __name__ == "__main__":
