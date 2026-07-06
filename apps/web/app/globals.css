@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-void text-readout font-mono antialiased;
+  /* Faint instrument grid behind everything. */
+  background-image:
+    linear-gradient(theme(colors.grid) 1px, transparent 1px),
+    linear-gradient(90deg, theme(colors.grid) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: -1px -1px;
+}
+
+/* Thin, dark scrollbars to match the instrument aesthetic. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: theme(colors.edge) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: theme(colors.edge);
+  border-radius: 4px;
+}
