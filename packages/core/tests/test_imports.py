@@ -99,12 +99,26 @@ def test_key_symbols_present():
     Trace()  # default-constructs
 
 
-def test_stubs_raise_not_implemented():
-    # build_gaussian_field landed at M3; train_sae is still an M4 stub.
-    from vitreous.concepts import train_sae
+def test_concepts_public_surface():
+    # M4: train_sae + providers + dictionary + quality gate are implemented.
+    from vitreous.concepts import (
+        ConceptProvider,
+        KMeansConceptProvider,
+        SAEConceptProvider,
+        build_concept_dictionary,
+        quality_gate,
+        train_sae,
+    )
 
-    with pytest.raises(NotImplementedError):
-        train_sae(None)
+    assert callable(train_sae)
+    assert callable(build_concept_dictionary)
+    assert callable(quality_gate)
+    assert ConceptProvider is not None
+    assert SAEConceptProvider is not None and KMeansConceptProvider is not None
+    # KSparseAutoencoder is provided lazily via module __getattr__ (torch import).
+    import vitreous.concepts as concepts
+
+    assert concepts.KSparseAutoencoder.__name__ == "KSparseAutoencoder"
 
 
 def test_model_registry_present_without_torch():

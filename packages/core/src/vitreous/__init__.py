@@ -13,9 +13,9 @@ Submodules (M0 ships interfaces; logic lands per the §16 roadmap):
 - :mod:`vitreous.gaussians`   Gaussian Feature Field builder (M3)
 - :mod:`vitreous.graph`       GraphProvider + ViTTokenGraphProvider (M3)
 - :mod:`vitreous.projections` dataset-level PCA/UMAP/t-SNE projections (M3)
-- :mod:`vitreous.concepts`    k-sparse-autoencoder concept tier (M4)
+- :mod:`vitreous.concepts`    k-sparse-autoencoder concept tier + k-means fallback (M4)
 - :mod:`vitreous.packs`       Explanation Pack manifest models + writer
-- :mod:`vitreous.storage`     StorageAdapter abstraction (M4)
+- :mod:`vitreous.storage`     StorageAdapter (local / Supabase / HF backends) (M4)
 
 Only the M0 runtime deps (pydantic, numpy, jsonschema) are required to import
 this package. torch/timm are optional ``[ml]`` extras.

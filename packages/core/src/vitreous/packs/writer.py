@@ -338,6 +338,18 @@ class PackReader:
         """Return the parsed ``graph.json`` structure (§8)."""
         return self.read_json("graph.json")
 
+    def read_concepts(self) -> Dict[str, Any]:
+        """Return the parsed ``concepts.json`` structure (§9).
+
+        Present only for packs built with a concept provider (gallery packs);
+        raises ``KeyError`` when absent (quick/live paths may omit it).
+        """
+        return self.read_json("concepts.json")
+
+    def has_concepts(self) -> bool:
+        """Whether this pack carries the additive ``concepts.json`` asset (§9)."""
+        return "concepts.json" in self.manifest.assets
+
 
 # --------------------------------------------------------------------------- #
 # build_pack — the orchestrator (§5, §6)
@@ -358,6 +370,7 @@ def build_pack(
     ig_steps: int = 20,
     faithfulness_steps: int = 20,
     faithfulness_methods: Optional[Tuple[str, ...]] = None,
+    concepts: Optional[Any] = None,
     seed: int = 0,
 ) -> Path:
     """Capture, run every XAI method + faithfulness, and write a complete pack.
@@ -380,6 +393,12 @@ def build_pack(
         Which attribution methods to run (default all: rollout, chefer, gradcam, ig).
     class_idx:
         Explanation target class; defaults to the predicted (argmax) class.
+    concepts:
+        Optional :class:`~vitreous.concepts.ConceptPackSpec` (or any object with a
+        ``build_asset(trace) -> dict`` method). When given, ``concepts.json`` is
+        emitted with per-token top-k feature ids + activations and a dictionary
+        reference id. **Additive asset** — absent by default (gallery packs opt
+        in; quick/live paths may skip it); ``pack_version`` stays ``1.0.0``.
     """
     import time
 
@@ -521,6 +540,21 @@ def build_pack(
               "residual": "implicit; see graph.json residual flag"},
     )
     timings["graph_ms"] = (time.perf_counter() - t0) * 1000.0
+
+    # -- Concept tier (§9) — additive; gallery packs opt in ------------------ #
+    if concepts is not None:
+        t0 = time.perf_counter()
+        concept_asset = concepts.build_asset(trace)
+        writer.add_json(
+            "concepts.json", concept_asset,
+            meta={
+                "layer": concept_asset.get("layer"),
+                "dictionary_id": concept_asset.get("dictionary_id"),
+                "provider_kind": concept_asset.get("provider_kind"),
+                "additive": "top-k SAE/k-means features per token; see §9",
+            },
+        )
+        timings["concepts_ms"] = (time.perf_counter() - t0) * 1000.0
 
     # -- manifest ------------------------------------------------------------ #
     num_classes = int(getattr(dataset_spec, "num_classes", probs.shape[0]))
