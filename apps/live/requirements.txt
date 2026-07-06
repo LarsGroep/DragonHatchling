@@ -1,0 +1,6 @@
+# ViTreous live service (HF Spaces free CPU). Pinned lower bounds; M0 stub.
+fastapi>=0.110,<1.0
+uvicorn[standard]>=0.29,<1.0
+pydantic>=2.6,<3.0
+# The service imports vitreous (packages/core). On HF Spaces the Dockerfile
+# copies and installs packages/core; for local dev: pip install -e ../../packages/core
