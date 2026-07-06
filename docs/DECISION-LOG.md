@@ -70,6 +70,17 @@ for how the system gets built. Companion to
 | M | Scope (see ARCHITECTURE.md §16) | Status |
 |---|---|---|
 | M0 | Monorepo scaffold, pack schema + codegen, web shell, live stub, CI | **Complete** (Opus agent, 2026-07-06; 30+1 tests pass, tsc/lint/build clean; reviewed & pushed) |
-| M1–M9 | — | Pending. Note for M1: pack format not frozen until M2 — `pack.schema.json`, `manifest.py`, `pack.ts` must change together (round-trip tests enforce). |
+| M1 | Dataset adapters (EuroSAT, Oxford Pet, imagefolder), ViT-S/16 loader, Instrumenter | **Complete** (Opus agent, 2026-07-06; 61 tests pass incl. hook-purity + exact trace shapes; reviewed & pushed) |
+| M2–M9 | — | Pending. Schema freezes at end of M2 (`pack.schema.json`/`manifest.py`/`pack.ts` co-edited, round-trip enforced; M1 added optional `ModelInfo.patch_size`). |
+
+Technical notes carried forward:
+- Attention is captured by *recomputing* softmax from each block's own qkv
+  while the fused forward runs untouched — this is what keeps logits
+  bit-identical with hooks attached. Keep recompute; do not un-fuse.
+- `Trace` = detached CPU torch tensors: attention `[12,6,197,197]` (true
+  softmax rows — safe for per-row uint8 quantization), tokens `[13,197,384]`
+  (block inputs t=0..11 + final norm t=12), logits, timings.
+- M2's Chefer relevance needs a grad-enabled capture variant (drop
+  `no_grad`, don't detach on that path); hook structure already supports it.
 
 Update this table as milestones land.
