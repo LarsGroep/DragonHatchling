@@ -20,8 +20,9 @@ from .manifest import (
     ModelInfo,
     PackManifest,
     Prediction,
+    QuantInfo,
 )
-from .writer import PackWriter
+from .writer import PACK_VERSION, PackReader, PackWriter, build_pack
 
 # Resolve the JSON Schema / fixture from the sibling ``packages/schema`` dir.
 # packages/core/src/vitreous/packs/__init__.py -> parents[4] == repo/packages
@@ -49,7 +50,11 @@ __all__ = [
     "ModelInfo",
     "PackManifest",
     "Prediction",
+    "QuantInfo",
     "PackWriter",
+    "PackReader",
+    "build_pack",
+    "PACK_VERSION",
     "SCHEMA_PATH",
     "FIXTURE_PATH",
     "load_pack_schema",
