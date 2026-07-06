@@ -72,7 +72,8 @@ for how the system gets built. Companion to
 | M0 | Monorepo scaffold, pack schema + codegen, web shell, live stub, CI | **Complete** (Opus agent, 2026-07-06; 30+1 tests pass, tsc/lint/build clean; reviewed & pushed) |
 | M1 | Dataset adapters (EuroSAT, Oxford Pet, imagefolder), ViT-S/16 loader, Instrumenter | **Complete** (Opus agent, 2026-07-06; 61 tests pass incl. hook-purity + exact trace shapes; reviewed & pushed) |
 | M2 | XAI suite (rollout, Chefer ICCV-2021 grad-weighted formulation, Grad-CAM, IG), faithfulness eval, PackWriter/PackReader, **pack format v1 frozen** | **Complete** (Opus agent, 2026-07-06; 87 tests pass, tsc clean; reviewed & pushed) |
-| M3–M9 | — | Pending. Pack format v1 is FROZEN (`pack_version` 1.0.0); M3+ may only *add* assets to the open asset index, never change existing layouts. |
+| M3 | `vitreous.gaussians` (Gaussian Feature Field) + `vitreous.graph` (ViTTokenGraphProvider, seeded Louvain communities) + `vitreous.projections` (PCA/UMAP/t-SNE + persisted reducers); pack gains `gaussians.bin` + `graph.json` additively | **Complete** (Opus agent, 2026-07-06; 120 tests pass, tsc clean; `pack_version` unchanged at 1.0.0) |
+| M4–M9 | — | Pending. Pack format v1 is FROZEN (`pack_version` 1.0.0); M4+ may only *add* assets to the open asset index, never change existing layouts. |
 
 Technical notes carried forward:
 - Attention is captured by *recomputing* softmax from each block's own qkv
@@ -95,5 +96,26 @@ Technical notes carried forward:
   14×14 via `divmod(i-1, 14)`; `xai.eval.to_patch_vector` is the canonical
   [196] reducer; `xai._common.embed_tokens`/`run_from_tokens` are the
   sanctioned timm entry points — do not re-derive internals.
+- M3 additive schema change (still `pack_version` 1.0.0): `AssetEntry` gained an
+  optional free-form `meta` object (schema/Pydantic/TS all mirrored). Used to
+  record the `gaussians.bin` channel order on its asset entry; existing v1
+  assets omit it, so all M0–M2 packs stay valid. `meta` never describes the
+  frozen binary layout (dtype/shape/encoding/quant still own that).
+- M3 `gaussians.bin` = `[13][197][12]` fp16, C-order. Channel order (frozen for
+  M6 renderer): `(x, y, rx, ry, theta, r, g, b, opacity, glow, halo,
+  activation_raw)`. CLS (token 0) sits at reserved off-grid anchor (0.0, 0.0);
+  eccentricity bounded to rx/ry ≤ 2.5 (area-preserving); step t=0 has neutral
+  (isotropic, zero-glow/halo) attention. Ranges [0,1] except theta ∈ [-π, π].
+- M3 `graph.json`: per-layer compact nodes `{idx, kind, community}` + edges
+  `[src, dst, weight-3dp]` (key→query, top-k=8 per destination on head-averaged
+  attention). Unrolled residual edges are IMPLICIT — a `residual` flag tells the
+  frontend to synthesize `(t,i)→(t+1,i)` identity edges (`num_tokens*(L-1)`),
+  never materialized. Louvain seeded via `networkx.louvain_communities` (no
+  extra dep). Providers: `ViTTokenGraphProvider` implements the M0 Protocol.
+- M3 projections are DATASET-level, NOT per-pack: `build_projection_artifacts`
+  writes coords `.bin` (fp16) + JSON sidecars + joblib reducers to their own
+  dir. PCA/UMAP support `.transform` (trajectories, upload-into-landscape);
+  t-SNE does not (static landscape only). UMAP is optional (`umap-learn`);
+  code degrades to PCA+t-SNE via `umap_available()` when absent.
 
 Update this table as milestones land.
