@@ -20,6 +20,7 @@ MODULES = [
     "vitreous.xai.eval",
     "vitreous.gaussians",
     "vitreous.graph",
+    "vitreous.projections",
     "vitreous.concepts",
     "vitreous.packs",
     "vitreous.packs.manifest",
@@ -99,12 +100,11 @@ def test_key_symbols_present():
 
 
 def test_stubs_raise_not_implemented():
-    # build_gaussian_field is still an M3 stub; load_model is implemented at M1
-    # (see tests/test_models.py, which is skipped when torch is unavailable).
-    from vitreous.gaussians import build_gaussian_field
+    # build_gaussian_field landed at M3; train_sae is still an M4 stub.
+    from vitreous.concepts import train_sae
 
     with pytest.raises(NotImplementedError):
-        build_gaussian_field(None, None)
+        train_sae(None)
 
 
 def test_model_registry_present_without_torch():

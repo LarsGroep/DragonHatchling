@@ -85,13 +85,14 @@ def test_expected_assets_present(pack_dir):
         "attr_ig_pixel.png",
         "attributions.json",
         "faithfulness.json",
+        # M3 assets (added additively; pack_version stays 1.0.0):
+        "gaussians.bin",
+        "graph.json",
     ):
         assert name in assets, f"expected asset {name}"
     # An image asset exists (webp or png fallback).
     assert any(k.startswith("image.") for k in assets)
-    # M3/M4 assets are absent and that's fine (schema tolerates it).
-    assert "gaussians.bin" not in assets
-    assert "graph.json" not in assets
+    # M4 concept asset is still absent (schema tolerates it).
     assert "concepts.json" not in assets
 
 
@@ -137,6 +138,41 @@ def test_reader_reads_json_assets(pack_dir):
     assert "deletion_auc" in faith and "agreement" in faith
     attr_index = rd.read_json("attributions.json")
     assert "chefer" in attr_index
+
+
+def test_gaussians_asset_roundtrip(pack_dir):
+    manifest = json.loads((pack_dir / "manifest.json").read_text())
+    entry = manifest["assets"]["gaussians.bin"]
+    assert entry["dtype"] == "float16"
+    assert entry["encoding"] == "raw"
+    assert entry["shape"] == [13, 197, 12]
+    # Channel order recorded in the additive asset meta.
+    assert entry["meta"]["channels"] == [
+        "x", "y", "rx", "ry", "theta", "r", "g", "b",
+        "opacity", "glow", "halo", "activation_raw",
+    ]
+    rd = PackReader(pack_dir)
+    g = rd.read_gaussians()
+    assert g.shape == (13, 197, 12)
+    assert g.dtype == np.float16
+    assert rd.gaussian_channels()[0] == "x"
+    # ranges: opacity/glow/halo in [0,1]
+    f = g.astype(np.float32)
+    for ci in (8, 9, 10):
+        assert f[:, :, ci].min() >= -1e-3 and f[:, :, ci].max() <= 1.0 + 1e-3
+
+
+def test_graph_asset_roundtrip(pack_dir):
+    rd = PackReader(pack_dir)
+    ga = rd.read_graph()
+    assert ga["num_layers"] == 12
+    assert ga["num_tokens"] == 197
+    assert ga["k"] == 8
+    assert len(ga["layers"]) == 12
+    layer0 = ga["layers"][0]
+    assert len(layer0["nodes"]) == 197
+    assert len(layer0["edges"]) == 197 * 8
+    assert ga["residual"]["materialized"] is False
 
 
 def test_prediction_consistent(pack_dir):
