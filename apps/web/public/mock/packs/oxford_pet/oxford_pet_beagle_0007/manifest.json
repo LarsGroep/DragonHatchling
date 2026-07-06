@@ -1,0 +1,114 @@
+{
+  "pack_version": "1.0.0",
+  "model": {
+    "arch": "deit_small_patch16_224",
+    "hf_repo": "vitreous/deit-small-oxfordpet",
+    "num_layers": 12,
+    "num_heads": 6,
+    "num_tokens": 197,
+    "embed_dim": 384,
+    "patch_size": 16
+  },
+  "dataset": {
+    "name": "oxford_pet",
+    "display_name": "Oxford-IIIT Pet — fine-grained breeds",
+    "num_classes": 8,
+    "class_names": [
+      "Abyssinian",
+      "Beagle",
+      "Bengal",
+      "Boxer",
+      "Persian",
+      "Ragdoll",
+      "Samoyed",
+      "Sphynx"
+    ]
+  },
+  "image": {
+    "id": "oxford_pet_beagle_0007",
+    "width": 224,
+    "height": 224,
+    "source": "gallery"
+  },
+  "prediction": {
+    "label": "Beagle",
+    "class_index": 1,
+    "confidence": 0.8894,
+    "probabilities": [
+      0.0158,
+      0.8894,
+      0.0158,
+      0.0158,
+      0.0158,
+      0.0158,
+      0.0158,
+      0.0158
+    ]
+  },
+  "assets": {
+    "attr_chefer.bin": {
+      "dtype": "float32",
+      "shape": [
+        12,
+        197
+      ],
+      "encoding": "raw",
+      "bytes": 9456
+    },
+    "attr_rollout.bin": {
+      "dtype": "float32",
+      "shape": [
+        12,
+        197
+      ],
+      "encoding": "raw",
+      "bytes": 9456
+    },
+    "attr_gradcam.bin": {
+      "dtype": "float32",
+      "shape": [
+        14,
+        14
+      ],
+      "encoding": "raw",
+      "bytes": 784
+    },
+    "attr_ig.bin": {
+      "dtype": "float32",
+      "shape": [
+        197
+      ],
+      "encoding": "raw",
+      "bytes": 788
+    },
+    "attributions.json": {
+      "dtype": "json",
+      "shape": [],
+      "encoding": "json",
+      "bytes": 233
+    },
+    "faithfulness.json": {
+      "dtype": "json",
+      "shape": [],
+      "encoding": "json",
+      "bytes": 4773
+    },
+    "image.png": {
+      "dtype": "png",
+      "shape": [
+        224,
+        224
+      ],
+      "encoding": "png",
+      "bytes": 71964
+    }
+  },
+  "timings": {
+    "predict_ms": 138.4,
+    "attention_ms": 84.1,
+    "chefer_ms": 301.7,
+    "gradcam_ms": 47.9,
+    "ig_ms": 2110.5,
+    "faithfulness_ms": 1788.2
+  }
+}

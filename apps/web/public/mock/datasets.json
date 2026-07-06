@@ -1,0 +1,118 @@
+{
+  "generated_by": "scripts/gen-mock-pack.mjs",
+  "storage": {
+    "bucket": "packs"
+  },
+  "datasets": [
+    {
+      "id": "eurosat",
+      "name": "eurosat",
+      "display_name": "EuroSAT — land use from Sentinel-2",
+      "num_classes": 10,
+      "class_names": [
+        "AnnualCrop",
+        "Forest",
+        "HerbaceousVegetation",
+        "Highway",
+        "Industrial",
+        "Pasture",
+        "PermanentCrop",
+        "Residential",
+        "River",
+        "SeaLake"
+      ],
+      "model_id": "eurosat-deit-s",
+      "arch": "deit_small_patch16_224"
+    },
+    {
+      "id": "oxford_pet",
+      "name": "oxford_pet",
+      "display_name": "Oxford-IIIT Pet — fine-grained breeds",
+      "num_classes": 8,
+      "class_names": [
+        "Abyssinian",
+        "Beagle",
+        "Bengal",
+        "Boxer",
+        "Persian",
+        "Ragdoll",
+        "Samoyed",
+        "Sphynx"
+      ],
+      "model_id": "pet-deit-s",
+      "arch": "deit_small_patch16_224"
+    }
+  ],
+  "gallery": {
+    "eurosat": [
+      {
+        "id": "eurosat_forest_00123",
+        "dataset_id": "eurosat",
+        "model_id": "eurosat-deit-s",
+        "class_label": "Forest",
+        "pred_label": "Forest",
+        "confidence": 0.9731,
+        "pack_prefix": "eurosat/eurosat_forest_00123/",
+        "thumb_url": "/mock/packs/eurosat/eurosat_forest_00123/image.png",
+        "tags": [
+          "reference",
+          "full-pack"
+        ]
+      },
+      {
+        "id": "eurosat_residential_00045",
+        "dataset_id": "eurosat",
+        "model_id": "eurosat-deit-s",
+        "class_label": "Residential",
+        "pred_label": "Residential",
+        "confidence": 0.9123,
+        "pack_prefix": "eurosat/eurosat_residential_00045/",
+        "thumb_url": "/mock/packs/eurosat/eurosat_residential_00045/image.png",
+        "tags": [
+          "light"
+        ]
+      },
+      {
+        "id": "eurosat_river_00210",
+        "dataset_id": "eurosat",
+        "model_id": "eurosat-deit-s",
+        "class_label": "River",
+        "pred_label": "River",
+        "confidence": 0.8477,
+        "pack_prefix": "eurosat/eurosat_river_00210/",
+        "thumb_url": "/mock/packs/eurosat/eurosat_river_00210/image.png",
+        "tags": [
+          "light"
+        ]
+      }
+    ],
+    "oxford_pet": [
+      {
+        "id": "oxford_pet_beagle_0007",
+        "dataset_id": "oxford_pet",
+        "model_id": "pet-deit-s",
+        "class_label": "Beagle",
+        "pred_label": "Beagle",
+        "confidence": 0.8894,
+        "pack_prefix": "oxford_pet/oxford_pet_beagle_0007/",
+        "thumb_url": "/mock/packs/oxford_pet/oxford_pet_beagle_0007/image.png",
+        "tags": [
+          "light",
+          "no-concepts"
+        ]
+      }
+    ]
+  },
+  "projections": [
+    {
+      "id": "proj-eurosat-l12-umap",
+      "dataset_id": "eurosat",
+      "model_id": "eurosat-deit-s",
+      "layer": 12,
+      "method": "umap",
+      "url": null,
+      "reducer_url": null,
+      "note": "coords omitted from M5 mock; M7 renders"
+    }
+  ]
+}

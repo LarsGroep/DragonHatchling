@@ -1,0 +1,208 @@
+{
+  "pack_version": "1.0.0",
+  "model": {
+    "arch": "deit_small_patch16_224",
+    "hf_repo": "vitreous/deit-small-eurosat",
+    "num_layers": 12,
+    "num_heads": 6,
+    "num_tokens": 197,
+    "embed_dim": 384,
+    "patch_size": 16
+  },
+  "dataset": {
+    "name": "eurosat",
+    "display_name": "EuroSAT — land use from Sentinel-2",
+    "num_classes": 10,
+    "class_names": [
+      "AnnualCrop",
+      "Forest",
+      "HerbaceousVegetation",
+      "Highway",
+      "Industrial",
+      "Pasture",
+      "PermanentCrop",
+      "Residential",
+      "River",
+      "SeaLake"
+    ]
+  },
+  "image": {
+    "id": "eurosat_forest_00123",
+    "width": 224,
+    "height": 224,
+    "source": "gallery"
+  },
+  "prediction": {
+    "label": "Forest",
+    "class_index": 1,
+    "confidence": 0.9731,
+    "probabilities": [
+      0.003,
+      0.9731,
+      0.003,
+      0.003,
+      0.003,
+      0.003,
+      0.003,
+      0.003,
+      0.003,
+      0.003
+    ]
+  },
+  "assets": {
+    "attention.bin": {
+      "dtype": "uint8",
+      "shape": [
+        12,
+        6,
+        197,
+        197
+      ],
+      "encoding": "per_row_uint8",
+      "bytes": 2850984,
+      "quant": {
+        "scheme": "per_row_uint8",
+        "row_axis": -1,
+        "scale_dtype": "float32",
+        "data_offset": 0,
+        "data_bytes": 2794248,
+        "scale_offset": 2794248,
+        "scale_count": 14184
+      }
+    },
+    "tokens.bin": {
+      "dtype": "float16",
+      "shape": [
+        13,
+        197,
+        384
+      ],
+      "encoding": "raw",
+      "bytes": 1966848
+    },
+    "attr_chefer.bin": {
+      "dtype": "float32",
+      "shape": [
+        12,
+        197
+      ],
+      "encoding": "raw",
+      "bytes": 9456
+    },
+    "attr_rollout.bin": {
+      "dtype": "float32",
+      "shape": [
+        12,
+        197
+      ],
+      "encoding": "raw",
+      "bytes": 9456
+    },
+    "attr_gradcam.bin": {
+      "dtype": "float32",
+      "shape": [
+        14,
+        14
+      ],
+      "encoding": "raw",
+      "bytes": 784
+    },
+    "attr_ig.bin": {
+      "dtype": "float32",
+      "shape": [
+        197
+      ],
+      "encoding": "raw",
+      "bytes": 788
+    },
+    "attributions.json": {
+      "dtype": "json",
+      "shape": [],
+      "encoding": "json",
+      "bytes": 233
+    },
+    "faithfulness.json": {
+      "dtype": "json",
+      "shape": [],
+      "encoding": "json",
+      "bytes": 4771
+    },
+    "image.png": {
+      "dtype": "png",
+      "shape": [
+        224,
+        224
+      ],
+      "encoding": "png",
+      "bytes": 78395
+    },
+    "gaussians.bin": {
+      "dtype": "float16",
+      "shape": [
+        13,
+        197,
+        12
+      ],
+      "encoding": "raw",
+      "bytes": 61464,
+      "meta": {
+        "channels": [
+          "x",
+          "y",
+          "rx",
+          "ry",
+          "theta",
+          "r",
+          "g",
+          "b",
+          "opacity",
+          "glow",
+          "halo",
+          "activation_raw"
+        ],
+        "layout": "S=13,N=197,C=12 float16 C-order",
+        "n_steps": 13,
+        "n_tokens": 197,
+        "grid": 14,
+        "cls_index": 0,
+        "cls_position": [
+          0,
+          0
+        ],
+        "ecc_max": 2.5,
+        "attribution": "chefer"
+      }
+    },
+    "graph.json": {
+      "dtype": "json",
+      "shape": [],
+      "encoding": "json",
+      "bytes": 385761,
+      "meta": {
+        "k": 8,
+        "num_layers": 12,
+        "residual": "implicit; see graph.json residual flag"
+      }
+    },
+    "concepts.json": {
+      "dtype": "json",
+      "shape": [],
+      "encoding": "json",
+      "bytes": 17559,
+      "meta": {
+        "layer": 9,
+        "dictionary_id": "eurosat-deit-s-l9-sae",
+        "provider_kind": "sae_topk",
+        "additive": "top-k SAE features per token; see §9"
+      }
+    }
+  },
+  "timings": {
+    "predict_ms": 138.4,
+    "attention_ms": 84.1,
+    "chefer_ms": 301.7,
+    "gradcam_ms": 47.9,
+    "ig_ms": 2110.5,
+    "faithfulness_ms": 1788.2
+  }
+}

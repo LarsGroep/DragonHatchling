@@ -1,0 +1,1 @@
+{"chefer":{"asset":"attr_chefer.bin","kind":"per_layer_tokens"},"rollout":{"asset":"attr_rollout.bin","kind":"per_layer_tokens"},"gradcam":{"asset":"attr_gradcam.bin","kind":"token_grid"},"ig":{"asset":"attr_ig.bin","kind":"tokens"}}

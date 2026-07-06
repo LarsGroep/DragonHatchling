@@ -1,0 +1,118 @@
+{
+  "pack_version": "1.0.0",
+  "model": {
+    "arch": "deit_small_patch16_224",
+    "hf_repo": "vitreous/deit-small-eurosat",
+    "num_layers": 12,
+    "num_heads": 6,
+    "num_tokens": 197,
+    "embed_dim": 384,
+    "patch_size": 16
+  },
+  "dataset": {
+    "name": "eurosat",
+    "display_name": "EuroSAT — land use from Sentinel-2",
+    "num_classes": 10,
+    "class_names": [
+      "AnnualCrop",
+      "Forest",
+      "HerbaceousVegetation",
+      "Highway",
+      "Industrial",
+      "Pasture",
+      "PermanentCrop",
+      "Residential",
+      "River",
+      "SeaLake"
+    ]
+  },
+  "image": {
+    "id": "eurosat_river_00210",
+    "width": 224,
+    "height": 224,
+    "source": "gallery"
+  },
+  "prediction": {
+    "label": "River",
+    "class_index": 8,
+    "confidence": 0.8477,
+    "probabilities": [
+      0.0169,
+      0.0169,
+      0.0169,
+      0.0169,
+      0.0169,
+      0.0169,
+      0.0169,
+      0.0169,
+      0.8477,
+      0.0169
+    ]
+  },
+  "assets": {
+    "attr_chefer.bin": {
+      "dtype": "float32",
+      "shape": [
+        12,
+        197
+      ],
+      "encoding": "raw",
+      "bytes": 9456
+    },
+    "attr_rollout.bin": {
+      "dtype": "float32",
+      "shape": [
+        12,
+        197
+      ],
+      "encoding": "raw",
+      "bytes": 9456
+    },
+    "attr_gradcam.bin": {
+      "dtype": "float32",
+      "shape": [
+        14,
+        14
+      ],
+      "encoding": "raw",
+      "bytes": 784
+    },
+    "attr_ig.bin": {
+      "dtype": "float32",
+      "shape": [
+        197
+      ],
+      "encoding": "raw",
+      "bytes": 788
+    },
+    "attributions.json": {
+      "dtype": "json",
+      "shape": [],
+      "encoding": "json",
+      "bytes": 233
+    },
+    "faithfulness.json": {
+      "dtype": "json",
+      "shape": [],
+      "encoding": "json",
+      "bytes": 4773
+    },
+    "image.png": {
+      "dtype": "png",
+      "shape": [
+        224,
+        224
+      ],
+      "encoding": "png",
+      "bytes": 81880
+    }
+  },
+  "timings": {
+    "predict_ms": 138.4,
+    "attention_ms": 84.1,
+    "chefer_ms": 301.7,
+    "gradcam_ms": 47.9,
+    "ig_ms": 2110.5,
+    "faithfulness_ms": 1788.2
+  }
+}
