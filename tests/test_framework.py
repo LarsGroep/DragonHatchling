@@ -39,7 +39,7 @@ def synthetic_loader(n=32, batch_size=8):
 
 def test_registries_populated():
     assert {"simple_cnn", "resnet18", "bdh"} <= set(available_backbones())
-    assert {"cifar10", "imagefolder"} <= set(available_loaders())
+    assert {"cifar10", "imagefolder", "ham10000", "isic"} <= set(available_loaders())
 
 
 @pytest.mark.parametrize("backbone", ["simple_cnn", "bdh", "resnet18"])

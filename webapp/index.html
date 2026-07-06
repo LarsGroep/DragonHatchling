@@ -417,6 +417,7 @@
       ⤒ Load bundle… <input type="file" id="file" accept=".zip,.json,.onnx,application/zip,application/json" multiple hidden></label>
   </div>
 </header>
+<div class="banner" id="disclaimer"></div>
 <div class="banner" id="banner"></div>
 <main>
   <div id="stage">
@@ -444,8 +445,8 @@
       <h2>Classify an image</h2>
       <div id="dropzone">
         <span class="dz-ico">🖼️</span>
-        <div class="big">Drop a bird photo</div>
-        <div class="small">or click to choose · runs entirely in your browser</div>
+        <div class="big" id="dzBig">Drop an image to classify</div>
+        <div class="small" id="dzSmall">or click to choose · runs entirely in your browser</div>
         <input type="file" id="imgfile" accept="image/*" hidden>
       </div>
       <div id="imgwrap">
@@ -488,7 +489,7 @@
       <h2>Class activation regions</h2>
       <div class="field">
         <span class="fico">🔍</span>
-        <input id="classSearch" type="search" placeholder="search a class… (e.g. Cardinal)" autocomplete="off">
+        <input id="classSearch" type="search" placeholder="search a class…" autocomplete="off">
       </div>
       <div id="classResults"></div>
       <div id="regionActive"><span class="rname"></span><button id="regionClear">clear</button></div>
@@ -502,7 +503,7 @@
     <div class="sec">
       <h2>Selection</h2>
       <div id="details"><div class="muted">Click a concept in the graph or list to inspect its units,
-        grounded attributes, and the species it responds to.</div></div>
+        grounded attributes, and the classes it responds to.</div></div>
     </div>
   </aside>
 </main>
@@ -1183,7 +1184,7 @@ function showTooltip(hit, cx, cy) {
     const s = hit.sat;
     html = s.kind === "attribute"
       ? `<b>${s.label}</b><br>visual attribute · effect ${(+s.weight).toFixed(2)}`
-      : `<b>${s.label}</b><br>species · affinity ${(+s.weight).toFixed(2)}`;
+      : `<b>${s.label}</b><br>${classLabel} · affinity ${(+s.weight).toFixed(2)}`;
   } else if (hit.unit) {
     const u = hit.unit, cn = u.concept ? u.concept.label : "unclustered";
     const links = (netNeighbors.get(u.id) || new Set()).size;
@@ -1229,7 +1230,7 @@ function renderDetails() {
   const el = $("details");
   if (!selected) {
     el.innerHTML = '<div class="muted">Click a concept in the graph or list to inspect its units, '
-      + 'grounded attributes, and the species it responds to.</div>';
+      + 'grounded attributes, and the classes it responds to.</div>';
     return;
   }
   const c = selected;
@@ -1240,7 +1241,7 @@ function renderDetails() {
   if (liveMode) rows.push(["fires on image", (100 * (c.live || 0)).toFixed(0) + "%"]);
   if (c.attrNames.length) rows.push(["attributes",
     Object.entries(c.attributes).map(([k, v]) => `${k} (${(+v).toFixed(2)})`).join("<br>")]);
-  if (c.topClasses.length) rows.push(["top species",
+  if (c.topClasses.length) rows.push([`top ${classLabel}s`,
     c.topClasses.slice(0, 5).map(([k, v]) => `${k} (${(+v).toFixed(2)})`).join("<br>")]);
   el.innerHTML = `<dl><dt>label</dt><dd><b>${c.label}</b></dd>` +
     rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("") + "</dl>";
@@ -1456,7 +1457,16 @@ function isDark() {
 
 /* ═══════════════════════════ INFERENCE ════════════════════════════ */
 let manifest = null, session = null, sessionPromise = null;
+// Dataset-aware label for what the classes represent
+let classLabel = "class";
 const infstatus = $("infstatus");
+
+const DATASET_PROMPTS = {
+  cub200:   { big: "Drop a bird photo",          small: "or click to choose · runs entirely in your browser" },
+  ham10000: { big: "Drop a dermoscopy image",    small: "or click to choose · for research use only — not a clinical tool" },
+  isic:     { big: "Drop a dermoscopy image",    small: "or click to choose · for research use only — not a clinical tool" },
+};
+const SKIN_DATASETS = new Set(["ham10000", "isic"]);
 
 async function initInference() {
   // fetch the deployed manifest; all UI state derives from applyManifestUI()
@@ -1594,10 +1604,15 @@ function renderWhy(predIdx) {
   }
   const bars = [...agg.entries()].sort((x, y) => y[1] - x[1]).slice(0, 7);
   const mx = Math.max(1e-6, ...bars.map(b => b[1]));
-  $("attrbars").innerHTML = `<h2 style="margin-bottom:7px">Visual evidence</h2>` + bars.map(([a, v]) => `
+  // For skin lesion datasets, the attributes are epidemiological (sex/age/location)
+  // rather than visual features — label the section accordingly.
+  const isSkin = manifest && SKIN_DATASETS.has((manifest.dataset || "").toLowerCase());
+  const sectionTitle = isSkin ? "Epidemiological profile" : "Visual evidence";
+  $("attrbars").innerHTML = bars.length
+    ? `<h2 style="margin-bottom:7px">${sectionTitle}</h2>` + bars.map(([a, v]) => `
     <div class="bar-row"><span class="nm">${a}</span>
       <span class="track"><span class="fill attr" style="width:${Math.round(100*v/mx)}%"></span></span></div>`).join("")
-    || '<span class="muted">No grounded attributes fired.</span>';
+    : '<span class="muted">No grounded attributes fired.</span>';
 }
 
 async function classifyImage(file) {
@@ -2041,13 +2056,44 @@ function resetSession() { session = null; sessionPromise = null; }
 
 function applyManifestUI() {
   $("salbtn").disabled = !canClassify();
-  $("dropzone").querySelector(".big").textContent =
-    manifest && manifest.dataset === "cub200" ? "Drop a bird photo" : "Drop an image to classify";
-  $("dropzone").querySelector(".small").textContent = !manifest
+  const ds = manifest ? (manifest.dataset || "").toLowerCase() : "";
+  const isSkin = SKIN_DATASETS.has(ds);
+
+  // Dataset-aware class label
+  if (ds === "cub200") classLabel = "species";
+  else if (isSkin) classLabel = "diagnosis";
+  else classLabel = "class";
+
+  // Dropzone text
+  const prompt = DATASET_PROMPTS[ds] || null;
+  $("dzBig").textContent = !manifest
+    ? "Drop an image to classify"
+    : (prompt ? prompt.big : "Drop an image to classify");
+  $("dzSmall").textContent = !manifest
     ? "no model bundle deployed — graph exploration only"
     : (bundleSource && !bundleSource.model)
       ? "this bundle has no model.onnx — graph exploration only"
-      : "or click to choose · runs entirely in your browser";
+      : (prompt ? prompt.small : "or click to choose · runs entirely in your browser");
+
+  // Search placeholder with example class name
+  if (manifest && manifest.class_names && manifest.class_names.length > 0) {
+    const eg = manifest.class_names[Math.floor(manifest.class_names.length / 3)];
+    $("classSearch").placeholder = `search a ${classLabel}… (e.g. ${eg})`;
+  } else {
+    $("classSearch").placeholder = `search a ${classLabel}…`;
+  }
+
+  // Medical disclaimer for dermatology bundles (persistent — separate from flash banner)
+  const disc = $("disclaimer");
+  if (isSkin) {
+    disc.style.background = "color-mix(in srgb, #f59e0b 10%, var(--surface-1))";
+    disc.innerHTML = "⚕️ <b>Research tool only.</b> This Hebbian XAI model is trained on " +
+      "HAM10000/ISIC data and is <b>not validated for clinical diagnosis</b>. " +
+      "Do not use for patient care decisions.";
+    disc.classList.add("show");
+  } else {
+    disc.classList.remove("show");
+  }
 }
 
 async function applyBundle(rec, { persist } = {}) {
