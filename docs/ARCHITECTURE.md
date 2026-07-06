@@ -464,9 +464,10 @@ Explainer*, IEEE VIS 2020 · Kerbl et al., *3D Gaussian Splatting*, SIGGRAPH
 CVPR 2024 · Bricken et al. / Templeton et al., *Towards Monosemanticity /
 Scaling Monosemanticity*, Anthropic 2023-24 · Kosowski et al., *The Dragon
 Hatchling*, arXiv:2509.26507 · Helber et al., *EuroSAT*, 2019 · Parkhi et
-al., *Oxford-IIIT Pet*, CVPR 2012. *(Live re-validation of this list is
-pending — the web-search backend was down during drafting; to be re-checked
-before M9's README.)*
+al., *Oxford-IIIT Pet*, CVPR 2012. Full annotated list with links and the
+critical BDH evaluation: [`RESEARCH.md`](./RESEARCH.md); interview record and
+orchestration agreement: [`DECISION-LOG.md`](./DECISION-LOG.md). Key
+citations re-validated against live sources on 2026-07-06.
 
 ## 19. Future extensions
 
