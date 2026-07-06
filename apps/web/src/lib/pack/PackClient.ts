@@ -47,7 +47,11 @@ export class PackClient {
   constructor(packUrl: string, opts: PackClientOptions = {}) {
     // Normalize to a trailing slash so asset names append cleanly.
     this.packUrl = packUrl.endsWith("/") ? packUrl : `${packUrl}/`;
-    this.fetchImpl = opts.fetchImpl ?? fetch;
+    // Bind the default global fetch to its realm: the browser's `fetch` throws
+    // "Illegal invocation" if called with `this` set to anything but the global
+    // object, and we invoke it as `this.fetchImpl(...)`. (Node/undici's fetch is
+    // lenient, so this only bites in the browser.)
+    this.fetchImpl = opts.fetchImpl ?? globalThis.fetch.bind(globalThis);
   }
 
   assetUrl(name: string): string {
