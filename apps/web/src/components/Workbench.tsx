@@ -20,6 +20,7 @@ import { GalleryStrip } from "./GalleryStrip";
 import { Transport } from "./Transport";
 import { SyncedPlaceholder } from "./SyncedPlaceholder";
 import { ImageSpaceView } from "./views/ImageSpace";
+import { GaussianFieldView } from "./views/GaussianField";
 
 /** Timeline layers swept per second at 1× speed. */
 const LAYERS_PER_SEC = 2;
@@ -148,11 +149,9 @@ export function Workbench() {
         </WorkbenchPanel>
 
         <WorkbenchPanel title="GAUSSIAN FEATURE FIELD" accent="gauss" milestone="M6" hint="">
-          <SyncedPlaceholder
-            accent="gauss"
-            emphasis="gaussian"
-            hint="197 anisotropic Gaussians whose opacity and glow show importance diffusing across layers."
-          />
+          <div className="h-full w-full">
+            <GaussianFieldView />
+          </div>
         </WorkbenchPanel>
 
         <WorkbenchPanel title="INTERACTION GRAPH" accent="graph" milestone="M7" hint="">
