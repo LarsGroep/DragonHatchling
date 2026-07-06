@@ -201,6 +201,10 @@
         "quant": {
           "description": "Present only for encoding 'per_row_uint8': the parameters needed to dequantize the asset back to floats.",
           "$ref": "#/$defs/QuantInfo"
+        },
+        "meta": {
+          "description": "Optional additive free-form asset metadata (e.g. channel order for gaussians.bin). Added at M3; existing v1 assets omit it. Never used to describe the frozen binary layout — that stays fixed by dtype/shape/encoding/quant.",
+          "type": "object"
         }
       }
     },

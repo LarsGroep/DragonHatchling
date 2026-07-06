@@ -94,6 +94,12 @@ export interface AssetEntry {
   bytes: number;
   checksum?: string;
   quant?: QuantInfo;
+  /**
+   * Optional additive free-form asset metadata (e.g. channel order for
+   * gaussians.bin). Added at M3; existing v1 assets omit it. Never describes
+   * the frozen binary layout — that stays fixed by dtype/shape/encoding/quant.
+   */
+  meta?: Record<string, unknown>;
 }
 
 /** Asset index: filename -> descriptor. */

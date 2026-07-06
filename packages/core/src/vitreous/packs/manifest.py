@@ -14,7 +14,7 @@ must be mirrored in ``packages/schema/schema/pack.schema.json`` and
 
 from __future__ import annotations
 
-from typing import Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -111,6 +111,10 @@ class AssetEntry(_Strict):
     bytes: int = Field(ge=0)
     checksum: Optional[str] = None
     quant: Optional[QuantInfo] = None
+    # Additive at M3: free-form asset metadata (e.g. gaussians.bin channel order).
+    # Optional; existing v1 assets omit it. Does not describe the frozen binary
+    # layout (that stays fixed by dtype/shape/encoding/quant).
+    meta: Optional[Dict[str, Any]] = None
 
 
 class PackManifest(_Strict):
