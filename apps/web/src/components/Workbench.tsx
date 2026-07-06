@@ -18,9 +18,10 @@ import { WorkbenchPanel } from "@/components/WorkbenchPanel";
 import { WorkbenchHeader } from "./WorkbenchHeader";
 import { GalleryStrip } from "./GalleryStrip";
 import { Transport } from "./Transport";
-import { SyncedPlaceholder } from "./SyncedPlaceholder";
 import { ImageSpaceView } from "./views/ImageSpace";
 import { GaussianFieldView } from "./views/GaussianField";
+import { GraphView } from "./views/GraphView";
+import { EmbeddingView } from "./views/EmbeddingView";
 
 /** Timeline layers swept per second at 1× speed. */
 const LAYERS_PER_SEC = 2;
@@ -155,19 +156,15 @@ export function Workbench() {
         </WorkbenchPanel>
 
         <WorkbenchPanel title="INTERACTION GRAPH" accent="graph" milestone="M7" hint="">
-          <SyncedPlaceholder
-            accent="graph"
-            emphasis="node"
-            hint="Tokens as nodes, top-k attention as edges; per-layer and unrolled all-layers modes."
-          />
+          <div className="h-full w-full">
+            <GraphView />
+          </div>
         </WorkbenchPanel>
 
         <WorkbenchPanel title="LATENT EMBEDDINGS" accent="latent" milestone="M7" hint="">
-          <SyncedPlaceholder
-            accent="latent"
-            emphasis="point"
-            hint="Dataset-level UMAP/PCA/t-SNE landscape with the image's per-layer CLS trajectory."
-          />
+          <div className="h-full w-full">
+            <EmbeddingView />
+          </div>
         </WorkbenchPanel>
       </main>
 
