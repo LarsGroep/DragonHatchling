@@ -69,7 +69,7 @@ for how the system gets built. Companion to
 
 | M | Scope (see ARCHITECTURE.md §16) | Status |
 |---|---|---|
-| M0 | Monorepo scaffold, pack schema + codegen, web shell, live stub, CI | **In progress** (Opus agent, dispatched 2026-07-06) |
-| M1–M9 | — | Pending |
+| M0 | Monorepo scaffold, pack schema + codegen, web shell, live stub, CI | **Complete** (Opus agent, 2026-07-06; 30+1 tests pass, tsc/lint/build clean; reviewed & pushed) |
+| M1–M9 | — | Pending. Note for M1: pack format not frozen until M2 — `pack.schema.json`, `manifest.py`, `pack.ts` must change together (round-trip tests enforce). |
 
 Update this table as milestones land.
