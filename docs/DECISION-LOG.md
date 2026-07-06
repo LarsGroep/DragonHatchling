@@ -71,7 +71,8 @@ for how the system gets built. Companion to
 |---|---|---|
 | M0 | Monorepo scaffold, pack schema + codegen, web shell, live stub, CI | **Complete** (Opus agent, 2026-07-06; 30+1 tests pass, tsc/lint/build clean; reviewed & pushed) |
 | M1 | Dataset adapters (EuroSAT, Oxford Pet, imagefolder), ViT-S/16 loader, Instrumenter | **Complete** (Opus agent, 2026-07-06; 61 tests pass incl. hook-purity + exact trace shapes; reviewed & pushed) |
-| M2–M9 | — | Pending. Schema freezes at end of M2 (`pack.schema.json`/`manifest.py`/`pack.ts` co-edited, round-trip enforced; M1 added optional `ModelInfo.patch_size`). |
+| M2 | XAI suite (rollout, Chefer ICCV-2021 grad-weighted formulation, Grad-CAM, IG), faithfulness eval, PackWriter/PackReader, **pack format v1 frozen** | **Complete** (Opus agent, 2026-07-06; 87 tests pass, tsc clean; reviewed & pushed) |
+| M3–M9 | — | Pending. Pack format v1 is FROZEN (`pack_version` 1.0.0); M3+ may only *add* assets to the open asset index, never change existing layouts. |
 
 Technical notes carried forward:
 - Attention is captured by *recomputing* softmax from each block's own qkv
@@ -82,5 +83,17 @@ Technical notes carried forward:
   (block inputs t=0..11 + final norm t=12), logits, timings.
 - M2's Chefer relevance needs a grad-enabled capture variant (drop
   `no_grad`, don't detach on that path); hook structure already supports it.
+  → Done: `Instrumenter.capture_with_grad()` (temporary unfused-forward swap,
+  restored after; plain forward bit-identical before/after).
+- Pack v1 binary layouts (frozen): attention.bin = uint8 data block +
+  trailing per-row fp32 scales (offsets in `AssetEntry.quant`); tokens.bin
+  raw fp16; attributions fp32 raw; IG pixel map as 8-bit PNG. zstd remains a
+  schema-valid encoding for a later size pass — no format change needed.
+- Chefer formulation: grad-weighted attention rollout (ICCV 2021 generic
+  variant), recorded in pack meta as `grad_weighted_rollout_iccv2021`.
+- Canonical grid mapping for M3+: token 0 = CLS; patches `[1:]` reshape to
+  14×14 via `divmod(i-1, 14)`; `xai.eval.to_patch_vector` is the canonical
+  [196] reducer; `xai._common.embed_tokens`/`run_from_tokens` are the
+  sanctioned timm entry points — do not re-derive internals.
 
 Update this table as milestones land.
