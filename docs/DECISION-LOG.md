@@ -74,7 +74,8 @@ for how the system gets built. Companion to
 | M2 | XAI suite (rollout, Chefer ICCV-2021 grad-weighted formulation, Grad-CAM, IG), faithfulness eval, PackWriter/PackReader, **pack format v1 frozen** | **Complete** (Opus agent, 2026-07-06; 87 tests pass, tsc clean; reviewed & pushed) |
 | M3 | `vitreous.gaussians` (Gaussian Feature Field) + `vitreous.graph` (ViTTokenGraphProvider, seeded Louvain communities) + `vitreous.projections` (PCA/UMAP/t-SNE + persisted reducers); pack gains `gaussians.bin` + `graph.json` additively | **Complete** (Opus agent, 2026-07-06; 120 tests pass, tsc clean; `pack_version` unchanged at 1.0.0) |
 | M4 | `vitreous.concepts` (TopK SAE + k-means fallback + quality gate), `vitreous.storage` (Local/Supabase/HF adapters), Supabase migration (§15), 3 dataset-swappable Kaggle notebooks; pack gains `concepts.json` additively | **Complete** (Opus agent, 2026-07-06; 157 tests pass, tsc clean; notebooks valid nbformat-4; no hardcoded creds; reviewed & pushed) |
-| M5–M9 | — | Pending. Pack format v1 is FROZEN (`pack_version` 1.0.0); may only *add* assets to the open asset index, never change existing layouts. |
+| M5 | Web data layer (PackClient + range reads, fp16/uint8 decode, Supabase client + zero-backend mock mode, Zustand store + O(1) resolver), Image Space view, gallery + dataset switcher, wired transport; browser-verified four-way sync via store-synced placeholder panes | **Complete** (2026-07-06; 22 vitest tests, tsc/lint/build clean; browser check: pack loads, prediction + top-5 render, hover syncs all panes. Root-caused browser-only `fetch` illegal-invocation bug → `globalThis.fetch.bind` + regression test) |
+| M6–M9 | — | Pending. Pack format v1 is FROZEN (`pack_version` 1.0.0); may only *add* assets to the open asset index, never change existing layouts. |
 
 M4 handoff notes for the frontend (M5+):
 - `StorageAdapter.get_url(key)` is the single source of truth for public URLs.
