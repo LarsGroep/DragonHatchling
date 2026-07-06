@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://vitreous.dev/schema/pack.schema.json",
   "title": "ViTreous Explanation Pack Manifest",
-  "description": "Single source of truth for the Explanation Pack manifest.json (§5 of ARCHITECTURE.md). Every binary asset in a pack is described by the asset index; the manifest loads first and binaries stream on demand.",
+  "description": "Single source of truth for the Explanation Pack manifest.json (§5 of ARCHITECTURE.md). Every binary asset in a pack is described by the asset index; the manifest loads first and binaries stream on demand. PACK FORMAT v1, FROZEN AT M2 — any change here must be mirrored in packages/core/.../packs/manifest.py and packages/schema/src/pack.ts and bump pack_version.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -197,6 +197,60 @@
         "checksum": {
           "description": "Optional content hash (e.g. 'sha256:...') for integrity checks.",
           "type": "string"
+        },
+        "quant": {
+          "description": "Present only for encoding 'per_row_uint8': the parameters needed to dequantize the asset back to floats.",
+          "$ref": "#/$defs/QuantInfo"
+        }
+      }
+    },
+    "QuantInfo": {
+      "description": "Per-row max-quantization parameters (§5 attention.bin). On-disk layout is the uint8 data block (C-order, `row_axis` = last axis) immediately followed by the per-row scales block. Dequantize row r as: data[r]/255 * scale[r]. Scale[r] is the max of the original row, so error <= 0.5/255 per element.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scheme",
+        "row_axis",
+        "scale_dtype",
+        "data_offset",
+        "data_bytes",
+        "scale_offset",
+        "scale_count"
+      ],
+      "properties": {
+        "scheme": {
+          "description": "Quantization scheme identifier.",
+          "type": "string",
+          "enum": ["per_row_uint8"]
+        },
+        "row_axis": {
+          "description": "Axis quantized per-row (a scale per index along all other axes). -1 = last axis.",
+          "type": "integer"
+        },
+        "scale_dtype": {
+          "description": "Element dtype of the scales block.",
+          "type": "string",
+          "enum": ["float32"]
+        },
+        "data_offset": {
+          "description": "Byte offset of the uint8 data block within the file.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "data_bytes": {
+          "description": "Length of the uint8 data block in bytes.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "scale_offset": {
+          "description": "Byte offset of the scales block within the file.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "scale_count": {
+          "description": "Number of per-row scales (product of all axes except row_axis).",
+          "type": "integer",
+          "minimum": 0
         }
       }
     },

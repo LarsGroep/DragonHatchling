@@ -6,6 +6,10 @@
  * `../schema/pack.schema.json`. The round-trip test in
  * `tests/pack.typecheck.ts` imports the shared fixture and asserts it
  * `satisfies PackManifest`, so drift breaks the build.
+ *
+ * PACK FORMAT v1, FROZEN AT M2 (§5 of ARCHITECTURE.md). Any change here must be
+ * mirrored in `../schema/pack.schema.json` and the Pydantic models in
+ * `packages/core/.../packs/manifest.py`, and bump `pack_version`.
  */
 
 /** Element dtype (or container type) of a decoded asset. */
@@ -66,6 +70,22 @@ export interface Prediction {
   probabilities: number[];
 }
 
+/**
+ * Per-row max-quantization parameters (present only for `per_row_uint8`).
+ * On-disk layout: uint8 data block (C-order, `row_axis` = last axis) followed
+ * by the per-row float32 scales block. Dequantize row r as
+ * `data[r] / 255 * scale[r]`; error <= 0.5/255 per element.
+ */
+export interface QuantInfo {
+  scheme: "per_row_uint8";
+  row_axis: number;
+  scale_dtype: "float32";
+  data_offset: number;
+  data_bytes: number;
+  scale_offset: number;
+  scale_count: number;
+}
+
 /** Descriptor for one binary/JSON asset referenced by the manifest. */
 export interface AssetEntry {
   dtype: AssetDtype;
@@ -73,6 +93,7 @@ export interface AssetEntry {
   encoding: AssetEncoding;
   bytes: number;
   checksum?: string;
+  quant?: QuantInfo;
 }
 
 /** Asset index: filename -> descriptor. */

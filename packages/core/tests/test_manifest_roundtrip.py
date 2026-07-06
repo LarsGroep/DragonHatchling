@@ -33,7 +33,7 @@ def test_schema_is_valid_draft_2020_12():
 
 def test_fixture_parses_with_pydantic(fixture_data):
     manifest = PackManifest.model_validate(fixture_data)
-    assert manifest.pack_version == "0.1.0"
+    assert manifest.pack_version == "1.0.0"
     assert manifest.model.arch == "deit_small_patch16_224"
     assert manifest.dataset.num_classes == len(manifest.dataset.class_names)
     assert manifest.image.source in ("gallery", "upload")

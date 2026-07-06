@@ -1,5 +1,5 @@
 {
-  "pack_version": "0.1.0",
+  "pack_version": "1.0.0",
   "model": {
     "arch": "deit_small_patch16_224",
     "hf_repo": "vitreous/deit-small-eurosat",
@@ -46,13 +46,22 @@
       "dtype": "uint8",
       "shape": [12, 6, 197, 197],
       "encoding": "per_row_uint8",
-      "bytes": 1548912
+      "bytes": 2850984,
+      "quant": {
+        "scheme": "per_row_uint8",
+        "row_axis": -1,
+        "scale_dtype": "float32",
+        "data_offset": 0,
+        "data_bytes": 2794248,
+        "scale_offset": 2794248,
+        "scale_count": 14184
+      }
     },
     "tokens.bin": {
       "dtype": "float16",
       "shape": [13, 197, 384],
-      "encoding": "zstd",
-      "bytes": 1490000
+      "encoding": "raw",
+      "bytes": 1966848
     },
     "attributions.json": {
       "dtype": "json",
@@ -62,9 +71,9 @@
     },
     "attr_chefer.bin": {
       "dtype": "float32",
-      "shape": [197],
+      "shape": [12, 197],
       "encoding": "raw",
-      "bytes": 788
+      "bytes": 9456
     },
     "attr_rollout.bin": {
       "dtype": "float32",
@@ -84,23 +93,11 @@
       "encoding": "raw",
       "bytes": 788
     },
-    "gaussians.bin": {
-      "dtype": "float16",
-      "shape": [13, 197, 12],
-      "encoding": "zstd",
-      "bytes": 61464
-    },
-    "graph.json": {
-      "dtype": "json",
-      "shape": [],
-      "encoding": "json",
-      "bytes": 204800
-    },
-    "concepts.json": {
-      "dtype": "json",
-      "shape": [],
-      "encoding": "json",
-      "bytes": 40960
+    "attr_ig_pixel.png": {
+      "dtype": "png",
+      "shape": [224, 224],
+      "encoding": "png",
+      "bytes": 11840
     },
     "faithfulness.json": {
       "dtype": "json",
@@ -121,9 +118,6 @@
     "chefer_ms": 310.2,
     "gradcam_ms": 51.7,
     "ig_ms": 2204.9,
-    "gaussians_ms": 44.1,
-    "graph_ms": 120.6,
-    "concepts_ms": 73.4,
     "faithfulness_ms": 1890.0
   }
 }

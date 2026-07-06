@@ -7,7 +7,9 @@ structurally identical to the JSON Schema; the round-trip test in
 fixture against both the JSON Schema (via ``jsonschema``) and these models,
 so drift is caught in CI.
 
-The pack format is frozen at milestone M2 (§5 of ARCHITECTURE.md).
+PACK FORMAT v1, FROZEN AT M2 (§5 of ARCHITECTURE.md). Any structural change here
+must be mirrored in ``packages/schema/schema/pack.schema.json`` and
+``packages/schema/src/pack.ts`` and bump ``pack_version``.
 """
 
 from __future__ import annotations
@@ -84,12 +86,31 @@ class Prediction(_Strict):
     probabilities: List[float] = Field(min_length=1)
 
 
+class QuantInfo(_Strict):
+    """Per-row max-quantization parameters (present only for ``per_row_uint8``).
+
+    On-disk layout: the uint8 data block (C-order, ``row_axis`` = last axis)
+    immediately followed by the per-row ``float32`` scales block. Dequantize row
+    ``r`` as ``data[r] / 255 * scale[r]``; ``scale[r]`` is the max of the
+    original row, so the per-element error is at most ``0.5/255``.
+    """
+
+    scheme: Literal["per_row_uint8"]
+    row_axis: int
+    scale_dtype: Literal["float32"]
+    data_offset: int = Field(ge=0)
+    data_bytes: int = Field(ge=0)
+    scale_offset: int = Field(ge=0)
+    scale_count: int = Field(ge=0)
+
+
 class AssetEntry(_Strict):
     dtype: AssetDtype
     shape: List[int] = Field(default_factory=list)
     encoding: AssetEncoding
     bytes: int = Field(ge=0)
     checksum: Optional[str] = None
+    quant: Optional[QuantInfo] = None
 
 
 class PackManifest(_Strict):
@@ -112,6 +133,7 @@ __all__ = [
     "DatasetInfo",
     "ImageMeta",
     "Prediction",
+    "QuantInfo",
     "AssetEntry",
     "PackManifest",
 ]
