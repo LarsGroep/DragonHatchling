@@ -67,6 +67,11 @@
           "description": "Token embedding dimension, e.g. 384.",
           "type": "integer",
           "minimum": 1
+        },
+        "patch_size": {
+          "description": "ViT patch side length in pixels, e.g. 16 (grid = image_size / patch_size).",
+          "type": "integer",
+          "minimum": 1
         }
       }
     },

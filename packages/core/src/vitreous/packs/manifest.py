@@ -60,6 +60,7 @@ class ModelInfo(_Strict):
     num_heads: Optional[int] = Field(default=None, ge=1)
     num_tokens: Optional[int] = Field(default=None, ge=1)
     embed_dim: Optional[int] = Field(default=None, ge=1)
+    patch_size: Optional[int] = Field(default=None, ge=1)
 
 
 class DatasetInfo(_Strict):

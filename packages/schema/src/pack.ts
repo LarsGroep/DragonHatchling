@@ -42,6 +42,7 @@ export interface ModelInfo {
   num_heads?: number;
   num_tokens?: number;
   embed_dim?: number;
+  patch_size?: number;
 }
 
 export interface DatasetInfo {
