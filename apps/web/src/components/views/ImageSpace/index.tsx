@@ -11,7 +11,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useWorkbench, layerForT } from "@/src/lib/state/store";
 import type { AttributionMethod } from "@/src/lib/state/refs";
-import { resolvedPatches } from "@/src/lib/state/resolver";
+import { resolve, resolvedPatches } from "@/src/lib/state/resolver";
 import { patchToToken } from "@/src/lib/state/packIndex";
 import { useImageSpaceData } from "./useImageSpaceData";
 import { SaliencyOverlay } from "./SaliencyOverlay";
@@ -50,6 +50,13 @@ export function ImageSpaceView({ classNames }: { classNames?: string[] }) {
   const grid = packIndex?.grid ?? 14;
   const layer = layerForT(t, packIndex?.numLayers ?? 12);
   const imageUrl = manifest ? client?.imageUrl(manifest) ?? null : null;
+
+  // Concept ids linked to the active selection (§9 tier surfaced in the UI).
+  const hoverConcepts = useMemo(() => {
+    const active = hover ?? pinned[pinned.length - 1];
+    if (!active || !packIndex) return [];
+    return resolve(active, packIndex, layerForT(t, packIndex.numLayers)).concepts.slice(0, 6);
+  }, [hover, pinned, packIndex, t]);
 
   // Patch cells lit by the current selection (hover takes precedence, then pins).
   const litPatches = useMemo(() => {
@@ -253,6 +260,19 @@ export function ImageSpaceView({ classNames }: { classNames?: string[] }) {
               </div>
             ) : null}
           </div>
+
+          {hoverConcepts.length ? (
+            <div className="rounded border border-edge bg-panel-hi p-2">
+              <div className="text-[10px] uppercase tracking-widest text-muted">concepts (SAE)</div>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {hoverConcepts.map((c) => (
+                  <span key={c} className="tabular-nums rounded bg-panel px-1 text-[9px] text-latent">
+                    #{c}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           {showSaliency ? (
             <label className="flex flex-col gap-1 text-[10px] uppercase tracking-widest text-muted">

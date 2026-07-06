@@ -1,4 +1,17 @@
-# DragonHatchling · hatchvision
+# DragonHatchling
+
+> **ViTreous** — the current project — is a multi-view visual-analytics
+> workbench for Vision Transformers: Image Space, Gaussian Feature Field,
+> Interaction Graph, and Latent Embeddings, bidirectionally synced over a
+> replayable inference timeline, at $0 hosting cost (Kaggle GPU · Supabase ·
+> Vercel · HF Spaces). Start at [`docs/VITREOUS.md`](docs/VITREOUS.md);
+> design in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Code:
+> `packages/` (core + schema), `apps/` (web + live), `kaggle/`, `supabase/`.
+>
+> Everything below documents the **legacy** hatchvision prototype, kept as
+> historical reference (evaluated in [`docs/RESEARCH.md`](docs/RESEARCH.md)).
+
+# hatchvision (legacy)
 
 A **universal image-classification + explainability tool** built on the Baby
 Dragon Hatchling (BDH) architecture: train a classifier on any image dataset,
