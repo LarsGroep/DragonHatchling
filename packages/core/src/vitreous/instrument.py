@@ -1,16 +1,32 @@
 """Observation-only instrumentation (§6).
 
-``Instrumenter(model).capture(image)`` registers forward hooks on attention
-softmaxes and block outputs, runs inference, detaches, and returns a
-:class:`Trace`. The hard guarantee (enforced by a regression test at M1) is that
-logits are **bit-identical** with hooks on or off — instrumentation observes,
-never perturbs.
+``Instrumenter(model).capture(image)`` registers forward hooks on a timm ViT,
+runs inference, detaches, and returns a :class:`Trace` holding:
 
-M0 ships the dataclasses and the interface; ``capture`` is a stub.
+* **attention** — per-layer softmax maps ``[L, H, T, T]``
+* **tokens** — the residual-stream token embeddings at each timeline step
+  ``[L+1, T, D]``: the input to each of the ``L`` blocks (steps ``0..L-1``)
+  plus the final-norm output (step ``L``)
+* **logits** — the classifier output
+* **timings** — wall-clock stage timings
+
+**Hard guarantee (enforced by test):** logits are *bit-identical* whether or
+not the Instrumenter is attached. This holds by construction — the hooks only
+*read* module inputs and never return a modified output. In particular,
+modern timm attention uses a fused ``scaled_dot_product_attention`` kernel that
+does not expose its internal softmax; rather than switch the model to the
+slower unfused path (which would change the numerics), the attention hook
+*recomputes* the softmax from the attention module's own inputs/weights. The
+model's real forward pass runs untouched, so the logits are unperturbed while
+the captured attention is exactly the softmax the fused kernel computed.
+
+The Instrumenter is a context manager; hooks are removed on ``__exit__`` (and
+by ``capture`` when it owns the hooks), leaving no lingering handles.
 """
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -19,47 +35,200 @@ from typing import Any, Dict, List, Optional
 class Trace:
     """Captured forward-pass internals for one image.
 
-    Arrays are stored as plain objects (numpy/torch at runtime) keyed by a
-    stable name so downstream XAI methods are decoupled from the capture
-    mechanism.
-
     Attributes
     ----------
-    attentions:
-        Per-layer attention probability tensors, shape ``[H, N, N]`` each.
+    attention:
+        ``[L, H, T, T]`` tensor of per-layer/head attention probabilities.
     tokens:
-        Per-layer token embeddings (block inputs + final), ``L+1`` entries.
+        ``[L+1, T, D]`` tensor of residual-stream token embeddings.
     logits:
-        Final classifier logits.
+        Classifier logits (kept with the batch dim, e.g. ``[B, num_classes]``).
+    timings:
+        Wall-clock stage timings in milliseconds.
     meta:
-        Free-form capture metadata (model spec, timings, etc.).
+        Free-form capture metadata (shapes, model arch, etc.).
     """
 
-    attentions: List[Any] = field(default_factory=list)
-    tokens: List[Any] = field(default_factory=list)
+    attention: Optional[Any] = None
+    tokens: Optional[Any] = None
     logits: Optional[Any] = None
+    timings: Dict[str, float] = field(default_factory=dict)
     meta: Dict[str, Any] = field(default_factory=dict)
 
 
-class Instrumenter:
-    """Attaches observation-only hooks to a model and captures a :class:`Trace`.
+def _unwrap(model: Any) -> Any:
+    """Accept a ``LoadedModel`` or a raw ``nn.Module`` and return the module."""
+    module = getattr(model, "module", None)
+    if module is not None and hasattr(module, "forward"):
+        return module
+    return model
 
-    Parameters
-    ----------
-    model:
-        The model to instrument (a ``LoadedModel`` or raw ``nn.Module``).
+
+class Instrumenter:
+    """Attaches observation-only hooks to a timm ViT and captures a :class:`Trace`.
+
+    Usage::
+
+        with Instrumenter(model) as inst:
+            trace = inst.capture(image_tensor)
+        # hooks are gone here
+
+    or standalone (``capture`` registers and removes its own hooks)::
+
+        trace = Instrumenter(model).capture(image_tensor)
     """
 
     def __init__(self, model: Any) -> None:
-        self.model = model
+        self.model = _unwrap(model)
+        if not hasattr(self.model, "blocks"):
+            raise TypeError(
+                "Instrumenter expects a timm ViT with a `.blocks` ModuleList"
+            )
+        self._handles: List[Any] = []
+        self._attn: Dict[int, Any] = {}
+        self._tokens: Dict[int, Any] = {}
+        self._final_norm: Optional[Any] = None
+
+    # -- hook registration --------------------------------------------------- #
+
+    def _make_token_pre_hook(self, layer: int):
+        def _hook(module, args):  # forward_pre_hook
+            # args[0] is the residual-stream tensor entering this block.
+            self._tokens[layer] = args[0].detach()
+            return None  # never modify the input
+
+        return _hook
+
+    def _make_attn_hook(self, layer: int):
+        import torch  # lazy
+
+        def _hook(module, args, output):  # forward_hook
+            # Recompute the softmax attention from this module's own inputs so
+            # the model's (possibly fused) forward stays untouched.
+            x = args[0]
+            b, n, c = x.shape
+            qkv = (
+                module.qkv(x)
+                .reshape(b, n, 3, module.num_heads, module.head_dim)
+                .permute(2, 0, 3, 1, 4)
+            )
+            q, k, _v = qkv.unbind(0)
+            q = module.q_norm(q)
+            k = module.k_norm(k)
+            attn = (q @ k.transpose(-2, -1)) * module.scale
+            attn = attn.softmax(dim=-1)
+            self._attn[layer] = attn.detach()
+            return None  # never modify the output
+
+        return _hook
+
+    def _make_final_norm_hook(self):
+        def _hook(module, args, output):
+            self._final_norm = output.detach()
+            return None
+
+        return _hook
+
+    def register(self) -> "Instrumenter":
+        """Register all hooks. Idempotent-safe (no-op if already registered)."""
+        if self._handles:
+            return self
+        blocks = self.model.blocks
+        for i, blk in enumerate(blocks):
+            self._handles.append(
+                blk.register_forward_pre_hook(self._make_token_pre_hook(i))
+            )
+            self._handles.append(
+                blk.attn.register_forward_hook(self._make_attn_hook(i))
+            )
+        # Final norm output = the last timeline step (L).
+        self._handles.append(
+            self.model.norm.register_forward_hook(self._make_final_norm_hook())
+        )
+        return self
+
+    def remove(self) -> None:
+        """Remove all registered hooks, leaving no lingering handles."""
+        for h in self._handles:
+            h.remove()
+        self._handles = []
+
+    def __enter__(self) -> "Instrumenter":
+        return self.register()
+
+    def __exit__(self, *exc: Any) -> None:
+        self.remove()
+
+    # -- capture ------------------------------------------------------------- #
 
     def capture(self, image: Any) -> Trace:
         """Run instrumented inference and return a detached :class:`Trace`.
 
-        Not implemented at M0 — lands at M1 with the hook-purity guarantee.
+        ``image`` may be ``[C, H, W]`` or ``[B, C, H, W]``; a leading batch dim
+        is added if missing. Attention/token arrays are returned with the batch
+        dim squeezed when ``B == 1`` so a single image yields the canonical
+        ``[L, H, T, T]`` / ``[L+1, T, D]`` shapes.
         """
+        import torch  # lazy
 
-        raise NotImplementedError("Instrumenter.capture lands at M1")
+        owns_hooks = not self._handles
+        if owns_hooks:
+            self.register()
+
+        # Reset per-capture buffers.
+        self._attn.clear()
+        self._tokens.clear()
+        self._final_norm = None
+
+        x = image
+        if hasattr(x, "dim") and x.dim() == 3:
+            x = x.unsqueeze(0)
+
+        was_training = self.model.training
+        self.model.eval()
+        try:
+            t0 = time.perf_counter()
+            with torch.no_grad():
+                logits = self.model(x)
+            forward_ms = (time.perf_counter() - t0) * 1000.0
+
+            n_layers = len(self.model.blocks)
+            # tokens: inputs to blocks 0..L-1, then final-norm output = step L.
+            token_steps = [self._tokens[i] for i in range(n_layers)]
+            if self._final_norm is not None:
+                token_steps.append(self._final_norm)
+            tokens = torch.stack(token_steps, dim=0)  # [L+1, B, T, D]
+            attention = torch.stack(
+                [self._attn[i] for i in range(n_layers)], dim=0
+            )  # [L, B, H, T, T]
+
+            # Squeeze the batch dim for the common single-image case.
+            if tokens.shape[1] == 1:
+                tokens = tokens.squeeze(1)  # [L+1, T, D]
+            if attention.shape[1] == 1:
+                attention = attention.squeeze(1)  # [L, H, T, T]
+
+            trace = Trace(
+                attention=attention.contiguous(),
+                tokens=tokens.contiguous(),
+                logits=logits.detach(),
+                timings={"forward_ms": forward_ms},
+                meta={
+                    "num_layers": n_layers,
+                    "num_heads": int(self.model.blocks[0].attn.num_heads),
+                    "num_tokens": int(tokens.shape[-2]),
+                    "embed_dim": int(tokens.shape[-1]),
+                    "attention_shape": tuple(attention.shape),
+                    "tokens_shape": tuple(tokens.shape),
+                },
+            )
+        finally:
+            if was_training:
+                self.model.train()
+            if owns_hooks:
+                self.remove()
+
+        return trace
 
 
 __all__ = ["Trace", "Instrumenter"]
