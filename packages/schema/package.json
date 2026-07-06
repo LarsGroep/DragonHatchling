@@ -1,0 +1,25 @@
+{
+  "name": "@vitreous/schema",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ViTreous Explanation Pack — JSON Schema (source of truth) + TypeScript type mirror.",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema/pack.schema.json": "./schema/pack.schema.json",
+    "./fixtures/manifest.fixture.json": "./fixtures/manifest.fixture.json"
+  },
+  "files": [
+    "src",
+    "schema",
+    "fixtures"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "5.5.4"
+  }
+}

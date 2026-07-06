@@ -1,0 +1,204 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vitreous.dev/schema/pack.schema.json",
+  "title": "ViTreous Explanation Pack Manifest",
+  "description": "Single source of truth for the Explanation Pack manifest.json (§5 of ARCHITECTURE.md). Every binary asset in a pack is described by the asset index; the manifest loads first and binaries stream on demand.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pack_version",
+    "model",
+    "dataset",
+    "image",
+    "prediction",
+    "assets",
+    "timings"
+  ],
+  "properties": {
+    "pack_version": {
+      "description": "Semantic version of the pack format. Frozen at milestone M2.",
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "model": { "$ref": "#/$defs/ModelInfo" },
+    "dataset": { "$ref": "#/$defs/DatasetInfo" },
+    "image": { "$ref": "#/$defs/ImageMeta" },
+    "prediction": { "$ref": "#/$defs/Prediction" },
+    "assets": {
+      "description": "Asset index: filename -> descriptor for every binary/JSON asset in the pack directory (§5).",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/AssetEntry" }
+    },
+    "timings": { "$ref": "#/$defs/Timings" }
+  },
+  "$defs": {
+    "ModelInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["arch", "hf_repo"],
+      "properties": {
+        "arch": {
+          "description": "Model architecture identifier, e.g. timm 'deit_small_patch16_224'.",
+          "type": "string",
+          "minLength": 1
+        },
+        "hf_repo": {
+          "description": "Hugging Face Hub repo id hosting the fine-tuned weights.",
+          "type": "string",
+          "minLength": 1
+        },
+        "num_layers": {
+          "description": "Transformer block count L (timeline length is L+1).",
+          "type": "integer",
+          "minimum": 1
+        },
+        "num_heads": {
+          "description": "Attention heads per block H.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "num_tokens": {
+          "description": "Sequence length incl. CLS token, e.g. 197 for ViT-S/16 @ 224.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "embed_dim": {
+          "description": "Token embedding dimension, e.g. 384.",
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "DatasetInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "num_classes", "class_names"],
+      "properties": {
+        "name": {
+          "description": "Registry key of the dataset, e.g. 'eurosat'.",
+          "type": "string",
+          "minLength": 1
+        },
+        "display_name": {
+          "description": "Human-facing dataset title.",
+          "type": "string"
+        },
+        "num_classes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "class_names": {
+          "description": "Ordered class labels; index i is class index i.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "ImageMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "width", "height", "source"],
+      "properties": {
+        "id": {
+          "description": "Stable image identifier; pack prefix in storage.",
+          "type": "string",
+          "minLength": 1
+        },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "source": {
+          "description": "Provenance of the image.",
+          "type": "string",
+          "enum": ["gallery", "upload"]
+        }
+      }
+    },
+    "Prediction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "class_index", "confidence", "probabilities"],
+      "properties": {
+        "label": {
+          "description": "Predicted class label (== class_names[class_index]).",
+          "type": "string"
+        },
+        "class_index": {
+          "description": "Argmax class index into dataset.class_names.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "confidence": {
+          "description": "Softmax probability of the predicted class.",
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "probabilities": {
+          "description": "Full softmax distribution over all classes; length == dataset.num_classes.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "AssetEntry": {
+      "description": "Descriptor for one binary/JSON asset referenced by the manifest asset index.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dtype", "shape", "encoding", "bytes"],
+      "properties": {
+        "dtype": {
+          "description": "Element dtype of the decoded array, or a container type for JSON/image assets.",
+          "type": "string",
+          "enum": [
+            "uint8",
+            "int8",
+            "uint16",
+            "int16",
+            "int32",
+            "float16",
+            "float32",
+            "float64",
+            "json",
+            "webp",
+            "png"
+          ]
+        },
+        "shape": {
+          "description": "Logical shape of the decoded array; empty for scalar or non-array (json/image) assets.",
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "encoding": {
+          "description": "On-disk encoding of the asset bytes.",
+          "type": "string",
+          "enum": [
+            "raw",
+            "zstd",
+            "gzip",
+            "per_row_uint8",
+            "json",
+            "webp",
+            "png"
+          ]
+        },
+        "bytes": {
+          "description": "On-disk size of the asset in bytes.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "checksum": {
+          "description": "Optional content hash (e.g. 'sha256:...') for integrity checks.",
+          "type": "string"
+        }
+      }
+    },
+    "Timings": {
+      "description": "Wall-clock timings (milliseconds) for pipeline stages that produced the pack.",
+      "type": "object",
+      "additionalProperties": { "type": "number", "minimum": 0 }
+    }
+  }
+}
