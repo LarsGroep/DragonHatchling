@@ -43,6 +43,10 @@ class Trace:
         ``[L+1, T, D]`` tensor of residual-stream token embeddings.
     logits:
         Classifier logits (kept with the batch dim, e.g. ``[B, num_classes]``).
+    attention_grad:
+        ``[L, H, T, T]`` gradient of a target logit w.r.t. the attention maps,
+        populated only by :meth:`Instrumenter.capture_with_grad` (used by
+        Chefer relevance). ``None`` on the observation-only ``capture`` path.
     timings:
         Wall-clock stage timings in milliseconds.
     meta:
@@ -52,6 +56,7 @@ class Trace:
     attention: Optional[Any] = None
     tokens: Optional[Any] = None
     logits: Optional[Any] = None
+    attention_grad: Optional[Any] = None
     timings: Dict[str, float] = field(default_factory=dict)
     meta: Dict[str, Any] = field(default_factory=dict)
 
@@ -227,6 +232,120 @@ class Instrumenter:
                 self.model.train()
             if owns_hooks:
                 self.remove()
+
+        return trace
+
+    # -- grad-enabled capture (Chefer relevance, §6 / DECISION-LOG) ----------- #
+
+    def capture_with_grad(self, image: Any, target: Optional[int] = None) -> Trace:
+        """Run a *differentiable* forward and return attention maps + their grads.
+
+        Chefer relevance (§6) needs the gradient of a target logit w.r.t. each
+        layer's attention softmax. The observation-only :meth:`capture` recomputes
+        attention *outside* the autograd graph (so it has no path to the logits);
+        here we instead temporarily replace each attention module's ``forward``
+        with a numerically-equivalent *unfused* version that materializes the
+        softmax matrix, calls ``retain_grad`` on it, and computes the block output
+        the standard way — so the target logit backpropagates into every
+        attention map.
+
+        This path deliberately drops ``no_grad`` and uses the unfused attention
+        (equal to the fused SDPA kernel up to float epsilon). It is entirely
+        separate from :meth:`capture`; the bit-identical hook-purity guarantee on
+        ``capture`` is untouched. The monkeypatch is installed and removed within
+        this call, leaving the model exactly as found.
+
+        Returns a :class:`Trace` with ``attention`` (softmax maps, detached),
+        ``attention_grad`` (their grads, detached), ``logits`` and
+        ``meta['target']``. ``target`` defaults to the argmax class.
+        """
+        import torch  # lazy
+
+        model = self.model
+        x = image
+        if hasattr(x, "dim") and x.dim() == 3:
+            x = x.unsqueeze(0)
+
+        blocks = model.blocks
+        n_layers = len(blocks)
+        attn_store: Dict[int, Any] = {}
+        originals: Dict[int, Any] = {}
+
+        def _make_forward(layer: int, attn_mod: Any):
+            def _forward(x, attn_mask=None, is_causal=False):
+                b, n, c = x.shape
+                qkv = (
+                    attn_mod.qkv(x)
+                    .reshape(b, n, 3, attn_mod.num_heads, attn_mod.head_dim)
+                    .permute(2, 0, 3, 1, 4)
+                )
+                q, k, v = qkv.unbind(0)
+                q = attn_mod.q_norm(q)
+                k = attn_mod.k_norm(k)
+                q = q * attn_mod.scale
+                attn = q @ k.transpose(-2, -1)
+                attn = attn.softmax(dim=-1)
+                attn.retain_grad()
+                attn_store[layer] = attn
+                a = attn_mod.attn_drop(attn)
+                out = a @ v
+                out = out.transpose(1, 2).reshape(b, n, attn_mod.attn_dim)
+                out = attn_mod.norm(out)
+                out = attn_mod.proj(out)
+                out = attn_mod.proj_drop(out)
+                return out
+
+            return _forward
+
+        was_training = model.training
+        model.eval()
+        try:
+            for i, blk in enumerate(blocks):
+                originals[i] = blk.attn.forward
+                blk.attn.forward = _make_forward(i, blk.attn)
+
+            t0 = time.perf_counter()
+            logits = model(x)
+            if target is None:
+                target = int(logits[0].argmax().item())
+            model.zero_grad(set_to_none=True)
+            logits[0, target].backward()
+            forward_ms = (time.perf_counter() - t0) * 1000.0
+
+            attention = torch.stack(
+                [attn_store[i].detach() for i in range(n_layers)], dim=0
+            )  # [L, B, H, T, T]
+            grads = torch.stack(
+                [attn_store[i].grad.detach() for i in range(n_layers)], dim=0
+            )  # [L, B, H, T, T]
+            if attention.shape[1] == 1:
+                attention = attention.squeeze(1)  # [L, H, T, T]
+                grads = grads.squeeze(1)
+
+            trace = Trace(
+                attention=attention.contiguous(),
+                attention_grad=grads.contiguous(),
+                logits=logits.detach(),
+                timings={"forward_ms": forward_ms},
+                meta={
+                    "num_layers": n_layers,
+                    "num_heads": int(blocks[0].attn.num_heads),
+                    "num_tokens": int(attention.shape[-1]),
+                    "target": int(target),
+                    "grad_capture": True,
+                },
+            )
+        finally:
+            for i, blk in enumerate(blocks):
+                if i in originals:
+                    # Restore the class-level forward by dropping the instance attr.
+                    try:
+                        del blk.attn.forward
+                    except AttributeError:
+                        blk.attn.forward = originals[i]
+            model.zero_grad(set_to_none=True)
+            if was_training:
+                model.train()
 
         return trace
 
