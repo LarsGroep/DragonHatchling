@@ -119,8 +119,14 @@ class PackWriter:
         *,
         encoding: str = "raw",
         dtype: Optional[str] = None,
+        meta: Optional[Dict[str, Any]] = None,
     ) -> AssetEntry:
-        """Serialize a numpy array asset with ``encoding`` in {raw, per_row_uint8}."""
+        """Serialize a numpy array asset with ``encoding`` in {raw, per_row_uint8}.
+
+        ``meta`` is optional additive free-form metadata recorded on the asset
+        entry (used e.g. for the ``gaussians.bin`` channel order); it never
+        describes the frozen binary layout.
+        """
         arr = np.asarray(array)
         if dtype is not None:
             arr = arr.astype(_DTYPE_TO_NP[dtype])
@@ -137,6 +143,7 @@ class PackWriter:
                 shape=list(arr.shape),
                 encoding="raw",
                 bytes=len(data),
+                meta=meta,
             )
         elif encoding == "per_row_uint8":
             q, scales = _quantize_per_row(arr)
@@ -157,6 +164,7 @@ class PackWriter:
                     scale_offset=len(data),
                     scale_count=int(scales.size),
                 ),
+                meta=meta,
             )
         else:
             raise ValueError(f"unknown array encoding {encoding!r}")
@@ -166,10 +174,14 @@ class PackWriter:
 
     # -- json assets --------------------------------------------------------- #
 
-    def add_json(self, filename: str, payload: Any) -> AssetEntry:
+    def add_json(
+        self, filename: str, payload: Any, *, meta: Optional[Dict[str, Any]] = None
+    ) -> AssetEntry:
         data = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
         (self.out_dir / filename).write_bytes(data)
-        entry = AssetEntry(dtype="json", shape=[], encoding="json", bytes=len(data))
+        entry = AssetEntry(
+            dtype="json", shape=[], encoding="json", bytes=len(data), meta=meta
+        )
         self._assets[filename] = entry
         return entry
 
@@ -311,6 +323,20 @@ class PackReader:
 
     def read_tokens(self) -> np.ndarray:
         return self.read_array("tokens.bin")
+
+    def read_gaussians(self) -> np.ndarray:
+        """Return the Gaussian Feature Field ``[13,197,12]`` float16 (§7)."""
+        return self.read_array("gaussians.bin")
+
+    def gaussian_channels(self) -> List[str]:
+        """Channel order for ``gaussians.bin`` from the asset meta (§7)."""
+        entry = self._entry("gaussians.bin")
+        meta = entry.meta or {}
+        return list(meta.get("channels", []))
+
+    def read_graph(self) -> Dict[str, Any]:
+        """Return the parsed ``graph.json`` structure (§8)."""
+        return self.read_json("graph.json")
 
 
 # --------------------------------------------------------------------------- #
@@ -473,6 +499,28 @@ def build_pack(
         img = (img - lo) / (hi - lo) if hi > lo else np.zeros_like(img)
         disp = (img * 255.0).astype(np.uint8)
     writer.add_image("image", disp)
+
+    # -- Gaussian Feature Field (§7) + Interaction Graph (§8) ----------------- #
+    from ..gaussians import build_gaussian_field
+    from ..graph import build_graph_asset
+
+    t0 = time.perf_counter()
+    chefer_layers = attrs["chefer"].token_scores if "chefer" in attrs else None
+    field_obj = build_gaussian_field(trace, disp, chefer_layers=chefer_layers)
+    writer.add_array(
+        "gaussians.bin", field_obj.data, encoding="raw", dtype="float16",
+        meta=field_obj.to_meta(),
+    )
+    timings["gaussians_ms"] = (time.perf_counter() - t0) * 1000.0
+
+    t0 = time.perf_counter()
+    graph_asset = build_graph_asset(trace, seed=seed)
+    writer.add_json(
+        "graph.json", graph_asset,
+        meta={"k": graph_asset["k"], "num_layers": graph_asset["num_layers"],
+              "residual": "implicit; see graph.json residual flag"},
+    )
+    timings["graph_ms"] = (time.perf_counter() - t0) * 1000.0
 
     # -- manifest ------------------------------------------------------------ #
     num_classes = int(getattr(dataset_spec, "num_classes", probs.shape[0]))

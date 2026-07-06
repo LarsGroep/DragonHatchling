@@ -11,7 +11,8 @@ Submodules (M0 ships interfaces; logic lands per the §16 roadmap):
 - :mod:`vitreous.instrument`  observation-only hooks -> Trace (M1)
 - :mod:`vitreous.xai`         attribution suite + faithfulness eval (M2)
 - :mod:`vitreous.gaussians`   Gaussian Feature Field builder (M3)
-- :mod:`vitreous.graph`       GraphProvider abstraction (M3)
+- :mod:`vitreous.graph`       GraphProvider + ViTTokenGraphProvider (M3)
+- :mod:`vitreous.projections` dataset-level PCA/UMAP/t-SNE projections (M3)
 - :mod:`vitreous.concepts`    k-sparse-autoencoder concept tier (M4)
 - :mod:`vitreous.packs`       Explanation Pack manifest models + writer
 - :mod:`vitreous.storage`     StorageAdapter abstraction (M4)
