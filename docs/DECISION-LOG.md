@@ -73,7 +73,29 @@ for how the system gets built. Companion to
 | M1 | Dataset adapters (EuroSAT, Oxford Pet, imagefolder), ViT-S/16 loader, Instrumenter | **Complete** (Opus agent, 2026-07-06; 61 tests pass incl. hook-purity + exact trace shapes; reviewed & pushed) |
 | M2 | XAI suite (rollout, Chefer ICCV-2021 grad-weighted formulation, Grad-CAM, IG), faithfulness eval, PackWriter/PackReader, **pack format v1 frozen** | **Complete** (Opus agent, 2026-07-06; 87 tests pass, tsc clean; reviewed & pushed) |
 | M3 | `vitreous.gaussians` (Gaussian Feature Field) + `vitreous.graph` (ViTTokenGraphProvider, seeded Louvain communities) + `vitreous.projections` (PCA/UMAP/t-SNE + persisted reducers); pack gains `gaussians.bin` + `graph.json` additively | **Complete** (Opus agent, 2026-07-06; 120 tests pass, tsc clean; `pack_version` unchanged at 1.0.0) |
-| M4–M9 | — | Pending. Pack format v1 is FROZEN (`pack_version` 1.0.0); M4+ may only *add* assets to the open asset index, never change existing layouts. |
+| M4 | `vitreous.concepts` (TopK SAE + k-means fallback + quality gate), `vitreous.storage` (Local/Supabase/HF adapters), Supabase migration (§15), 3 dataset-swappable Kaggle notebooks; pack gains `concepts.json` additively | **Complete** (Opus agent, 2026-07-06; 157 tests pass, tsc clean; notebooks valid nbformat-4; no hardcoded creds; reviewed & pushed) |
+| M5–M9 | — | Pending. Pack format v1 is FROZEN (`pack_version` 1.0.0); may only *add* assets to the open asset index, never change existing layouts. |
+
+M4 handoff notes for the frontend (M5+):
+- `StorageAdapter.get_url(key)` is the single source of truth for public URLs.
+  Supabase: `{SUPABASE_URL}/storage/v1/object/public/{bucket}/{key}`;
+  HF: `https://huggingface.co/datasets/{repo}/resolve/{rev}/{key}`.
+- `gallery_images.pack_prefix` is stored WITH a trailing slash; append the
+  asset name for the object key. Buckets: `packs/ projections/ concepts/ thumbs/`.
+- `manifest.json` lists every asset with exact `bytes` (+ `quant` offsets for
+  attention.bin, `meta.channels` for gaussians.bin) → precise HTTP `Range`
+  requests per view, no HEAD needed. `concepts.json` may be ABSENT — gate on
+  `manifest.assets["concepts.json"]`; it carries `dictionary_id` →
+  `concept_dictionaries.url`.
+- CORS: public Supabase Storage serves `Access-Control-Allow-Origin: *` and
+  honors Range (206). HF `resolve/` 302-redirects to a range-capable CDN —
+  loader must follow redirects.
+- Projections are dataset-level (one row per dataset/model/layer/method);
+  `reducer_url` is null for t-SNE (no upload-into-landscape for that method).
+- concepts.json shape: `{layer, topk, dictionary_id, provider_kind, n_concepts,
+  num_tokens, feature_ids [197][topk], activations [197][topk]}`.
+- SAE quality-gate thresholds: dead-feature ≤ 0.50, exemplar coherence ≥ 0.30,
+  duplicate-feature ≤ 0.35; all three pass ⇒ use SAE, else k-means fallback.
 
 Technical notes carried forward:
 - Attention is captured by *recomputing* softmax from each block's own qkv
