@@ -32,8 +32,10 @@ where = ["src"]
 include = ["vitreous*"]
 
 [tool.setuptools.package-data]
-# Ship the JSON Schema alongside the package is not needed: schema lives in
-# packages/schema and is resolved relatively. No package data at M0.
+# The pack JSON Schema is vendored next to vitreous.packs and MUST ship in the
+# wheel: build_pack validates every manifest against it at runtime, and a
+# standalone pip install (e.g. on Kaggle) does not include packages/schema.
+"vitreous.packs" = ["pack.schema.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

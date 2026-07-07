@@ -17,3 +17,8 @@ node_modules/
 .env*
 vercel.env
 kaggle/ham10000_live_push.ipynb
+
+# Python build artifacts
+packages/core/build/
+packages/core/*.egg-info/
+**/__pycache__/

@@ -225,10 +225,15 @@ spec_json = dataclasses.asdict(spec) if dataclasses.is_dataclass(spec) else {
 ds_row = sb.table("datasets").upsert(
     {"name": DATASET, "display_name": spec.display_name, "spec": spec_json},
     on_conflict="name").execute().data[0]
+DATASET_ID = ds_row["id"]
+# Idempotent: drop any prior models for this dataset (ON DELETE CASCADE also
+# clears their gallery_images / projections / concept_dictionaries) so re-runs
+# don't accumulate orphan rows the way earlier failed runs did.
+sb.table("models").delete().eq("dataset_id", DATASET_ID).execute()
 md_row = sb.table("models").insert(
-    {"dataset_id": ds_row["id"], "arch": lm.spec.arch,
+    {"dataset_id": DATASET_ID, "arch": lm.spec.arch,
      "metrics": {"val_acc": val_acc, "epochs": EPOCHS}}).execute().data[0]
-DATASET_ID, MODEL_ID = ds_row["id"], md_row["id"]
+MODEL_ID = md_row["id"]
 print("dataset", DATASET_ID, "model", MODEL_ID)
 """))
 

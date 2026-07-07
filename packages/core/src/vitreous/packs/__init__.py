@@ -24,18 +24,28 @@ from .manifest import (
 )
 from .writer import PACK_VERSION, PackReader, PackWriter, build_pack
 
-# Resolve the JSON Schema / fixture from the sibling ``packages/schema`` dir.
-# packages/core/src/vitreous/packs/__init__.py -> parents[4] == repo/packages
-_PACKAGES_DIR = Path(__file__).resolve().parents[4]
-SCHEMA_PATH = _PACKAGES_DIR / "schema" / "schema" / "pack.schema.json"
-FIXTURE_PATH = _PACKAGES_DIR / "schema" / "fixtures" / "manifest.fixture.json"
+# Schema resolution. The single source of truth is ``packages/schema`` in the
+# monorepo, but that directory is NOT installed when ``packages/core`` is pip-
+# installed on its own (e.g. on Kaggle). So a copy is vendored next to this
+# module and shipped as package data; we prefer the vendored copy and fall back
+# to the monorepo source for in-repo development. A drift test keeps them equal.
+_VENDORED_SCHEMA = Path(__file__).resolve().parent / "pack.schema.json"
+_MONOREPO_SCHEMA = (
+    Path(__file__).resolve().parents[4] / "schema" / "schema" / "pack.schema.json"
+)
+SCHEMA_PATH = _VENDORED_SCHEMA if _VENDORED_SCHEMA.exists() else _MONOREPO_SCHEMA
+FIXTURE_PATH = (
+    Path(__file__).resolve().parents[4] / "schema" / "fixtures" / "manifest.fixture.json"
+)
 
 
 def load_pack_schema() -> Dict[str, Any]:
     """Return the pack JSON Schema (draft 2020-12) as a dict.
 
-    The schema in ``packages/schema`` is the single source of truth; the
-    Pydantic models mirror it and are kept honest by the round-trip test.
+    Loads the vendored copy shipped with the package (works after a standalone
+    pip install), falling back to the ``packages/schema`` source of truth in a
+    monorepo checkout. The Pydantic models mirror it and are kept honest by the
+    round-trip + drift tests.
     """
     return json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
 
