@@ -23,7 +23,7 @@
  * and brightens + outlines the matching Gaussians. Hovering a patch in Image
  * Space lights the Gaussian here; hovering here lights the patch there.
  */
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useWorkbench, layerForT } from "@/src/lib/state/store";
 import { resolve } from "@/src/lib/state/resolver";
 import { GaussianFieldRenderer } from "./renderer";
@@ -42,13 +42,17 @@ export function GaussianFieldView() {
   const pinned = useWorkbench((s) => s.pinned);
   const setHover = useWorkbench((s) => s.setHover);
   const togglePin = useWorkbench((s) => s.togglePin);
+  const mode = useWorkbench((s) => s.mode);
 
   const { gaussians, absent, error } = useGaussianFieldData();
+
+  const [is3D, setIs3D] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<GaussianFieldRenderer | null>(null);
   const glFailed = useRef(false);
+  const dragRef = useRef({ x: 0, y: 0, moved: 0, down: false });
 
   // Token idxs lit by the current hover/pinned selection. Layer-independent
   // (we only collect idxs), so this needs no `t` subscription.
@@ -111,6 +115,11 @@ export function GaussianFieldView() {
     rendererRef.current?.setHighlight(litIdx);
   }, [litIdx]);
 
+  // Apply the 2D/3D mode to the renderer (also re-applied when it rebuilds).
+  useEffect(() => {
+    rendererRef.current?.setMode3D(is3D);
+  }, [is3D, gaussians]);
+
   // -- pointer → analytic ellipse hit-test → gaussian EntityRef -------------- //
   function pointerToWorld(e: React.PointerEvent): { x: number; y: number } | null {
     const canvas = canvasRef.current;
@@ -131,6 +140,8 @@ export function GaussianFieldView() {
     return interpAll(gaussians.data, gaussians.steps, gaussians.tokens, t);
   }
 
+  const curLayer = () => layerForT(useWorkbench.getState().t, packIndex?.numLayers ?? 12);
+
   function handleMove(e: React.PointerEvent) {
     const w = pointerToWorld(e);
     const inst = instancesAtNow();
@@ -143,8 +154,7 @@ export function GaussianFieldView() {
       if (hover?.kind === "gaussian") setHover(null);
       return;
     }
-    const layer = layerForT(useWorkbench.getState().t, packIndex?.numLayers ?? 12);
-    setHover({ kind: "gaussian", layer, idx });
+    setHover({ kind: "gaussian", layer: curLayer(), idx });
   }
 
   function handleClick(e: React.PointerEvent) {
@@ -153,8 +163,60 @@ export function GaussianFieldView() {
     if (!w || !inst) return;
     const idx = hitTest(w.x, w.y, inst);
     if (idx < 0) return;
-    const layer = layerForT(useWorkbench.getState().t, packIndex?.numLayers ?? 12);
-    togglePin({ kind: "token", layer, idx });
+    togglePin({ kind: "token", layer: curLayer(), idx });
+  }
+
+  // -- 3D relief: drag-to-orbit + screen-space nearest pick ------------------ //
+  function pick3DAt(e: React.PointerEvent): number {
+    const canvas = canvasRef.current;
+    const r = rendererRef.current;
+    if (!canvas || !r) return -1;
+    const rect = canvas.getBoundingClientRect();
+    return r.pick3D(e.clientX - rect.left, e.clientY - rect.top, rect.width, rect.height);
+  }
+
+  function onPointerDown(e: React.PointerEvent) {
+    if (!is3D) {
+      handleClick(e);
+      return;
+    }
+    dragRef.current = { x: e.clientX, y: e.clientY, moved: 0, down: true };
+    rendererRef.current?.setDragging(true);
+    (e.target as Element).setPointerCapture?.(e.pointerId);
+  }
+
+  function onPointerMove(e: React.PointerEvent) {
+    if (!is3D) {
+      handleMove(e);
+      return;
+    }
+    const d = dragRef.current;
+    if (d.down) {
+      const dx = e.clientX - d.x;
+      const dy = e.clientY - d.y;
+      d.moved += Math.abs(dx) + Math.abs(dy);
+      d.x = e.clientX;
+      d.y = e.clientY;
+      rendererRef.current?.dragOrbit(dx, dy);
+      return;
+    }
+    const idx = pick3DAt(e);
+    if (idx < 0) {
+      if (hover?.kind === "gaussian") setHover(null);
+      return;
+    }
+    setHover({ kind: "gaussian", layer: curLayer(), idx });
+  }
+
+  function onPointerUp(e: React.PointerEvent) {
+    if (!is3D) return;
+    const d = dragRef.current;
+    d.down = false;
+    rendererRef.current?.setDragging(false);
+    if (d.moved < 5) {
+      const idx = pick3DAt(e);
+      if (idx >= 0) togglePin({ kind: "token", layer: curLayer(), idx });
+    }
   }
 
   const ready = !!gaussians && !glFailed.current;
@@ -170,11 +232,36 @@ export function GaussianFieldView() {
     >
       <canvas
         ref={canvasRef}
-        onPointerMove={handleMove}
-        onPointerLeave={() => hover?.kind === "gaussian" && setHover(null)}
-        onPointerDown={handleClick}
-        className="absolute inset-0 h-full w-full"
+        onPointerMove={onPointerMove}
+        onPointerLeave={() => !dragRef.current.down && hover?.kind === "gaussian" && setHover(null)}
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+        className={`absolute inset-0 h-full w-full ${is3D ? "cursor-grab active:cursor-grabbing" : ""}`}
       />
+
+      {/* 2D / 3D relief toggle (S2) */}
+      {ready ? (
+        <div className="absolute right-2 top-2 flex gap-1">
+          {(["2D", "3D"] as const).map((m) => {
+            const active = (m === "3D") === is3D;
+            return (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setIs3D(m === "3D")}
+                title={m === "3D" ? "3D relief — height = attribution" : "2D field"}
+                className={`rounded border px-1.5 py-0.5 text-[10px] uppercase tracking-widest ${
+                  active
+                    ? "border-gauss/60 bg-gauss/10 text-gauss"
+                    : "border-edge text-muted hover:text-readout"
+                }`}
+              >
+                {m}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
 
       {/* honesty label + visual-encoding legend (§7) */}
       {ready ? (
@@ -184,8 +271,13 @@ export function GaussianFieldView() {
             <span className="uppercase tracking-widest">lens, not evidence</span>
           </div>
           <LegendRow color="#c8d3e6" label="opacity = activation" />
-          <LegendRow color="#b5179e" label="glow = attribution" />
+          <LegendRow color="#b5179e" label={is3D ? "glow + height = attribution" : "glow = attribution"} />
           <LegendRow color="#4cc9f0" label="halo = attention-in" />
+          {is3D && mode === "plain" ? (
+            <div className="mt-0.5 max-w-[19ch] text-[9px] leading-tight text-readout/70">
+              height = how much this spot influenced the answer
+            </div>
+          ) : null}
         </div>
       ) : null}
 

@@ -1,36 +1,54 @@
 /**
  * GaussianFieldRenderer — the flagship WebGL view (§7). three.js (pinned dep)
  * quads with an analytic Gaussian-falloff fragment shader and additive glow, on
- * the near-black instrument canvas.
+ * the near-black instrument canvas. Two modes behind a toggle:
+ *
+ *   • 2D (default): the original flat field — every splat's clip position is
+ *     computed directly in the vertex shader (orthographic, z = 0).
+ *   • 3D RELIEF (S2): the field becomes terrain. Each splat sits on a ground
+ *     plane (XZ) at a HEIGHT (Y) equal to its measured `glow` (Chefer
+ *     attribution) — z = zForGlow(glow), a pure function of one measured channel
+ *     (§7 honesty rule; the pane labels the axis). A slow auto-orbiting
+ *     perspective camera reads the terrain; a faint ground grid at Y=0 anchors
+ *     depth. Splats are camera-facing billboards so they stay legible from any
+ *     angle; color/opacity/glow/halo encodings are unchanged.
  *
  * GEOMETRY: NON-INSTANCED BY DESIGN
  * --------------------------------
- * The field is 197 quads baked into ONE ordinary mesh (197×4 = 788 vertices,
- * 197×6 indices). We deliberately do NOT use instanced rendering: the software
- * GL used for headless verification (SwiftShader) mis-handles instanced draws
- * with a RawShaderMaterial (only instance 0 rasterizes / gl_InstanceID unusable),
- * which would make the whole field invisible in CI. 788 vertices is trivially
- * 60 fps, so the non-instanced path costs nothing and renders identically on
- * every GL. Each token's 12 channels are written to its 4 quad vertices.
+ * The field is 197 quads baked into ONE ordinary mesh (197×4 = 788 vertices).
+ * We deliberately do NOT use instanced rendering: the software GL used for
+ * headless verification (SwiftShader) mis-handles instanced draws with a
+ * RawShaderMaterial. 788 vertices is trivially 60 fps.
  *
- * INTERPOLATION LOCATION / PERFORMANCE
- * ------------------------------------
- * Each frame the 12 channels of every token are LERP'd between the two
- * bracketing timeline steps ON THE CPU (interp.ts — the same pure, unit-tested
- * code the hit-test uses) into three compact vertex-attribute buffers, which are
- * re-uploaded (~38 KB/frame; skipped entirely while `t` is unchanged). We do not
- * push all 13 steps into a data texture and interpolate in the vertex shader:
- * vertex-texture-fetch also proved unreliable under SwiftShader, and the channel
- * math is unit-tested independently of the GPU either way. See the M6 report.
+ * CAMERA / PROJECTION
+ * -------------------
+ * BOTH modes compute `gl_Position` manually in the shader, so the scene renders
+ * with a plain identity camera. In 3D the shader multiplies world positions by
+ * `uViewProj`, which the CPU rebuilds each frame from a spherical orbit
+ * (relief.ts `orbitEye`) via a helper PerspectiveCamera used purely for matrix
+ * math. The same matrix drives the ground-grid material and the hover pick.
  *
- * The per-vertex `aHighlight` attribute is uploaded only when the store's
- * hover/pinned selection changes (user-paced, not per-frame).
+ * IDLE MICRO-MOTION (S1)
+ * ----------------------
+ * A global `uShimmer` scalar (a tiny sine breath, identical for every splat)
+ * multiplies body brightness so the field reads as "alive" even while the loop
+ * is paused. It is NOT a data channel — a uniform gain on all splats encodes
+ * nothing; it only signals liveness. The 3D auto-orbit is the 3D equivalent.
  *
- * CLS (token 0) is drawn as a fixed corner gutter marker (a per-vertex flag),
- * not on the image plane.
+ * INTERPOLATION / HIGHLIGHT
+ * -------------------------
+ * The 12 channels of every token are LERP'd on the CPU (interp.ts) into vertex
+ * buffers each frame `t` changes; `aHighlight` uploads only on selection change.
  */
 import * as THREE from "three";
 import type { LoadedGaussians } from "@/src/lib/pack/types";
+import { easeInOut } from "@/src/lib/loop/schedule";
+import {
+  RELIEF_Z_GAIN,
+  nearestScreenIndex,
+  orbitEye,
+  type ScreenPoint,
+} from "./relief";
 import {
   CH,
   CLS_INDEX,
@@ -46,6 +64,15 @@ const GLOW_COLOR = new THREE.Color(0xb5179e); // attribution — the view's acce
 const HALO_COLOR = new THREE.Color(0x4cc9f0); // attention-in — cool cyan ring
 const HIGHLIGHT_COLOR = new THREE.Color(0xe8eefc); // hot selection outline
 const CLS_COLOR = new THREE.Color(0x9fb4ff);
+const GRID_COLOR = new THREE.Color(0x1c2333); // faint edge hue for the ground grid
+
+// 3D orbit constants.
+const ORBIT_RADIUS = 2.7;
+const ORBIT_CENTER: [number, number, number] = [0, 0.16, 0];
+const TOPDOWN_POLAR = 0.12; // near straight-down → reads like the flat 2D view
+const ORBIT_POLAR = 1.02; // settled ~58° tilt showing the terrain relief
+const AUTO_ORBIT_SPEED = 0.16; // rad/sec — the "always-alive" slow spin
+const PICK_RADIUS_PX = 20;
 
 // The four quad corners (unit square in [-1,1]), reused for every token.
 const CORNERS = [
@@ -64,8 +91,13 @@ in vec4 aParam;      // opacity, glow, halo, isCls
 in float aHighlight; // 0/1 selection flag
 
 uniform float uSigma;
-uniform vec2 uFit;   // square-aspect correction
+uniform vec2 uFit;   // square-aspect correction (2D)
 uniform float uMargin;
+uniform float uMode;      // 0 = 2D, 1 = 3D relief
+uniform float uZGain;     // world height per unit glow
+uniform mat4 uViewProj;   // 3D view-projection
+uniform vec3 uCamRight;   // 3D billboard basis
+uniform vec3 uCamUp;
 
 out vec2 vSig;
 out vec3 vColor;
@@ -87,12 +119,27 @@ void main() {
   vec2 local = position.xy * uSigma * vec2(aGeom.z, aGeom.w);
   float c = cos(aColT.w), s = sin(aColT.w);
   vec2 rot = vec2(c * local.x - s * local.y, s * local.x + c * local.y);
-  vec2 world = aGeom.xy + rot;
-  vec2 clipField = vec2(world.x * 2.0 - 1.0, 1.0 - world.y * 2.0) * uMargin;
-  // CLS: fixed small marker in the bottom-left gutter, off the image plane.
-  vec2 clipCls = vec2(-0.92, -0.92) + position.xy * 0.055;
-  vec2 clip = mix(clipField, clipCls, aParam.w);
-  gl_Position = vec4(clip * uFit, 0.0, 1.0);
+
+  if (uMode < 0.5) {
+    // -- 2D: direct clip position (unchanged from M6) --
+    vec2 world = aGeom.xy + rot;
+    vec2 clipField = vec2(world.x * 2.0 - 1.0, 1.0 - world.y * 2.0) * uMargin;
+    vec2 clipCls = vec2(-0.92, -0.92) + position.xy * 0.055;
+    vec2 clip = mix(clipField, clipCls, aParam.w);
+    gl_Position = vec4(clip * uFit, 0.0, 1.0);
+  } else {
+    // -- 3D relief: ground plane = XZ, height Y = measured glow (honesty rule) --
+    float gx = (aGeom.x * 2.0 - 1.0) * uMargin;
+    float gz = (aGeom.y * 2.0 - 1.0) * uMargin;
+    float gy = uZGain * vGlow;
+    vec3 center = vec3(gx, gy, gz);
+    vec3 offset = uCamRight * rot.x + uCamUp * rot.y; // camera-facing billboard
+    // CLS: parked flat at a ground corner, off the terrain.
+    vec3 clsCenter = vec3(-0.92 * uMargin, 0.0, 0.92 * uMargin);
+    vec3 clsOffset = (uCamRight * position.x + uCamUp * position.y) * (uSigma * 0.02);
+    vec3 world3 = mix(center + offset, clsCenter + clsOffset, aParam.w);
+    gl_Position = uViewProj * vec4(world3, 1.0);
+  }
 }
 `;
 
@@ -110,6 +157,7 @@ uniform vec3 uGlowColor;
 uniform vec3 uHaloColor;
 uniform vec3 uHighlightColor;
 uniform vec3 uClsColor;
+uniform float uShimmer; // global liveness breath (NOT a data channel)
 
 out vec4 frag;
 
@@ -118,10 +166,10 @@ void main() {
   float d = sqrt(d2);
   float g = exp(-0.5 * d2);
 
-  // body: patch mean color, brightness ∝ activation (opacity channel). The
-  // scalar gains are a fixed display exposure — relative brightness stays
-  // proportional to the measured channels (the §7 honesty rule).
-  vec3 col = vColor * g * (0.55 + vOpacity * 1.3) * 1.7;
+  // body: patch mean color, brightness ∝ activation. The scalar gains are a
+  // fixed display exposure; uShimmer is a uniform breath applied identically to
+  // every splat (legibility of "alive", encodes no data — §7 honesty rule).
+  vec3 col = vColor * g * (0.55 + vOpacity * 1.3) * 1.7 * uShimmer;
 
   // additive emissive glow ∝ attribution
   col += uGlowColor * (g * g) * vGlow * 2.3;
@@ -144,12 +192,38 @@ void main() {
 }
 `;
 
+const GRID_VERT = /* glsl */ `
+precision highp float;
+in vec3 position;
+uniform mat4 uViewProj;
+void main() { gl_Position = uViewProj * vec4(position, 1.0); }
+`;
+
+const GRID_FRAG = /* glsl */ `
+precision highp float;
+uniform vec3 uColor;
+out vec4 frag;
+void main() { frag = vec4(uColor, 1.0); }
+`;
+
+/** Build the XZ ground-grid line segments at Y=0 spanning ±margin. */
+function buildGrid(margin: number, divisions: number): Float32Array {
+  const lines: number[] = [];
+  for (let i = 0; i <= divisions; i++) {
+    const a = -margin + (2 * margin * i) / divisions;
+    lines.push(-margin, 0, a, margin, 0, a); // along X
+    lines.push(a, 0, -margin, a, 0, margin); // along Z
+  }
+  return new Float32Array(lines);
+}
+
 export class GaussianFieldRenderer {
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
-  private camera = new THREE.Camera();
+  private camera = new THREE.Camera(); // identity — shaders compute clip directly
   private geometry: THREE.BufferGeometry | null = null;
   private material: THREE.RawShaderMaterial;
+  private gridMesh: THREE.LineSegments;
 
   private loaded: LoadedGaussians | null = null;
   private tokens = 0;
@@ -163,6 +237,19 @@ export class GaussianFieldRenderer {
 
   private width = 1;
   private height = 1;
+  private startTime = performance.now();
+  private lastFrame = performance.now();
+
+  // -- 3D relief state --
+  private mode3D = false;
+  private camMath = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
+  private viewProj = new THREE.Matrix4();
+  private camRight = new THREE.Vector3(1, 0, 0);
+  private camUp = new THREE.Vector3(0, 1, 0);
+  private orbitAzimuth = Math.PI * 0.15;
+  private tiltFrac = 0; // 0 = top-down, 1 = full orbit tilt
+  private tiltTarget = 0;
+  private dragging = false;
 
   constructor(canvas: HTMLCanvasElement) {
     this.renderer = new THREE.WebGLRenderer({
@@ -190,12 +277,42 @@ export class GaussianFieldRenderer {
         uSigma: { value: SIGMA_EXTENT },
         uFit: { value: new THREE.Vector2(1, 1) },
         uMargin: { value: FIELD_MARGIN },
+        uMode: { value: 0 },
+        uZGain: { value: RELIEF_Z_GAIN },
+        uViewProj: { value: this.viewProj },
+        uCamRight: { value: this.camRight },
+        uCamUp: { value: this.camUp },
+        uShimmer: { value: 1 },
         uGlowColor: { value: GLOW_COLOR },
         uHaloColor: { value: HALO_COLOR },
         uHighlightColor: { value: HIGHLIGHT_COLOR },
         uClsColor: { value: CLS_COLOR },
       },
     });
+
+    // Ground grid (3D only) — additive faint lines sharing the view-projection.
+    const gridGeo = new THREE.BufferGeometry();
+    gridGeo.setAttribute("position", new THREE.BufferAttribute(buildGrid(FIELD_MARGIN, 10), 3));
+    const gridMat = new THREE.RawShaderMaterial({
+      glslVersion: THREE.GLSL3,
+      vertexShader: GRID_VERT,
+      fragmentShader: GRID_FRAG,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+      blending: THREE.CustomBlending,
+      blendEquation: THREE.AddEquation,
+      blendSrc: THREE.OneFactor,
+      blendDst: THREE.OneFactor,
+      uniforms: {
+        uViewProj: { value: this.viewProj },
+        uColor: { value: GRID_COLOR },
+      },
+    });
+    this.gridMesh = new THREE.LineSegments(gridGeo, gridMat);
+    this.gridMesh.frustumCulled = false;
+    this.gridMesh.visible = false;
+    this.scene.add(this.gridMesh);
   }
 
   /** Bind the field data and build the (non-instanced) 197-quad geometry. */
@@ -242,7 +359,9 @@ export class GaussianFieldRenderer {
     geo.setIndex(new THREE.BufferAttribute(index, 1));
     this.geometry = geo;
 
-    this.scene.clear();
+    // Keep the grid; only (re)create the splat mesh.
+    const stale = this.scene.children.filter((c) => c !== this.gridMesh);
+    for (const c of stale) this.scene.remove(c);
     const mesh = new THREE.Mesh(geo, this.material);
     mesh.frustumCulled = false;
     this.scene.add(mesh);
@@ -253,7 +372,6 @@ export class GaussianFieldRenderer {
   /**
    * CPU-interpolate all tokens at time `t` into the vertex attribute buffers
    * (same value written to each token's 4 vertices) and flag for re-upload.
-   * O(tokens); allocation-free.
    */
   private fill(t: number): void {
     const l = this.loaded;
@@ -316,6 +434,59 @@ export class GaussianFieldRenderer {
     if (t !== this.lastT) this.fill(t);
   }
 
+  /** Toggle 3D relief. Entering 3D animates the tilt from top-down → orbit. */
+  setMode3D(on: boolean): void {
+    if (on === this.mode3D) return;
+    this.mode3D = on;
+    this.material.uniforms.uMode.value = on ? 1 : 0;
+    this.gridMesh.visible = on;
+    if (on) {
+      // "dissolve into terrain": start near-flat (top-down) and tilt up.
+      this.tiltFrac = 0;
+      this.tiltTarget = 1;
+    }
+  }
+
+  isMode3D(): boolean {
+    return this.mode3D;
+  }
+
+  /** Pointer-drag orbit (3D): dx spins azimuth, dy adjusts the tilt. */
+  dragOrbit(dx: number, dy: number): void {
+    this.orbitAzimuth += dx * 0.006;
+    this.tiltTarget = Math.min(1, Math.max(0, this.tiltTarget - dy * 0.004));
+  }
+
+  setDragging(on: boolean): void {
+    this.dragging = on;
+  }
+
+  /**
+   * 3D hover/selection pick: project every splat center with the live
+   * view-projection and return the token idx nearest the pointer on screen
+   * (relief.ts `nearestScreenIndex`). Chosen over an offscreen ID buffer — no
+   * GPU readback — and over the 2D analytic ellipse test, which is plane-only.
+   */
+  pick3D(px: number, py: number, rectW: number, rectH: number): number {
+    if (!this.aGeom || !this.aParam) return -1;
+    const zGain = this.material.uniforms.uZGain.value as number;
+    const v = new THREE.Vector4();
+    const pts: ScreenPoint[] = [];
+    for (let n = 1; n < this.tokens; n++) {
+      // n === CLS_INDEX (0) is parked off-terrain — excluded.
+      const q = n * 4 * 4; // token n's first vertex, 4 floats/vertex
+      const gx = (this.aGeom[q] * 2 - 1) * FIELD_MARGIN;
+      const gz = (this.aGeom[q + 1] * 2 - 1) * FIELD_MARGIN;
+      const gy = zGain * this.aParam[q + 1]; // height = glow (matches shader)
+      v.set(gx, gy, gz, 1).applyMatrix4(this.viewProj);
+      if (v.w <= 0) continue;
+      const sx = (v.x / v.w * 0.5 + 0.5) * rectW;
+      const sy = (1 - (v.y / v.w * 0.5 + 0.5)) * rectH;
+      pts.push({ idx: n, x: sx, y: sy });
+    }
+    return nearestScreenIndex(pts, px, py, PICK_RADIUS_PX);
+  }
+
   /** Resize the drawing buffer and recompute square-aspect fit. */
   resize(width: number, height: number): void {
     this.width = Math.max(1, width);
@@ -327,17 +498,45 @@ export class GaussianFieldRenderer {
     else fit.set(1, aspect);
   }
 
+  /** Advance the perspective orbit and refresh the view-projection uniforms. */
+  private updateCamera(dt: number): void {
+    if (!this.dragging) this.orbitAzimuth += AUTO_ORBIT_SPEED * dt;
+    this.tiltFrac += (this.tiltTarget - this.tiltFrac) * Math.min(1, dt * 3.5);
+    const polar = TOPDOWN_POLAR + (ORBIT_POLAR - TOPDOWN_POLAR) * easeInOut(this.tiltFrac);
+    const eye = orbitEye(ORBIT_RADIUS, this.orbitAzimuth, polar, ORBIT_CENTER);
+    this.camMath.position.set(eye[0], eye[1], eye[2]);
+    this.camMath.up.set(0, 1, 0);
+    this.camMath.lookAt(ORBIT_CENTER[0], ORBIT_CENTER[1], ORBIT_CENTER[2]);
+    this.camMath.aspect = this.width / this.height;
+    this.camMath.updateProjectionMatrix();
+    this.camMath.updateMatrixWorld();
+    this.viewProj.multiplyMatrices(this.camMath.projectionMatrix, this.camMath.matrixWorldInverse);
+    this.camRight.setFromMatrixColumn(this.camMath.matrixWorld, 0);
+    this.camUp.setFromMatrixColumn(this.camMath.matrixWorld, 1);
+  }
+
   render(): void {
     if (!this.geometry) {
       this.renderer.clear();
       return;
     }
+    const now = performance.now();
+    const dt = Math.min((now - this.lastFrame) / 1000, 0.05);
+    this.lastFrame = now;
+
+    // Idle micro-motion: a subtle global breath (legibility, not data).
+    this.material.uniforms.uShimmer.value =
+      1 + 0.05 * Math.sin((now - this.startTime) / 900);
+
+    if (this.mode3D) this.updateCamera(dt);
     this.renderer.render(this.scene, this.camera);
   }
 
   dispose(): void {
     this.geometry?.dispose();
     this.material.dispose();
+    (this.gridMesh.geometry as THREE.BufferGeometry).dispose();
+    (this.gridMesh.material as THREE.Material).dispose();
     this.renderer.dispose();
   }
 }
