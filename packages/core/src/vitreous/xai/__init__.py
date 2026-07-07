@@ -80,7 +80,7 @@ def attention_rollout(trace: Any, *, residual_ratio: float = 0.5) -> Attribution
     if A.dim() != 4:
         raise ValueError(f"expected attention [L,H,T,T], got shape {tuple(A.shape)}")
     L, H, T, _ = A.shape
-    eye = torch.eye(T, dtype=A.dtype)
+    eye = torch.eye(T, dtype=A.dtype, device=A.device)
 
     cumulative: Optional[Any] = None
     rows = []
@@ -119,7 +119,7 @@ def chefer_relevance(
     G = trace.attention_grad.float()  # [L,H,T,T]
     L, H, T, _ = A.shape
 
-    R = torch.eye(T, dtype=A.dtype)
+    R = torch.eye(T, dtype=A.dtype, device=A.device)
     rows = []
     for layer in range(L):
         cam = (G[layer] * A[layer]).clamp(min=0).mean(dim=0)  # [T,T]

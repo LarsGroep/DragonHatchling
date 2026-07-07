@@ -49,17 +49,32 @@ SUPABASE_URL = "https://xjsnvobuulfkiibxkbqu.supabase.co"
 SUPABASE_ANON = ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ"
                  "iI6Inhqc252b2J1dWxma2lpYnhrYnF1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM0"
                  "MDM0NTksImV4cCI6MjA5ODk3OTQ1OX0.0-wHoqghosePf2bZNAAy84q91kE-dyrV6gKqnf20Cos")
-DATA_ROOT = "/kaggle/input/skin-cancer-mnist-ham10000"
 OUTPUT_DIR = "/kaggle/working"
+
+# Auto-detect the dataset mount (Kaggle sometimes nests inputs, e.g.
+# /kaggle/input/datasets/...). The adapter finds the metadata CSV + images
+# recursively under DATA_ROOT, so we just need the right top directory.
+import pathlib
+_inp = pathlib.Path("/kaggle/input")
+DATA_ROOT = "/kaggle/input"
+if _inp.is_dir():
+    print("available inputs:", [d.name for d in _inp.iterdir() if d.is_dir()])
+    for d in sorted(_inp.rglob("*")):
+        if d.is_file() and "metadata" in d.name.lower() and d.suffix == ".csv" \
+           and d.name.lower().startswith("ham"):
+            DATA_ROOT = str(d.parent)
+            break
+print("DATA_ROOT:", DATA_ROOT)
 """))
 
 cells.append(CODE("""
 # ─── Install the vitreous core package (single code path with the app) ──
+# PEP 508: extras go with the name, before the direct-reference URL.
 import subprocess, sys
 REPO   = "https://github.com/LarsGroep/DragonHatchling.git"
-BRANCH = "claude/explainable-vit-research-qadg2i"
+BRANCH = "main"
 subprocess.run([sys.executable, "-m", "pip", "install", "-q",
-                f"git+{REPO}@{BRANCH}#subdirectory=packages/core[ml]",
+                f"vitreous[ml] @ git+{REPO}@{BRANCH}#subdirectory=packages/core",
                 "supabase"], check=True)
 """))
 
@@ -89,6 +104,14 @@ try:
     print("created public bucket 'packs'")
 except Exception as e:
     print("bucket 'packs' ready (", str(e)[:60], ")")
+
+# Preflight: fail HERE with a clear message if the migration wasn't applied.
+try:
+    sb.table("datasets").select("id").limit(1).execute()
+    print("tables OK")
+except Exception:
+    raise RuntimeError("Tables missing — run supabase/migrations/0001_init.sql "
+                       "in the Supabase SQL editor first (step 4 above).") from None
 """))
 
 cells.append(CODE("""
@@ -156,28 +179,31 @@ if DO_CONCEPTS:
     from sklearn.cluster import KMeans
     inst = Instrumenter(model)
     bank, refs = [], []
-    train_samples = adapter.load(DATA_ROOT, "train")[:SAE_MAX_IMAGES]
+    train_samples = list(adapter.load(DATA_ROOT, "train"))[:SAE_MAX_IMAGES]
     pre = adapter.preprocess()
     for s in train_samples:
         x = pre(Image.open(s.image).convert("RGB")).unsqueeze(0).to(device)
-        tok = inst.capture(x).tokens[DEFAULT_LAYER][0].cpu().numpy()   # [197,384]
-        for ti in range(1, tok.shape[0]):                              # skip CLS
+        tok = inst.capture(x).tokens[DEFAULT_LAYER].numpy()   # [197,384] (Trace is CPU)
+        for ti in range(1, tok.shape[0]):                     # skip CLS (token 0)
             bank.append(tok[ti])
             refs.append(ExemplarRef(image_id=s.image_id, token_idx=ti,
                                     activation=float(np.linalg.norm(tok[ti])),
                                     class_label=spec.class_names[s.label]))
     acts = np.stack(bank).astype("float32")
     print("token bank:", acts.shape)
+    torch.cuda.empty_cache()
     try:
         sae, stats = train_sae(acts, epochs=40, seed=SEED, device=device)
         provider = SAEConceptProvider(sae, layer=DEFAULT_LAYER)
         dic = build_concept_dictionary(provider, acts, refs, num_classes=spec.num_classes,
                                        model=MODEL, dataset=DATASET, layer=DEFAULT_LAYER)
         rep = quality_gate(stats, dic)
-        concept_quality = {"dead_rate": rep.dead_rate, "coherence": rep.exemplar_coherence,
-                           "duplicate_rate": rep.duplicate_rate, "use_sae": rep.use_sae}
+        concept_quality = {"dead_rate": rep.dead_feature_rate,
+                           "coherence": rep.exemplar_coherence,
+                           "duplicate_rate": rep.duplicate_feature_rate,
+                           "use_sae": rep.use_sae}
         if not rep.use_sae:
-            raise RuntimeError("quality gate failed -> k-means")
+            raise RuntimeError(f"quality gate failed ({rep.reasons}) -> k-means")
     except Exception as e:
         print("SAE fallback:", str(e)[:80])
         km = KMeans(n_clusters=256, random_state=SEED, n_init=4).fit(acts)

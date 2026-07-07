@@ -214,9 +214,9 @@ class Instrumenter:
                 attention = attention.squeeze(1)  # [L, H, T, T]
 
             trace = Trace(
-                attention=attention.contiguous(),
-                tokens=tokens.contiguous(),
-                logits=logits.detach(),
+                attention=attention.contiguous().cpu(),
+                tokens=tokens.contiguous().cpu(),
+                logits=logits.detach().cpu(),
                 timings={"forward_ms": forward_ms},
                 meta={
                     "num_layers": n_layers,
@@ -323,9 +323,9 @@ class Instrumenter:
                 grads = grads.squeeze(1)
 
             trace = Trace(
-                attention=attention.contiguous(),
-                attention_grad=grads.contiguous(),
-                logits=logits.detach(),
+                attention=attention.contiguous().cpu(),
+                attention_grad=grads.contiguous().cpu(),
+                logits=logits.detach().cpu(),
                 timings={"forward_ms": forward_ms},
                 meta={
                     "num_layers": n_layers,
