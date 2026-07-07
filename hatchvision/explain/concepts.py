@@ -123,35 +123,45 @@ def probe_activations(
     """
     if layers is None:
         layers = model.hebbian_layers()
-    captured: Dict[str, List[torch.Tensor]] = {name: [] for name in layers}
-
-    def make_hook(name):
-        def hook(_m, _i, out):
-            a = torch.relu(HebbianFeatureMemory._pool(out.detach().float()))
-            captured[name].append(a.cpu())
-        return hook
-
-    handles = [m.register_forward_hook(make_hook(n)) for n, m in layers.items()]
+    # Collect one aggregated [B, units] tensor per forward pass.  Some
+    # backbones (e.g. BDH) call the same module multiple times per pass;
+    # hooks fire once per call, so we average the fires within each pass
+    # rather than naively concatenating and inflating the image count.
+    per_pass: Dict[str, List[torch.Tensor]] = {name: [] for name in layers}
     device = next(model.parameters()).device
     was_training = model.training
     model.eval()
     try:
-        pause = memory.paused() if memory is not None else None
-        if pause:
-            pause.__enter__()
+        ctx = memory.paused() if memory is not None else None
+        if ctx:
+            ctx.__enter__()
         try:
             for start in range(0, probe_images.shape[0], batch_size):
-                model(probe_images[start : start + batch_size].to(device))
+                pass_chunks: Dict[str, List[torch.Tensor]] = {n: [] for n in layers}
+
+                def make_hook(name):
+                    def hook(_m, _i, out):
+                        a = torch.relu(HebbianFeatureMemory._pool(out.detach().float()))
+                        pass_chunks[name].append(a.cpu())
+                    return hook
+
+                handles = [m.register_forward_hook(make_hook(n)) for n, m in layers.items()]
+                try:
+                    model(probe_images[start : start + batch_size].to(device))
+                finally:
+                    for h in handles:
+                        h.remove()
+                for name, chunks in pass_chunks.items():
+                    # Average across repeated hook fires within this pass → [B, units]
+                    per_pass[name].append(torch.stack(chunks).mean(dim=0))
         finally:
-            if pause:
-                pause.__exit__(None, None, None)
+            if ctx:
+                ctx.__exit__(None, None, None)
     finally:
-        for h in handles:
-            h.remove()
         if was_training:
             model.train()
 
-    acts = {name: torch.cat(chunks) for name, chunks in captured.items()}
+    acts = {name: torch.cat(batches) for name, batches in per_pass.items()}
     if memory is not None:
         for name, a in acts.items():
             st = memory.stats.get(name)

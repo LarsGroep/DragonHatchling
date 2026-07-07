@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence
 
 import torch
 from torch import nn
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, WeightedRandomSampler
 
 from hatchvision.hebbian.memory import HebbianFeatureMemory
 
@@ -19,6 +19,31 @@ class TrainConfig:
     weight_decay: float = 5e-4
     device: str = ""            # "" = auto
     log_every: int = 50
+    # Per-class loss weights: pass torch.Tensor([w0, w1, ...]) to upweight
+    # rare classes. Use compute_class_weights() to derive from label counts.
+    class_weights: Optional[torch.Tensor] = None
+    # Cosine annealing: restarts LR to lr every `lr_cycle_epochs` epochs.
+    # 0 = fixed LR (default). Good for fine-tuning on imbalanced medical data.
+    lr_cycle_epochs: int = 0
+
+
+def compute_class_weights(
+    labels: Sequence[int], num_classes: int, method: str = "inv_freq"
+) -> torch.Tensor:
+    """Derive per-class loss weights from a sequence of integer class labels.
+
+    ``method="inv_freq"`` (default): weight_k = N / (num_classes * count_k),
+    matching scikit-learn's "balanced" mode. Use for highly imbalanced datasets
+    like HAM10000 where the majority class outnumbers rare ones by 50-70x.
+    """
+    counts = torch.zeros(num_classes)
+    for lbl in labels:
+        counts[lbl] += 1
+    counts = counts.clamp(min=1)
+    if method == "inv_freq":
+        n = counts.sum()
+        return (n / (num_classes * counts)).float()
+    raise ValueError(f"Unknown method {method!r}; use 'inv_freq'")
 
 
 def resolve_device(requested: str = "") -> torch.device:
@@ -49,10 +74,18 @@ class Trainer:
         self.device = resolve_device(config.device)
         self.model = model.to(self.device)
         self.memory = hebbian_memory
-        self.criterion = nn.CrossEntropyLoss()
+        weights = config.class_weights
+        if weights is not None:
+            weights = weights.to(self.device)
+        self.criterion = nn.CrossEntropyLoss(weight=weights)
         self.optimizer = torch.optim.AdamW(
             model.parameters(), lr=config.lr, weight_decay=config.weight_decay
         )
+        self.scheduler: Optional[torch.optim.lr_scheduler.LRScheduler] = None
+        if config.lr_cycle_epochs > 0:
+            self.scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+                self.optimizer, T_max=config.lr_cycle_epochs, eta_min=config.lr * 0.01
+            )
         self.history: Dict[str, List[float]] = {
             "train_loss": [], "train_acc": [], "val_loss": [], "val_acc": [],
         }
@@ -117,4 +150,6 @@ class Trainer:
                 self.history["val_acc"].append(va_acc)
                 msg += f" | val loss {va_loss:.4f} acc {va_acc:.3f}"
             print(msg)
+            if self.scheduler is not None:
+                self.scheduler.step()
         return self.history

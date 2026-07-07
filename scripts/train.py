@@ -8,6 +8,18 @@ The universal workflow — same command, any registered dataset::
     python scripts/train.py --dataset cub200 --root data/cub --backbone hybrid \
         --epochs 15 --export-bundle exports/cub200
 
+Skin lesion datasets (HAM10000 from Kaggle, ISIC imagefolder)::
+
+    # HAM10000: raw CSV + image directories from Kaggle
+    #   download: skin-lesion-analysis-toward-melanoma-detection
+    #   place HAM10000_metadata.csv + HAM10000_images_part_1/ + part_2/ in data/ham10000/
+    python scripts/train.py --dataset ham10000 --root data/ham10000 --backbone hybrid \
+        --epochs 20 --n-concepts 16 --export-bundle webapp
+
+    # ISIC / any pre-organized dermoscopy dataset as train/<class>/ + val/<class>/
+    python scripts/train.py --dataset isic --root data/isic --backbone hybrid \
+        --epochs 20 --export-bundle webapp
+
 ``--export-bundle DIR`` writes everything the web app needs into DIR:
 ``graph.json`` (Hebbian concept graph, attribute-grounded when the dataset
 has attributes), ``model.onnx`` (with activation outputs),
