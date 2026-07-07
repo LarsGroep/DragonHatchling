@@ -16,3 +16,4 @@ node_modules/
 *.local
 .env*
 vercel.env
+kaggle/ham10000_live_push.ipynb
