@@ -31,24 +31,37 @@ export interface WorkbenchState {
   pinned: EntityRef[];
   method: AttributionMethod;
 
-  // -- transport (§12) ---------------------------------------------------- //
-  playing: boolean;
+  // -- presentation ------------------------------------------------------- //
+  /** Plain (lay, guided) vs Expert (methods, layers). Default plain. */
+  mode: "plain" | "expert";
+
+  // -- transport + ambient loop (§12, S1) --------------------------------- //
+  playing: boolean; // ambient loop running (auto-started on image select)
   speed: number;
+  /** Current narrative stage index (published by the LoopController). */
+  loopStage: number;
+  /** Wall-clock (ms) of the last user transport interaction; drives idle-resume. */
+  lastInteraction: number;
 
   // -- actions ------------------------------------------------------------ //
   selectImage(datasetId: string, image: GalleryImageRow): Promise<void>;
   setT(t: number): void;
+  /** User-driven timeline change (scrub/step): sets t, pauses, marks interaction. */
+  scrub(t: number): void;
   setHover(ref: EntityRef | null): void;
   pin(ref: EntityRef): void;
   unpin(ref: EntityRef): void;
   togglePin(ref: EntityRef): void;
   clearPins(): void;
   setMethod(method: AttributionMethod): void;
+  setMode(mode: "plain" | "expert"): void;
+  toggleMode(): void;
   play(): void;
   pause(): void;
   togglePlay(): void;
   stepLayer(delta: number): void;
   seekLayer(layer: number): void;
+  setLoopStage(stage: number): void;
 }
 
 /** Effective (integer) attention layer for the current fractional t. */
@@ -71,8 +84,12 @@ export const useWorkbench = create<WorkbenchState>((set, get) => ({
   pinned: [],
   method: "chefer",
 
+  mode: "plain",
+
   playing: false,
   speed: 1,
+  loopStage: 0,
+  lastInteraction: 0,
 
   async selectImage(datasetId, image) {
     // Guard against races: only the latest selection may commit.
@@ -95,7 +112,17 @@ export const useWorkbench = create<WorkbenchState>((set, get) => ({
       const concepts = await client.loadConcepts(manifest);
       const packIndex = buildPackIndex(manifest, concepts);
       if ((get() as unknown as { _sel?: string })._sel !== token) return; // superseded
-      set({ client, manifest, packIndex, loading: false, t: 0 });
+      // Auto-start the ambient loop: the workbench simply IS alive (S1).
+      set({
+        client,
+        manifest,
+        packIndex,
+        loading: false,
+        t: 0,
+        loopStage: 0,
+        playing: true,
+        lastInteraction: 0,
+      });
     } catch (err) {
       if ((get() as unknown as { _sel?: string })._sel !== token) return;
       set({
@@ -111,6 +138,12 @@ export const useWorkbench = create<WorkbenchState>((set, get) => ({
   setT(t) {
     const L = get().packIndex?.numLayers ?? 12;
     set({ t: Math.max(0, Math.min(L, t)) });
+  },
+
+  scrub(t) {
+    const L = get().packIndex?.numLayers ?? 12;
+    // A scrub is a user interaction: pause the loop and arm the idle-resume timer.
+    set({ t: Math.max(0, Math.min(L, t)), playing: false, lastInteraction: Date.now() });
   },
 
   setHover(ref) {
@@ -144,24 +177,44 @@ export const useWorkbench = create<WorkbenchState>((set, get) => ({
     set({ method });
   },
 
+  setMode(mode) {
+    set({ mode });
+  },
+  toggleMode() {
+    set((s) => ({ mode: s.mode === "plain" ? "expert" : "plain" }));
+  },
+
   play() {
-    set({ playing: true });
+    set({ playing: true, lastInteraction: 0 });
   },
   pause() {
-    set({ playing: false });
+    set({ playing: false, lastInteraction: Date.now() });
   },
   togglePlay() {
-    set((s) => ({ playing: !s.playing }));
+    set((s) => ({ playing: !s.playing, lastInteraction: Date.now() }));
   },
 
   stepLayer(delta) {
     const L = get().packIndex?.numLayers ?? 12;
     const cur = Math.round(get().t);
-    set({ t: Math.max(0, Math.min(L, cur + delta)), playing: false });
+    // Stepping is a user interaction: pause + arm idle-resume.
+    set({
+      t: Math.max(0, Math.min(L, cur + delta)),
+      playing: false,
+      lastInteraction: Date.now(),
+    });
   },
 
   seekLayer(layer) {
     const L = get().packIndex?.numLayers ?? 12;
-    set({ t: Math.max(0, Math.min(L, layer)) });
+    set({
+      t: Math.max(0, Math.min(L, layer)),
+      playing: false,
+      lastInteraction: Date.now(),
+    });
+  },
+
+  setLoopStage(stage) {
+    if (get().loopStage !== stage) set({ loopStage: stage });
   },
 }));

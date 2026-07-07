@@ -10,21 +10,52 @@
  * transport bar. Image Space is live at M5; the other three panes are
  * store-driven SyncedPlaceholders proving the four-way link until M6/M7.
  */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { DatasetRow, GalleryImageRow } from "@/src/lib/db/types";
 import { getDb } from "@/src/lib/db/client";
 import { useWorkbench } from "@/src/lib/state/store";
-import { WorkbenchPanel } from "@/components/WorkbenchPanel";
+import { LOOP_STAGES, type FeaturePane } from "@/src/lib/loop/schedule";
+import { WorkbenchPanel, type PanelAccent } from "@/components/WorkbenchPanel";
 import { WorkbenchHeader } from "./WorkbenchHeader";
 import { GalleryStrip } from "./GalleryStrip";
 import { Transport } from "./Transport";
+import { LoopController } from "./LoopController";
+import { LoopCaption } from "./LoopCaption";
 import { ImageSpaceView } from "./views/ImageSpace";
 import { GaussianFieldView } from "./views/GaussianField";
 import { GraphView } from "./views/GraphView";
 import { EmbeddingView } from "./views/EmbeddingView";
 
-/** Timeline layers swept per second at 1× speed. */
-const LAYERS_PER_SEC = 2;
+/**
+ * The four panes, with Expert (instrument) titles and Plain (lay) titles. The
+ * ambient loop spotlights `feature` panes stage-by-stage (S1); `accent` picks
+ * the wayfinding hue and the vignette color.
+ */
+const PANES: {
+  accent: PanelAccent;
+  feature: FeaturePane;
+  milestone: string;
+  expertTitle: string;
+  plainTitle: string;
+}[] = [
+  { accent: "image", feature: "image", milestone: "M5", expertTitle: "IMAGE SPACE", plainTitle: "The photo & the evidence" },
+  { accent: "gauss", feature: "gauss", milestone: "M6", expertTitle: "GAUSSIAN FEATURE FIELD", plainTitle: "What the model senses" },
+  { accent: "graph", feature: "graph", milestone: "M7", expertTitle: "INTERACTION GRAPH", plainTitle: "The model's neurons" },
+  { accent: "latent", feature: "latent", milestone: "M7", expertTitle: "LATENT EMBEDDINGS", plainTitle: "The model's map of ideas" },
+];
+
+const PANE_CONTENT = (accent: PanelAccent, classNames?: string[]) => {
+  switch (accent) {
+    case "image":
+      return <ImageSpaceView classNames={classNames} />;
+    case "gauss":
+      return <GaussianFieldView />;
+    case "graph":
+      return <GraphView />;
+    case "latent":
+      return <EmbeddingView />;
+  }
+};
 
 export function Workbench() {
   const [datasets, setDatasets] = useState<DatasetRow[]>([]);
@@ -33,6 +64,9 @@ export function Workbench() {
   const [bootError, setBootError] = useState<string | null>(null);
 
   const selectImage = useWorkbench((s) => s.selectImage);
+  const mode = useWorkbench((s) => s.mode);
+  const loopStage = useWorkbench((s) => s.loopStage);
+  const featurePane = LOOP_STAGES[Math.min(loopStage, LOOP_STAGES.length - 1)].feature;
 
   // -- initial load: datasets → first dataset's gallery → first image ------ //
   useEffect(() => {
@@ -74,28 +108,7 @@ export function Workbench() {
     [selectImage],
   );
 
-  // -- rAF replay clock ---------------------------------------------------- //
-  const raf = useRef<number | null>(null);
-  const last = useRef<number>(0);
-  useEffect(() => {
-    function tick(now: number) {
-      const st = useWorkbench.getState();
-      const L = st.packIndex?.numLayers ?? 12;
-      if (st.playing) {
-        const dt = last.current ? (now - last.current) / 1000 : 0;
-        let nt = st.t + dt * LAYERS_PER_SEC * st.speed;
-        if (nt >= L) nt = 0; // loop
-        st.setT(nt);
-      }
-      last.current = now;
-      raf.current = requestAnimationFrame(tick);
-    }
-    raf.current = requestAnimationFrame(tick);
-    return () => {
-      if (raf.current != null) cancelAnimationFrame(raf.current);
-      last.current = 0;
-    };
-  }, []);
+  // The ambient replay clock now lives in <LoopController/> (S1).
 
   // -- global keyboard transport ------------------------------------------ //
   useEffect(() => {
@@ -142,31 +155,26 @@ export function Workbench() {
         </div>
       ) : null}
 
-      <main className="grid min-h-0 flex-1 grid-cols-1 grid-rows-[repeat(4,minmax(180px,1fr))] gap-3 p-3 lg:grid-cols-2 lg:grid-rows-2">
-        <WorkbenchPanel title="IMAGE SPACE" accent="image" milestone="M5" hint="">
-          <div className="h-full w-full">
-            <ImageSpaceView classNames={activeDataset?.class_names} />
-          </div>
-        </WorkbenchPanel>
+      <div className="relative min-h-0 flex-1">
+        <main className="grid h-full min-h-0 grid-cols-1 grid-rows-[repeat(4,minmax(180px,1fr))] gap-3 p-3 lg:grid-cols-2 lg:grid-rows-2">
+          {PANES.map((p) => (
+            <WorkbenchPanel
+              key={p.accent}
+              title={mode === "plain" ? p.plainTitle : p.expertTitle}
+              accent={p.accent}
+              milestone={p.milestone}
+              hint=""
+              featured={featurePane === p.feature}
+            >
+              <div className="h-full w-full">{PANE_CONTENT(p.accent, activeDataset?.class_names)}</div>
+            </WorkbenchPanel>
+          ))}
+        </main>
 
-        <WorkbenchPanel title="GAUSSIAN FEATURE FIELD" accent="gauss" milestone="M6" hint="">
-          <div className="h-full w-full">
-            <GaussianFieldView />
-          </div>
-        </WorkbenchPanel>
-
-        <WorkbenchPanel title="INTERACTION GRAPH" accent="graph" milestone="M7" hint="">
-          <div className="h-full w-full">
-            <GraphView />
-          </div>
-        </WorkbenchPanel>
-
-        <WorkbenchPanel title="LATENT EMBEDDINGS" accent="latent" milestone="M7" hint="">
-          <div className="h-full w-full">
-            <EmbeddingView />
-          </div>
-        </WorkbenchPanel>
-      </main>
+        {/* Ambient inference replay (S1): narrative strip + seamless-loop veil. */}
+        <LoopCaption />
+        <LoopController />
+      </div>
 
       <footer className="px-3 pb-3">
         <Transport />

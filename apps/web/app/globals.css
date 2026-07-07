@@ -6,6 +6,41 @@
   color-scheme: dark;
 }
 
+/* Ambient-loop motion (S1). */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Featured-pane vignette: a gentle breathing glow (never a hard on/off). The
+   accent color is supplied per-pane via the --vig CSS variable. */
+@keyframes vignettePulse {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--vig) 45%, transparent),
+      inset 0 0 34px -6px color-mix(in srgb, var(--vig) 30%, transparent),
+      0 0 22px -8px color-mix(in srgb, var(--vig) 55%, transparent);
+  }
+  50% {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--vig) 80%, transparent),
+      inset 0 0 60px -4px color-mix(in srgb, var(--vig) 55%, transparent),
+      0 0 40px -6px color-mix(in srgb, var(--vig) 80%, transparent);
+  }
+}
+
+.pane-featured {
+  animation: vignettePulse 3.2s ease-in-out infinite;
+  border-color: color-mix(in srgb, var(--vig) 55%, transparent) !important;
+}
+
 html,
 body {
   height: 100%;

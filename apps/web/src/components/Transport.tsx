@@ -37,8 +37,7 @@ export function Transport() {
   const packIndex = useWorkbench((s) => s.packIndex);
   const t = useWorkbench((s) => s.t);
   const playing = useWorkbench((s) => s.playing);
-  const speed = useWorkbench((s) => s.speed);
-  const setT = useWorkbench((s) => s.setT);
+  const scrub = useWorkbench((s) => s.scrub);
   const seekLayer = useWorkbench((s) => s.seekLayer);
   const stepLayer = useWorkbench((s) => s.stepLayer);
   const togglePlay = useWorkbench((s) => s.togglePlay);
@@ -50,11 +49,19 @@ export function Transport() {
   return (
     <div className="flex items-center gap-4 rounded-md border border-edge bg-panel-hi px-3 py-2">
       <div className="flex items-center gap-1.5">
+        {/* Ambient-loop liveness lamp: lit while the workbench is replaying (S1). */}
+        <span
+          className={`mr-1 inline-block h-2 w-2 rounded-full ${
+            playing ? "animate-pulse bg-latent shadow-glow shadow-latent" : "bg-muted/50"
+          }`}
+          title={playing ? "Live — replaying continuously" : "Paused — resumes when idle"}
+          aria-hidden
+        />
         <Btn glyph="⏮" label="First layer" onClick={() => seekLayer(0)} disabled={!ready} />
         <Btn glyph="◀" label="Step back" onClick={() => stepLayer(-1)} disabled={!ready} />
         <Btn
           glyph={playing ? "❚❚" : "▶"}
-          label={playing ? "Pause" : "Play"}
+          label={playing ? "Pause loop" : "Resume loop"}
           onClick={togglePlay}
           disabled={!ready}
         />
@@ -78,7 +85,7 @@ export function Transport() {
             step={0.01}
             value={t}
             disabled={!ready}
-            onChange={(e) => setT(Number(e.target.value))}
+            onChange={(e) => scrub(Number(e.target.value))}
             aria-label="Timeline scrub"
             className="absolute inset-0 w-full cursor-pointer appearance-none bg-transparent accent-image disabled:cursor-not-allowed"
           />
@@ -93,8 +100,6 @@ export function Transport() {
         <span className="tabular-nums rounded border border-edge bg-panel px-1.5 py-0.5 text-readout">
           {Math.round(t)}
         </span>
-        <span className="text-muted/60">·</span>
-        <span className="tabular-nums">{speed.toFixed(1)}×</span>
       </div>
     </div>
   );

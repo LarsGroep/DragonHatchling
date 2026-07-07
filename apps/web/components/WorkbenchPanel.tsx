@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 export type PanelAccent = "image" | "gauss" | "graph" | "latent";
 
@@ -16,6 +16,14 @@ const ACCENT_DOT: Record<PanelAccent, string> = {
   latent: "bg-latent",
 };
 
+/** Hex accent for the featured-pane vignette CSS variable (mirrors tailwind). */
+const ACCENT_HEX: Record<PanelAccent, string> = {
+  image: "#4cc9f0",
+  gauss: "#b5179e",
+  graph: "#f0a04c",
+  latent: "#57e389",
+};
+
 interface WorkbenchPanelProps {
   /** Short view name, e.g. "IMAGE SPACE". */
   title: string;
@@ -25,6 +33,8 @@ interface WorkbenchPanelProps {
   milestone: string;
   /** One-line description of what will render here. */
   hint: string;
+  /** True while the ambient loop's current stage is "about" this pane (S1). */
+  featured?: boolean;
   children?: ReactNode;
 }
 
@@ -38,11 +48,15 @@ export function WorkbenchPanel({
   accent,
   milestone,
   hint,
+  featured = false,
   children,
 }: WorkbenchPanelProps) {
   return (
     <section
-      className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-md border border-edge bg-panel"
+      className={`flex min-h-0 min-w-0 flex-col overflow-hidden rounded-md border border-edge bg-panel transition-colors duration-500 ${
+        featured ? "pane-featured" : ""
+      }`}
+      style={featured ? ({ "--vig": ACCENT_HEX[accent] } as CSSProperties) : undefined}
       aria-label={title}
     >
       <header className="flex items-center justify-between border-b border-edge bg-panel-hi px-3 py-2">
