@@ -13,3 +13,7 @@ __pycache__/
 node_modules/
 .next/
 .vercel/
+*.local
+.env*
+vercel.env
+kaggle/ham10000_live_push.ipynb
