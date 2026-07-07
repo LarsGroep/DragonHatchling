@@ -617,6 +617,153 @@ class OxfordPetAdapter(DatasetAdapter):
         return self._train_transform()
 
 
+# HAM10000 diagnosis codes -> human-readable lesion names (7 classes).
+_HAM10000_DX = {
+    "akiec": "Actinic keratoses",
+    "bcc": "Basal cell carcinoma",
+    "bkl": "Benign keratosis",
+    "df": "Dermatofibroma",
+    "mel": "Melanoma",
+    "nv": "Melanocytic nevi",
+    "vasc": "Vascular lesion",
+}
+# Stable class order (sorted by code) so label indices are reproducible.
+_HAM10000_CODES = sorted(_HAM10000_DX)  # akiec, bcc, bkl, df, mel, nv, vasc
+_HAM10000_CLASSES = [_HAM10000_DX[c] for c in _HAM10000_CODES]
+_HAM10000_COLORS = [
+    "#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#42d4f4",
+]
+
+
+def _read_csv_rows(path: Path) -> List[Dict[str, str]]:
+    """Read a CSV into a list of dict rows (stdlib csv, utf-8)."""
+    import csv
+
+    with path.open("r", encoding="utf-8", newline="") as fh:
+        return list(csv.DictReader(fh))
+
+
+@register_dataset("ham10000")
+class HAM10000Adapter(DatasetAdapter):
+    """HAM10000 dermatoscopy skin lesions (7 diagnostic classes).
+
+    The Kaggle ``kmader/skin-cancer-mnist-ham10000`` layout is a metadata CSV
+    plus two image folders::
+
+        root/HAM10000_metadata.csv
+        root/HAM10000_images_part_1/*.jpg
+        root/HAM10000_images_part_2/*.jpg
+
+    Each row has an ``image_id`` (the jpg stem), a ``dx`` diagnosis code, and a
+    ``lesion_id`` — several images can belong to the same physical lesion. The
+    split is **grouped by ``lesion_id``** (a lesion's images all land in one
+    split) so near-duplicate views of the same lesion never leak across
+    train/val/test. Grouping is stratified by the lesion's diagnosis and
+    seeded, so proportions are stable and reproducible.
+
+    CSV/folder names are auto-detected case-insensitively; if the two
+    ``part_*`` folders are absent the adapter falls back to any ``*.jpg`` found
+    recursively under ``root``.
+    """
+
+    spec = DatasetSpec(
+        name="ham10000",
+        display_name="HAM10000 — dermatoscopy skin lesions",
+        num_classes=7,
+        image_size=224,
+        channels=3,
+        class_names=list(_HAM10000_CLASSES),
+        class_colors=list(_HAM10000_COLORS),
+        license="CC BY-NC 4.0",
+        citation="Tschandl et al. 2018",
+        kaggle_sources=["kmader/skin-cancer-mnist-ham10000"],
+    )
+
+    def _find_metadata(self, root: Path) -> Path:
+        for p in sorted(root.rglob("*.csv")):
+            if "metadata" in p.name.lower():
+                return p
+        raise FileNotFoundError(f"HAM10000 metadata CSV not found under {root}")
+
+    def _index_images(self, root: Path) -> Dict[str, Path]:
+        """Map image_id (jpg stem) -> path, across both part folders."""
+        by_id: Dict[str, Path] = {}
+        for p in root.rglob("*"):
+            if p.is_file() and p.suffix.lower() in IMAGE_EXTS:
+                by_id.setdefault(p.stem, p)
+        return by_id
+
+    def load(self, root: str, split: str = "all") -> List[Sample]:
+        root_path = Path(root)
+        if not root_path.is_dir():
+            raise FileNotFoundError(f"HAM10000 root not found: {root}")
+
+        rows = _read_csv_rows(self._find_metadata(root_path))
+        if not rows:
+            raise FileNotFoundError("HAM10000 metadata CSV is empty")
+        by_id = self._index_images(root_path)
+        class_index = {code: i for i, code in enumerate(_HAM10000_CODES)}
+
+        # Determine each lesion's diagnosis (stratify grouped split by dx).
+        lesion_dx: Dict[str, str] = {}
+        for r in rows:
+            lesion = r.get("lesion_id") or r["image_id"]
+            lesion_dx.setdefault(lesion, r["dx"])
+
+        # Assign a split per lesion, stratified by dx and seeded.
+        policy = self.splits()
+        by_dx: Dict[str, List[str]] = {}
+        for lesion, dx in lesion_dx.items():
+            by_dx.setdefault(dx, []).append(lesion)
+        lesion_split: Dict[str, str] = {}
+        for dx, lesions in by_dx.items():
+            lesion_split.update(deterministic_splits(lesions, policy, salt=dx))
+
+        samples: List[Sample] = []
+        for r in rows:
+            dx = r["dx"]
+            if dx not in class_index:
+                continue  # unknown code — skip defensively
+            img_id = r["image_id"]
+            path = by_id.get(img_id)
+            if path is None:
+                continue  # metadata row with no image on disk
+            lesion = r.get("lesion_id") or img_id
+            samples.append(
+                Sample(
+                    image=str(path),
+                    label=class_index[dx],
+                    split=lesion_split[lesion],
+                    image_id=img_id,
+                    meta={
+                        "class_name": _HAM10000_DX[dx],
+                        "dx": dx,
+                        "lesion_id": lesion,
+                        "path": str(path),
+                    },
+                )
+            )
+        if not samples:
+            raise FileNotFoundError(
+                f"no HAM10000 samples matched between CSV and images under {root}"
+            )
+        return _filter_split(samples, split)
+
+    def splits(self) -> SplitPolicy:
+        # Grouped split keyed on lesion_id — declared for downstream tooling;
+        # the grouping is applied per-lesion in load().
+        return SplitPolicy(fractions=(0.8, 0.1, 0.1), seed=1234, group_key="lesion_id")
+
+    def preprocess(self) -> Transform:
+        return self._eval_transform()
+
+    def augment(self) -> Transform:
+        return self._train_transform()
+
+    def viz_hooks(self) -> VizHooks:
+        return VizHooks(extras={"palette": list(self.spec.class_colors)})
+
+
 @register_dataset("imagefolder")
 class ImageFolderAdapter(DatasetAdapter):
     """Generic ImageFolder adapter.
@@ -821,6 +968,28 @@ def make_synthetic_dataset(
                 ),
                 encoding="utf-8",
             )
+    elif layout == "ham10000":
+        # CSV + two image-part folders. Two images per lesion (same dx) so the
+        # grouped split is exercised; dx codes cycle through the real 7.
+        part1 = root_path / "HAM10000_images_part_1"
+        part2 = root_path / "HAM10000_images_part_2"
+        codes = _HAM10000_CODES
+        rows = ["lesion_id,image_id,dx,dx_type,age,sex,localization"]
+        idx = 0
+        for ci in range(num_classes):
+            dx = codes[ci % len(codes)]
+            for k in range(per_class):
+                lesion = f"HAM_{ci:02d}_{k:03d}"
+                # two views of the lesion, split across the two part folders
+                for v, part in enumerate((part1, part2)):
+                    img_id = f"ISIC_{idx:07d}"
+                    _write_img(part / f"{img_id}.png", ci)
+                    rows.append(f"{lesion},{img_id},{dx},histo,50,male,back")
+                    idx += 1
+        (root_path / "HAM10000_metadata.csv").write_text(
+            "\n".join(rows) + "\n", encoding="utf-8"
+        )
+
     else:
         raise ValueError(f"unknown synthetic layout: {layout!r}")
 
@@ -838,6 +1007,7 @@ __all__ = [
     "DatasetAdapter",
     "EuroSATAdapter",
     "OxfordPetAdapter",
+    "HAM10000Adapter",
     "ImageFolderAdapter",
     "register_dataset",
     "get_dataset",

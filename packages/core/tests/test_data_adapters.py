@@ -262,3 +262,69 @@ def test_split_policy_validates_fractions():
         SplitPolicy(fractions=(0.5, 0.4, 0.4))
     with pytest.raises(ValueError):
         SplitPolicy(fractions=(0.8, 0.2))  # wrong length
+
+
+# --------------------------------------------------------------------------- #
+# HAM10000 — CSV + part folders, lesion-grouped leak-free split.
+# --------------------------------------------------------------------------- #
+
+
+def test_ham10000_registered_and_lookup():
+    from vitreous.data import HAM10000Adapter
+
+    assert "ham10000" in list_datasets()
+    assert get_dataset("ham10000") is HAM10000Adapter
+
+
+def test_ham10000_loads_csv_and_images(tmp_path):
+    from vitreous.data import HAM10000Adapter
+
+    root = make_synthetic_dataset(
+        str(tmp_path / "ham"), "ham10000", num_classes=7, per_class=6
+    )
+    samples = HAM10000Adapter().load(root, "all")
+    _assert_valid_samples(samples)
+    # 7 classes × 6 lesions × 2 views = 84 images.
+    assert len(samples) == 84
+    assert all("lesion_id" in s.meta and "dx" in s.meta for s in samples)
+    # labels are dense 0..6
+    assert {s.label for s in samples} == set(range(7))
+
+
+def test_ham10000_split_is_grouped_by_lesion(tmp_path):
+    """A lesion's images must never straddle two splits (no leakage)."""
+    from vitreous.data import HAM10000Adapter
+
+    root = make_synthetic_dataset(
+        str(tmp_path / "ham"), "ham10000", num_classes=7, per_class=8
+    )
+    samples = HAM10000Adapter().load(root, "all")
+    by_lesion = {}
+    for s in samples:
+        by_lesion.setdefault(s.meta["lesion_id"], set()).add(s.split)
+    for lesion, splits in by_lesion.items():
+        assert len(splits) == 1, f"lesion {lesion} leaked across {splits}"
+
+
+def test_ham10000_deterministic(tmp_path):
+    from vitreous.data import HAM10000Adapter
+
+    root = make_synthetic_dataset(
+        str(tmp_path / "ham"), "ham10000", num_classes=5, per_class=6
+    )
+    a = {s.image_id: s.split for s in HAM10000Adapter().load(root, "all")}
+    b = {s.image_id: s.split for s in HAM10000Adapter().load(root, "all")}
+    assert a == b
+
+
+def test_ham10000_split_filtering(tmp_path):
+    from vitreous.data import HAM10000Adapter
+
+    root = make_synthetic_dataset(
+        str(tmp_path / "ham"), "ham10000", num_classes=7, per_class=8
+    )
+    counts = Counter(s.split for s in HAM10000Adapter().load(root, "all"))
+    for sp in SPLITS:
+        subset = HAM10000Adapter().load(root, sp)
+        assert all(s.split == sp for s in subset)
+        assert len(subset) == counts[sp]
