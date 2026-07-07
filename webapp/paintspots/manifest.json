@@ -1,0 +1,38 @@
+{
+  "format": "hatchvision-bundle",
+  "version": "1.0",
+  "model": "model.onnx",
+  "graph": "graph.json",
+  "dataset": "paintspots",
+  "image_size": 224,
+  "in_channels": 3,
+  "mean": [
+    0.485,
+    0.456,
+    0.406
+  ],
+  "std": [
+    0.229,
+    0.224,
+    0.225
+  ],
+  "class_names": [
+    "Vermilion Spot",
+    "Cobalt Spot",
+    "Ochre Spot",
+    "Sienna Spot",
+    "Umber Spot",
+    "Viridian Spot",
+    "Crimson Spot"
+  ],
+  "explain": "explain.json",
+  "activation_outputs": [
+    {
+      "layer": "neurons",
+      "output": "act_neurons",
+      "units": 512,
+      "node_prefix": "u:neurons:"
+    }
+  ],
+  "backbone": "hybrid"
+}

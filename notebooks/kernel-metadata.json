@@ -1,0 +1,15 @@
+{
+  "id": "larsvandergroep/dragonhatchling-ham10000",
+  "title": "DragonHatchling HAM10000",
+  "code_file": "kaggle_ham10000.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": ["kmader/skin-cancer-mnist-ham10000"],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "machine_shape": "NvidiaTeslaT4"
+}
