@@ -234,15 +234,10 @@ export function BrainView() {
 
   // -- the render loop (imperative; brain mode only) ------------------------- //
   useEffect(() => {
-    const dbg = window as unknown as Record<string, unknown>;
-    dbg.__brainEffect = ((dbg.__brainEffect as number) ?? 0) + 1;
-    dbg.__brainExpert = expert;
     if (expert) return;
     const canvas = canvasRef.current;
-    dbg.__brainCanvas = !!canvas;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    dbg.__brainCtx = !!ctx;
     if (!ctx) return;
     let raf = 0;
 
@@ -265,9 +260,6 @@ export function BrainView() {
       const brain = brainRef.current;
       const act = actRef.current;
       const target = targetRef.current;
-      const dbg = window as unknown as { __brainFrames?: number; __brainReady?: boolean };
-      dbg.__brainFrames = (dbg.__brainFrames ?? 0) + 1;
-      dbg.__brainReady = !!(brain && act && target);
       if (!brain || !act || !target) return;
 
       const { w, h } = dims();
