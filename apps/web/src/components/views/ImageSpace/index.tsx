@@ -30,7 +30,13 @@ function agreementScore(
   return others.reduce((a, [, v]) => a + v, 0) / others.length;
 }
 
-export function ImageSpaceView({ classNames }: { classNames?: string[] }) {
+export function ImageSpaceView({
+  classNames,
+  compact = false,
+}: {
+  classNames?: string[];
+  compact?: boolean;
+}) {
   const client = useWorkbench((s) => s.client);
   const manifest = useWorkbench((s) => s.manifest);
   const packIndex = useWorkbench((s) => s.packIndex);
@@ -198,7 +204,8 @@ export function ImageSpaceView({ classNames }: { classNames?: string[] }) {
           </div>
         </div>
 
-        {/* readout column */}
+        {/* readout column (hidden in the compact bottom-strip card) */}
+        {compact ? null : (
         <div className="flex w-40 shrink-0 flex-col gap-3 overflow-y-auto">
           <div>
             <div className="text-[10px] uppercase tracking-widest text-muted">prediction</div>
@@ -289,6 +296,7 @@ export function ImageSpaceView({ classNames }: { classNames?: string[] }) {
             </label>
           ) : null}
         </div>
+        )}
       </div>
     </div>
   );

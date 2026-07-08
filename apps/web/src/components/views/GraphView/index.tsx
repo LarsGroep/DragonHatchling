@@ -19,7 +19,8 @@ import { useWorkbench, layerForT } from "@/src/lib/state/store";
 import { resolve } from "@/src/lib/state/resolver";
 import { nodeId, tokenToPatch } from "@/src/lib/state/packIndex";
 
-const HUES = [174, 291, 33, 130, 210, 350, 60, 260, 100, 310, 20, 190];
+// Soft, desaturated community hues for the light theme (no neon).
+const HUES = [210, 258, 160, 32, 190, 340, 96, 280, 130, 300, 18, 174];
 
 function nodeXY(idx: number, grid: number, w: number, h: number): [number, number] {
   const pc = tokenToPatch(idx, grid);
@@ -80,28 +81,27 @@ export function GraphView() {
       const grid = graph!.grid;
 
       if (mode === "layer") {
-        ctx!.globalCompositeOperation = "lighter";
         for (const [s, d, wt] of L.edges) {
           const [x1, y1] = nodeXY(s, grid, w, h);
           const [x2, y2] = nodeXY(d, grid, w, h);
-          ctx!.strokeStyle = `rgba(240,160,76,${Math.min(0.5, wt * 2)})`;
-          ctx!.lineWidth = 0.5 + wt * 2;
+          ctx!.strokeStyle = `rgba(90,102,122,${Math.min(0.32, wt * 1.4)})`;
+          ctx!.lineWidth = 0.4 + wt * 1.6;
           ctx!.beginPath();
           ctx!.moveTo(x1, y1);
           ctx!.lineTo(x2, y2);
           ctx!.stroke();
         }
-        ctx!.globalCompositeOperation = "source-over";
         for (const n of L.nodes) {
           const [x, y] = nodeXY(n.idx, grid, w, h);
           const hue = HUES[n.community % HUES.length];
           const hit = res?.idx === n.idx && res.layer === layer;
-          ctx!.fillStyle = hit ? "#e8eefc" : `hsl(${hue} 70% ${n.kind === "cls_token" ? 75 : 55}% / 0.9)`;
+          ctx!.fillStyle = hit ? "#0f1723" : `hsl(${hue} 62% ${n.kind === "cls_token" ? 46 : 58}% / 0.92)`;
           ctx!.beginPath();
           ctx!.arc(x, y, hit ? 5 : n.kind === "cls_token" ? 4 : 2.4, 0, Math.PI * 2);
           ctx!.fill();
           if (hit) {
-            ctx!.strokeStyle = "#e8eefc";
+            ctx!.strokeStyle = "#3b82f6";
+            ctx!.lineWidth = 1.4;
             ctx!.beginPath();
             ctx!.arc(x, y, 8, 0, Math.PI * 2);
             ctx!.stroke();
@@ -114,7 +114,7 @@ export function GraphView() {
         const yOf = (idx: number) => padY + (idx / (graph!.num_tokens - 1)) * (h - 2 * padY);
         // residual path for the selected token only (per residual.materialized=false convention)
         if (res && res.idx >= 0) {
-          ctx!.strokeStyle = "rgba(232,238,252,0.6)";
+          ctx!.strokeStyle = "rgba(59,130,246,0.55)";
           ctx!.lineWidth = 1;
           ctx!.beginPath();
           ctx!.moveTo(padX, yOf(res.idx));
@@ -128,13 +128,13 @@ export function GraphView() {
             const hue = HUES[n.community % HUES.length];
             const hit = res?.idx === n.idx;
             ctx!.fillStyle = hit
-              ? "#e8eefc"
-              : `hsl(${hue} 70% 55% / ${cur ? 0.95 : 0.3})`;
+              ? "#0f1723"
+              : `hsl(${hue} 60% 56% / ${cur ? 0.95 : 0.28})`;
             const r = hit ? 2.5 : cur ? 1.6 : 1;
             ctx!.fillRect(x - r / 2, yOf(n.idx) - r / 2, r, r);
           }
           if (cur) {
-            ctx!.strokeStyle = "rgba(240,160,76,0.5)";
+            ctx!.strokeStyle = "rgba(59,130,246,0.45)";
             ctx!.strokeRect(x - 4, padY - 2, 8, h - 2 * padY + 4);
           }
         }

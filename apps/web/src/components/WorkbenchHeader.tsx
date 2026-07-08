@@ -1,39 +1,17 @@
 "use client";
 
 /**
- * Instrument header wired to the store (§1). Product mark, live monospaced
- * readouts (model / dataset / image / prediction), a pack-status lamp, and the
- * Plain/Expert mode toggle (S1). In Plain mode the jargon readouts carry
- * lay-language tooltips (title attributes) — the dark-instrument look is
- * unchanged; only the words soften.
+ * Minimal light header (UX-VISION-2). Product mark, a couple of quiet readouts
+ * (dataset · prediction), the Plain/Expert mode toggle, and a small pack-status
+ * lamp. Clean and unobtrusive — the brain is the star, not the chrome.
  */
 import { useWorkbench } from "@/src/lib/state/store";
-
-function Readout({
-  label,
-  value,
-  plainHint,
-  plain,
-}: {
-  label: string;
-  value: string;
-  plainHint?: string;
-  plain: boolean;
-}) {
-  const title = plain && plainHint ? plainHint : value;
-  return (
-    <div className="flex items-baseline gap-2" title={title}>
-      <span className="text-[10px] uppercase tracking-widest text-muted">{label}</span>
-      <span className="max-w-[16ch] truncate tabular-nums text-xs text-readout">{value}</span>
-    </div>
-  );
-}
 
 function ModeToggle() {
   const mode = useWorkbench((s) => s.mode);
   return (
     <div
-      className="flex items-center rounded border border-edge bg-panel p-0.5"
+      className="flex items-center rounded-md border border-edge bg-panel p-0.5"
       role="group"
       aria-label="Explanation mode"
     >
@@ -43,15 +21,9 @@ function ModeToggle() {
           type="button"
           onClick={() => useWorkbench.getState().setMode(m)}
           aria-pressed={mode === m}
-          title={
-            m === "plain"
-              ? "Plain — lay language, guided"
-              : "Expert — methods, layers, AUCs"
-          }
-          className={`rounded px-2 py-0.5 text-[10px] uppercase tracking-widest transition-colors ${
-            mode === m
-              ? "bg-signal/10 text-signal"
-              : "text-muted hover:text-readout"
+          title={m === "plain" ? "Plain — lay language, guided" : "Expert — methods, layers, stats"}
+          className={`rounded px-2.5 py-1 text-[11px] font-medium capitalize transition-colors ${
+            mode === m ? "bg-image/10 text-image" : "text-muted hover:text-readout"
           }`}
         >
           {m}
@@ -65,52 +37,46 @@ export function WorkbenchHeader({ datasetName }: { datasetName?: string }) {
   const manifest = useWorkbench((s) => s.manifest);
   const loading = useWorkbench((s) => s.loading);
   const error = useWorkbench((s) => s.error);
-  const mode = useWorkbench((s) => s.mode);
-  const plain = mode === "plain";
 
-  const model = manifest?.model.arch ?? "—";
-  const image = manifest?.image.id ?? "—";
   const pred = manifest
-    ? `${manifest.prediction.label} ${(manifest.prediction.confidence * 100).toFixed(0)}%`
+    ? `${manifest.prediction.label} · ${(manifest.prediction.confidence * 100).toFixed(0)}%`
     : "—";
 
-  const status = error ? "error" : loading ? "loading…" : manifest ? "pack loaded" : "no pack";
+  const status = error ? "error" : loading ? "loading" : manifest ? "ready" : "no pack";
   const lamp = error
-    ? "bg-gauss"
+    ? "bg-red-500"
     : loading
-      ? "bg-graph animate-pulse"
+      ? "bg-warm animate-pulse"
       : manifest
-        ? "bg-latent"
+        ? "bg-evidence"
         : "bg-muted";
 
   return (
-    <header className="flex items-center justify-between border-b border-edge bg-panel-hi px-4 py-2.5">
+    <header className="flex items-center justify-between border-b border-edge bg-void px-4 py-2.5">
       <div className="flex items-baseline gap-3">
-        <span className="text-sm font-semibold tracking-[0.3em] text-signal">VITREOUS</span>
-        <span className="hidden text-[11px] text-muted sm:inline">
-          {plain ? "watch a vision model think" : "explainable vision-transformer workbench"}
+        <span className="text-[15px] font-semibold tracking-tight text-signal">ViTreous</span>
+        <span className="hidden text-[12px] text-muted md:inline">
+          a window into a vision model&rsquo;s brain
         </span>
       </div>
 
-      <div className="flex items-center gap-5">
-        <Readout
-          label="model"
-          value={model}
-          plain={plain}
-          plainHint="The AI being examined — a vision transformer that reads images."
-        />
-        <Readout label="dataset" value={datasetName ?? "—"} plain={plain} plainHint="The kind of photos it was trained on." />
-        <Readout label="image" value={image} plain={plain} plainHint="The photo it is looking at right now." />
-        <Readout
-          label="pred"
-          value={pred}
-          plain={plain}
-          plainHint="Its answer, and how sure it is (0–100%)."
-        />
+      <div className="flex items-center gap-4">
+        <div className="hidden items-baseline gap-4 sm:flex">
+          {datasetName ? (
+            <span className="max-w-[22ch] truncate text-[12px] text-muted" title={datasetName}>
+              {datasetName}
+            </span>
+          ) : null}
+          <span className="font-mono text-[12px] tabular-nums text-readout" title="prediction">
+            {pred}
+          </span>
+        </div>
         <ModeToggle />
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5" title={status}>
           <span className={`h-2 w-2 rounded-full ${lamp}`} />
-          <span className="text-[10px] uppercase tracking-widest text-muted">{status}</span>
+          <span className="hidden text-[10px] uppercase tracking-wide text-muted lg:inline">
+            {status}
+          </span>
         </div>
       </div>
     </header>

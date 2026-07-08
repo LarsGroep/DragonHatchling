@@ -1,9 +1,14 @@
 import type { Config } from "tailwindcss";
 
 /**
- * Dark scientific-instrument palette (§1). Near-black canvas, luminous marks,
- * monospaced readouts. Colors are placeholders that later views (Gaussian
- * field, graph, embedding) will draw luminous marks against.
+ * Light "brain-first" palette (UX-VISION-2). Clean, professional (Apple /
+ * Notion / Linear / Obsidian): white page, light-gray panels, dark type, and a
+ * restrained semantic accent set — soft blue = activity, green = confirmed
+ * evidence, orange = intermediate activation, purple = latent space only.
+ *
+ * The token NAMES are kept from the v1 instrument palette (void/panel/edge/
+ * readout/muted/signal + the four pane accents) so every existing className
+ * keeps working; only their VALUES invert to the light design language.
  */
 const config: Config = {
   content: [
@@ -14,23 +19,35 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Instrument chrome.
-        void: "#05060a",       // near-black page canvas
-        panel: "#0b0e14",      // panel fill
-        "panel-hi": "#111623", // raised panel / bar
-        edge: "#1c2333",       // hairline borders
-        grid: "#141b2b",       // subtle grid lines
-        // Readout text.
-        readout: "#c8d3e6",    // primary monospaced text
-        muted: "#5c6b85",      // secondary / labels
-        // Luminous accents (one per view, for wayfinding).
-        image: "#4cc9f0",      // Image Space
-        gauss: "#b5179e",      // Gaussian Feature Field
-        graph: "#f0a04c",      // Interaction Graph
-        latent: "#57e389",     // Latent Embeddings
-        signal: "#e8eefc",     // hot highlight
+        // Surfaces.
+        void: "#ffffff",       // page canvas (white)
+        panel: "#f4f5f7",      // panel / card fill (light gray)
+        "panel-hi": "#eceef2", // raised panel / bar
+        edge: "#e3e6ec",       // hairline borders
+        grid: "#eef1f5",       // barely-there grid lines
+        // Type.
+        readout: "#28313f",    // primary text (dark)
+        muted: "#8b94a4",      // secondary / labels
+        signal: "#0f1723",     // strongest text / near-black emphasis
+        // Semantic accents (UX-VISION-2 §Design language).
+        image: "#3b82f6",      // soft blue — activity (Image + Brain wayfinding)
+        gauss: "#0d9488",      // teal — the sensory field
+        graph: "#3b82f6",      // soft blue — the Brain
+        latent: "#8b5cf6",     // purple — latent embeddings only
+        evidence: "#22c55e",   // green — confirmed evidence
+        warm: "#f59e0b",       // orange — intermediate activation
       },
       fontFamily: {
+        sans: [
+          "var(--font-sans)",
+          "system-ui",
+          "-apple-system",
+          "Segoe UI",
+          "Roboto",
+          "Helvetica Neue",
+          "Arial",
+          "sans-serif",
+        ],
         mono: [
           "var(--font-mono)",
           "ui-monospace",
@@ -41,6 +58,8 @@ const config: Config = {
         ],
       },
       boxShadow: {
+        // Soft, diffuse card lift (no neon glow).
+        soft: "0 1px 2px rgba(15,23,35,0.04), 0 4px 16px -6px rgba(15,23,35,0.10)",
         glow: "0 0 24px -6px var(--tw-shadow-color)",
       },
     },

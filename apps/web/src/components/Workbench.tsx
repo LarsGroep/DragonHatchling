@@ -1,21 +1,24 @@
 "use client";
 
 /**
- * Workbench — the client orchestrator (§11–§13). Owns:
- *   • initial data load (datasets → first gallery → first pack),
- *   • the requestAnimationFrame replay clock that advances the timeline `t`
- *     while `playing` (sweeps 0..L then loops),
- *   • global keyboard transport (space / arrows / home / end),
- * and composes the header, gallery strip, the four synchronized panes, and the
- * transport bar. Image Space is live at M5; the other three panes are
- * store-driven SyncedPlaceholders proving the four-way link until M6/M7.
+ * Workbench — the client orchestrator, redesigned brain-first (UX-VISION-2).
+ *
+ * Layout inversion: the top ~65% is the living Brain (full width); the bottom
+ * strip is three cards — [input image + saliency + method chips] · [Gaussian
+ * sensory field] · [concepts + prediction]. A slim transport bar sits beneath
+ * the strip; the header is minimal. The ambient loop machinery (store.playing/t/
+ * loopStage, LoopController, schedule) is unchanged — it is the replay engine;
+ * this component only re-choreographs where its output is drawn.
+ *
+ * Owns: initial data load (datasets → first gallery → first pack) and global
+ * keyboard transport. The per-frame replay clock lives in <LoopController/>.
  */
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
+import type { CSSProperties } from "react";
 import type { DatasetRow, GalleryImageRow } from "@/src/lib/db/types";
 import { getDb } from "@/src/lib/db/client";
 import { useWorkbench } from "@/src/lib/state/store";
 import { LOOP_STAGES, type FeaturePane } from "@/src/lib/loop/schedule";
-import { WorkbenchPanel, type PanelAccent } from "@/components/WorkbenchPanel";
 import { WorkbenchHeader } from "./WorkbenchHeader";
 import { GalleryStrip } from "./GalleryStrip";
 import { Transport } from "./Transport";
@@ -23,39 +26,49 @@ import { LoopController } from "./LoopController";
 import { LoopCaption } from "./LoopCaption";
 import { ImageSpaceView } from "./views/ImageSpace";
 import { GaussianFieldView } from "./views/GaussianField";
-import { GraphView } from "./views/GraphView";
-import { EmbeddingView } from "./views/EmbeddingView";
+import { BrainView } from "./views/BrainView";
+import { ConceptsPanel } from "./views/ConceptsPanel";
 
-/**
- * The four panes, with Expert (instrument) titles and Plain (lay) titles. The
- * ambient loop spotlights `feature` panes stage-by-stage (S1); `accent` picks
- * the wayfinding hue and the vignette color.
- */
-const PANES: {
-  accent: PanelAccent;
-  feature: FeaturePane;
-  milestone: string;
-  expertTitle: string;
-  plainTitle: string;
-}[] = [
-  { accent: "image", feature: "image", milestone: "M5", expertTitle: "IMAGE SPACE", plainTitle: "The photo & the evidence" },
-  { accent: "gauss", feature: "gauss", milestone: "M6", expertTitle: "GAUSSIAN FEATURE FIELD", plainTitle: "What the model senses" },
-  { accent: "graph", feature: "graph", milestone: "M7", expertTitle: "INTERACTION GRAPH", plainTitle: "The model's neurons" },
-  { accent: "latent", feature: "latent", milestone: "M7", expertTitle: "LATENT EMBEDDINGS", plainTitle: "The model's map of ideas" },
-];
+type Accent = "image" | "gauss" | "latent";
 
-const PANE_CONTENT = (accent: PanelAccent, classNames?: string[]) => {
-  switch (accent) {
-    case "image":
-      return <ImageSpaceView classNames={classNames} />;
-    case "gauss":
-      return <GaussianFieldView />;
-    case "graph":
-      return <GraphView />;
-    case "latent":
-      return <EmbeddingView />;
-  }
+const ACCENT_DOT: Record<Accent, string> = {
+  image: "bg-image",
+  gauss: "bg-gauss",
+  latent: "bg-latent",
 };
+const ACCENT_HEX: Record<Accent, string> = {
+  image: "#3b82f6",
+  gauss: "#0d9488",
+  latent: "#8b5cf6",
+};
+
+function StripCard({
+  title,
+  accent,
+  featured,
+  children,
+}: {
+  title: string;
+  accent: Accent;
+  featured?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      className={`flex min-h-0 min-w-0 flex-col overflow-hidden rounded-xl border border-edge bg-panel shadow-soft ${
+        featured ? "pane-featured" : ""
+      }`}
+      style={featured ? ({ "--vig": ACCENT_HEX[accent] } as CSSProperties) : undefined}
+      aria-label={title}
+    >
+      <header className="flex items-center gap-2 border-b border-edge px-3 py-1.5">
+        <span className={`h-1.5 w-1.5 rounded-full ${ACCENT_DOT[accent]}`} />
+        <h2 className="text-[11px] font-semibold tracking-wide text-readout">{title}</h2>
+      </header>
+      <div className="relative min-h-0 flex-1 p-2.5">{children}</div>
+    </section>
+  );
+}
 
 export function Workbench() {
   const [datasets, setDatasets] = useState<DatasetRow[]>([]);
@@ -66,7 +79,7 @@ export function Workbench() {
   const selectImage = useWorkbench((s) => s.selectImage);
   const mode = useWorkbench((s) => s.mode);
   const loopStage = useWorkbench((s) => s.loopStage);
-  const featurePane = LOOP_STAGES[Math.min(loopStage, LOOP_STAGES.length - 1)].feature;
+  const feature: FeaturePane = LOOP_STAGES[Math.min(loopStage, LOOP_STAGES.length - 1)].feature;
 
   // -- initial load: datasets → first dataset's gallery → first image ------ //
   useEffect(() => {
@@ -108,8 +121,6 @@ export function Workbench() {
     [selectImage],
   );
 
-  // The ambient replay clock now lives in <LoopController/> (S1).
-
   // -- global keyboard transport ------------------------------------------ //
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -139,8 +150,10 @@ export function Workbench() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  const plain = mode === "plain";
+
   return (
-    <div className="flex h-screen flex-col">
+    <div className="flex h-screen flex-col bg-void text-readout">
       <WorkbenchHeader datasetName={activeDataset?.display_name} />
       <GalleryStrip
         datasets={datasets}
@@ -150,33 +163,49 @@ export function Workbench() {
       />
 
       {bootError ? (
-        <div className="border-b border-gauss/40 bg-gauss/10 px-4 py-1.5 text-[11px] text-gauss">
+        <div className="border-b border-red-200 bg-red-50 px-4 py-1.5 text-[11px] text-red-600">
           data load failed: {bootError}
         </div>
       ) : null}
 
-      <div className="relative min-h-0 flex-1">
-        <main className="grid h-full min-h-0 grid-cols-1 grid-rows-[repeat(4,minmax(180px,1fr))] gap-3 p-3 lg:grid-cols-2 lg:grid-rows-2">
-          {PANES.map((p) => (
-            <WorkbenchPanel
-              key={p.accent}
-              title={mode === "plain" ? p.plainTitle : p.expertTitle}
-              accent={p.accent}
-              milestone={p.milestone}
-              hint=""
-              featured={featurePane === p.feature}
-            >
-              <div className="h-full w-full">{PANE_CONTENT(p.accent, activeDataset?.class_names)}</div>
-            </WorkbenchPanel>
-          ))}
-        </main>
+      <main className="flex min-h-0 flex-1 flex-col gap-2 p-2">
+        {/* THE BRAIN — the centerpiece (~65%). */}
+        <section className="relative flex min-h-0 flex-[1.75_1_0%] flex-col overflow-hidden rounded-xl border border-edge bg-panel shadow-soft">
+          <LoopCaption />
+          <div className="relative min-h-0 flex-1">
+            <BrainView />
+          </div>
+          {/* Seamless-loop fade veil (resets t 12→0 behind a soft white fade). */}
+          <LoopController />
+        </section>
 
-        {/* Ambient inference replay (S1): narrative strip + seamless-loop veil. */}
-        <LoopCaption />
-        <LoopController />
-      </div>
+        {/* BOTTOM STRIP — three supporting cards. */}
+        <section className="grid min-h-0 flex-[1_1_0%] grid-cols-1 gap-2 md:grid-cols-3">
+          <StripCard
+            title={plain ? "The photo & its evidence" : "Image · saliency"}
+            accent="image"
+            featured={feature === "image"}
+          >
+            <ImageSpaceView classNames={activeDataset?.class_names} compact />
+          </StripCard>
+          <StripCard
+            title={plain ? "What the model senses" : "Gaussian feature field"}
+            accent="gauss"
+            featured={feature === "gauss"}
+          >
+            <GaussianFieldView />
+          </StripCard>
+          <StripCard
+            title={plain ? "Concepts & answer" : "Concepts · prediction"}
+            accent="latent"
+            featured={feature === "latent"}
+          >
+            <ConceptsPanel classNames={activeDataset?.class_names} />
+          </StripCard>
+        </section>
+      </main>
 
-      <footer className="px-3 pb-3">
+      <footer className="px-2 pb-2">
         <Transport />
       </footer>
     </div>

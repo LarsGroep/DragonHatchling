@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
-import { JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+
+// Clean sans for UI text (UX-VISION-2); JetBrains Mono stays for data readouts.
+const sans = Inter({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
 
 const mono = JetBrains_Mono({
   subsets: ["latin"],
@@ -9,9 +16,9 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ViTreous — Explainable ViT Workbench",
+  title: "ViTreous — a window into a vision model's brain",
   description:
-    "A multi-view visual analytics workbench for Vision Transformers: an image's classification as a time-evolving computation across four synchronized spaces.",
+    "Watch a vision transformer think: a living Hebbian brain graph, its sensory field, and the evidence behind every prediction.",
 };
 
 export default function RootLayout({
@@ -20,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={mono.variable}>
+    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
       <body>{children}</body>
     </html>
   );

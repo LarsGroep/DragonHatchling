@@ -228,7 +228,7 @@ export function GaussianFieldView() {
       data-gaussian-ready={ready ? "1" : "0"}
       data-gaussian-highlights={litIdx.size}
       data-gaussian-absent={absent ? "1" : "0"}
-      className="relative h-full w-full overflow-hidden rounded bg-black"
+      className="relative h-full w-full overflow-hidden rounded-lg bg-[#0e1626]"
     >
       <canvas
         ref={canvasRef}
@@ -252,8 +252,8 @@ export function GaussianFieldView() {
                 title={m === "3D" ? "3D relief — height = attribution" : "2D field"}
                 className={`rounded border px-1.5 py-0.5 text-[10px] uppercase tracking-widest ${
                   active
-                    ? "border-gauss/60 bg-gauss/10 text-gauss"
-                    : "border-edge text-muted hover:text-readout"
+                    ? "border-[#5eead4]/50 bg-[#5eead4]/15 text-[#5eead4]"
+                    : "border-white/15 text-white/50 hover:text-white/80"
                 }`}
               >
                 {m}
@@ -265,16 +265,16 @@ export function GaussianFieldView() {
 
       {/* honesty label + visual-encoding legend (§7) */}
       {ready ? (
-        <div className="pointer-events-none absolute left-2 top-2 flex flex-col gap-1 rounded border border-edge/70 bg-panel/70 px-2 py-1.5 text-[9px] leading-tight backdrop-blur-sm">
-          <div className="flex items-center gap-1 text-gauss">
-            <span className="inline-block h-2 w-2 rounded-full bg-gauss" />
+        <div className="pointer-events-none absolute left-2 top-2 flex flex-col gap-1 rounded-md border border-white/10 bg-black/35 px-2 py-1.5 text-[9px] leading-tight text-white/70 backdrop-blur-sm">
+          <div className="flex items-center gap-1 text-[#5eead4]">
+            <span className="inline-block h-2 w-2 rounded-full bg-[#5eead4]" />
             <span className="uppercase tracking-widest">lens, not evidence</span>
           </div>
-          <LegendRow color="#c8d3e6" label="opacity = activation" />
-          <LegendRow color="#b5179e" label={is3D ? "glow + height = attribution" : "glow = attribution"} />
-          <LegendRow color="#4cc9f0" label="halo = attention-in" />
+          <LegendRow color="#dbe4f2" label="opacity = activation" />
+          <LegendRow color="#34d27f" label={is3D ? "glow + height = attribution" : "glow = attribution"} />
+          <LegendRow color="#60a5fa" label="halo = attention-in" />
           {is3D && mode === "plain" ? (
-            <div className="mt-0.5 max-w-[19ch] text-[9px] leading-tight text-readout/70">
+            <div className="mt-0.5 max-w-[19ch] text-[9px] leading-tight text-white/60">
               height = how much this spot influenced the answer
             </div>
           ) : null}
@@ -283,14 +283,14 @@ export function GaussianFieldView() {
 
       {/* CLS gutter caption */}
       {ready ? (
-        <div className="pointer-events-none absolute bottom-1 left-2 text-[8px] uppercase tracking-widest text-muted/70">
+        <div className="pointer-events-none absolute bottom-1 left-2 text-[8px] uppercase tracking-widest text-white/40">
           CLS
         </div>
       ) : null}
 
       {/* status overlays */}
       {!gaussians ? (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-[11px] tracking-widest text-muted">
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-center text-[11px] tracking-widest text-white/50">
           {absent
             ? "no gaussian asset"
             : error
@@ -306,7 +306,7 @@ export function GaussianFieldView() {
 
 function LegendRow({ color, label }: { color: string; label: string }) {
   return (
-    <div className="flex items-center gap-1 text-muted">
+    <div className="flex items-center gap-1 text-white/60">
       <span className="inline-block h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
       <span>{label}</span>
     </div>

@@ -65,7 +65,7 @@ export function magma(v: number): [number, number, number, number] {
   const r = a[0] + (b[0] - a[0]) * f;
   const g = a[1] + (b[1] - a[1]) * f;
   const bl = a[2] + (b[2] - a[2]) * f;
-  // alpha: low for cold, opaque for hot
-  const alpha = Math.round(255 * Math.pow(t, 0.7) * 0.92);
+  // alpha: low for cold, softened at the top so it reads calm on the light theme
+  const alpha = Math.round(255 * Math.pow(t, 0.85) * 0.78);
   return [Math.round(r), Math.round(g), Math.round(bl), alpha];
 }

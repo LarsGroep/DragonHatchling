@@ -59,12 +59,14 @@ import {
   lerpAngle,
 } from "./interp";
 
-// Instrument palette (mirrors tailwind.config: gauss/image/signal), as vec3s.
-const GLOW_COLOR = new THREE.Color(0xb5179e); // attribution — the view's accent
-const HALO_COLOR = new THREE.Color(0x4cc9f0); // attention-in — cool cyan ring
-const HIGHLIGHT_COLOR = new THREE.Color(0xe8eefc); // hot selection outline
+// Light-theme semantic palette (UX-VISION-2), as vec3s. The field keeps its
+// additive glow so it stays legible on a soft dark inset, but the hues switch
+// to the new language: green = evidence, soft blue = activity.
+const GLOW_COLOR = new THREE.Color(0x34d27f); // attribution → green (evidence)
+const HALO_COLOR = new THREE.Color(0x60a5fa); // attention-in → soft blue
+const HIGHLIGHT_COLOR = new THREE.Color(0xeaf1ff); // hot selection outline
 const CLS_COLOR = new THREE.Color(0x9fb4ff);
-const GRID_COLOR = new THREE.Color(0x1c2333); // faint edge hue for the ground grid
+const GRID_COLOR = new THREE.Color(0x27364b); // faint grid on the slate inset
 
 // 3D orbit constants.
 const ORBIT_RADIUS = 2.7;
@@ -260,7 +262,9 @@ export class GaussianFieldRenderer {
       preserveDrawingBuffer: true,
     });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-    this.renderer.setClearColor(0x05060a, 1);
+    // Soft dark-slate inset (not pure black) so the additive field reads while
+    // sitting inside the light card — see GaussianField index for the frame.
+    this.renderer.setClearColor(0x0e1626, 1);
 
     this.material = new THREE.RawShaderMaterial({
       glslVersion: THREE.GLSL3,
