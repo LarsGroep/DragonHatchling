@@ -151,6 +151,41 @@ describe("buildBrainGraph + computeLayout", () => {
     expect(g.communities.size).toBeGreaterThanOrEqual(1);
   });
 
+  it("builds a fixed, finite anchor per community", () => {
+    const g = buildBrainGraph(graph);
+    expect(g.anchors.size).toBe(g.communities.size);
+    for (const { x, y } of g.anchors.values()) {
+      expect(Number.isFinite(x)).toBe(true);
+      expect(Number.isFinite(y)).toBe(true);
+    }
+  });
+
+  it("anchored gravity separates two communities", () => {
+    // Two 2-node communities starting interleaved at the centre.
+    const nodes = [
+      node(1, 0.01, 0, 0),
+      node(2, -0.01, 0, 0),
+      node(3, 0.02, 0, 1),
+      node(4, -0.02, 0, 1),
+    ];
+    const communities = new Map([
+      [0, [0, 1]],
+      [1, [2, 3]],
+    ]);
+    const anchors = new Map([
+      [0, { x: -1, y: 0 }],
+      [1, { x: 1, y: 0 }],
+    ]);
+    for (let i = 0; i < 200; i++) {
+      forceStep(nodes, [], communities, 0.5, DEFAULT_FORCE_OPTS, anchors);
+    }
+    const c0 = centroid(nodes, [0, 1]);
+    const c1 = centroid(nodes, [2, 3]);
+    // Each community's centroid is displaced toward its own anchor (repulsion
+    // between the four nodes keeps the toy system from full separation).
+    expect(c1.x - c0.x).toBeGreaterThan(0.2);
+  });
+
   it("computeLayout keeps positions finite and bounded", () => {
     const g = buildBrainGraph(graph);
     computeLayout(g, 120);

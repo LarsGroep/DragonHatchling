@@ -56,7 +56,8 @@ import {
 const QUIET: RGB = [138, 148, 164]; // resting node gray (visible on white)
 const ACTIVE: RGB = [59, 130, 246]; // soft blue — activity
 const EVIDENCE: RGB = [34, 197, 94]; // green — confirmed evidence
-const EDGE_BASE = "rgba(88,99,120,0.16)";
+const EDGE_RGB: RGB = [88, 99, 120];
+const EDGE_ALPHA = 0.16;
 const LABEL_TEXT: RGB = [40, 49, 63];
 
 const LABEL_THRESHOLD = 0.42;
@@ -163,6 +164,7 @@ export function BrainView() {
       if (!alive) return;
       const brain = buildBrainGraph(graph);
       computeLayout(brain, 320);
+      (window as unknown as Record<string, unknown>).__brainDebug = brain; // TEMP diag
       brainRef.current = brain;
       actRef.current = new Float32Array(brain.nodes.length);
       targetRef.current = new Float32Array(brain.nodes.length);
@@ -270,7 +272,7 @@ export function BrainView() {
       const t = st.t;
 
       // gentle continuous drift keeps the brain "alive".
-      forceStep(brain.nodes, brain.links, brain.communities, DRIFT_ALPHA);
+      forceStep(brain.nodes, brain.links, brain.communities, DRIFT_ALPHA, undefined, brain.anchors);
 
       // activation target from token norms at the current layer.
       if (tokens) {
@@ -300,6 +302,25 @@ export function BrainView() {
 
       const now = performance.now() / 1000;
 
+      // hover focus (§Interaction): the selected node(s) + their direct
+      // neighbours stay full-strength; the rest of the brain dims softly.
+      let focus: Set<number> | null = null; // array positions kept bright
+      let focusCore: Set<number> | null = null; // the selection itself
+      if (litIdx.size) {
+        const posByIdx = new Map<number, number>();
+        brain.nodes.forEach((n, i) => posByIdx.set(n.idx, i));
+        focusCore = new Set<number>();
+        for (const idx of litIdx) {
+          const p = posByIdx.get(idx);
+          if (p !== undefined) focusCore.add(p);
+        }
+        focus = new Set(focusCore);
+        for (const lk of brain.links) {
+          if (focusCore.has(lk.a)) focus.add(lk.b);
+          if (focusCore.has(lk.b)) focus.add(lk.a);
+        }
+      }
+
       // -- edges: subtle base + soft illumination for co-active pairs -------- //
       const pulseCandidates: { link: number; activity: number }[] = [];
       brain.links.forEach((lk, i) => {
@@ -309,15 +330,28 @@ export function BrainView() {
         const [x2, y2] = worldToScreen(nb.x, nb.y, w, h);
         const [cx, cy] = controlPoint(x1, y1, x2, y2, 0.14);
         const activity = Math.min(act[lk.a], act[lk.b]);
+        const onFocus = focusCore ? focusCore.has(lk.a) || focusCore.has(lk.b) : false;
+        const dim = focus ? (onFocus ? 1 : 0.22) : 1;
+        // Long bridges fade hard (quadratic) so local cluster structure reads
+        // (Obsidian look) — without them the layout's real lobes are drowned
+        // in cross-community curves sweeping through the centre.
+        const len = Math.hypot(x2 - x1, y2 - y1);
+        const attnLin = Math.min(1, (Math.min(w, h) * 0.20) / (len + 1));
+        const attn = attnLin * attnLin;
         ctx!.beginPath();
         ctx!.moveTo(x1, y1);
         ctx!.quadraticCurveTo(cx, cy, x2, y2);
-        if (activity > thr * 0.7) {
-          ctx!.strokeStyle = rgba(ACTIVE, Math.min(0.5, activity * 0.7));
-          ctx!.lineWidth = 0.8 + activity * 1.6;
+        if (onFocus) {
+          ctx!.strokeStyle = rgba(ACTIVE, 0.55);
+          ctx!.lineWidth = 1.1;
+        } else if (activity >= thr) {
+          // Both endpoints hot: soft illumination, still distance-attenuated so
+          // the active region reads as a glowing locality, not a starburst.
+          ctx!.strokeStyle = rgba(ACTIVE, Math.min(0.38, activity * 0.5) * dim * attn);
+          ctx!.lineWidth = 0.8 + activity * 1.2;
           pulseCandidates.push({ link: i, activity });
         } else {
-          ctx!.strokeStyle = EDGE_BASE;
+          ctx!.strokeStyle = rgba(EDGE_RGB, EDGE_ALPHA * dim * attn);
           ctx!.lineWidth = 0.8;
         }
         ctx!.stroke();
@@ -349,6 +383,7 @@ export function BrainView() {
         const a = act[i];
         const hot = a >= thr;
         const g = chef ? chef[i] * gp : 0;
+        const dim = focus ? (focus.has(i) ? 1 : 0.25) : 1;
         // resting gray → soft blue by activation → green by confirmed evidence.
         const base = mix(QUIET, ACTIVE, hot ? 0.35 + a * 0.65 : a * 0.5);
         const col = mix(base, EVIDENCE, g);
@@ -359,12 +394,12 @@ export function BrainView() {
         if (hot || g > 0.2) {
           ctx!.beginPath();
           ctx!.arc(x, y, r + 4 + a * 4, 0, Math.PI * 2);
-          ctx!.fillStyle = rgba(g > 0.2 ? EVIDENCE : ACTIVE, 0.06 + a * 0.10);
+          ctx!.fillStyle = rgba(g > 0.2 ? EVIDENCE : ACTIVE, (0.06 + a * 0.10) * dim);
           ctx!.fill();
         }
         ctx!.beginPath();
         ctx!.arc(x, y, lit ? r + 1.5 : r, 0, Math.PI * 2);
-        ctx!.fillStyle = lit ? "#0f1723" : rgba(col, 0.72 + a * 0.28);
+        ctx!.fillStyle = lit ? "#0f1723" : rgba(col, (0.72 + a * 0.28) * dim);
         ctx!.fill();
         if (lit) {
           ctx!.strokeStyle = rgba(ACTIVE, 0.9);

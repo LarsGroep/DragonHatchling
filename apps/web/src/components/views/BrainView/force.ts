@@ -55,16 +55,23 @@ export interface ForceOpts {
 }
 
 export const DEFAULT_FORCE_OPTS: ForceOpts = {
-  charge: 0.006,
-  linkDist: 0.09,
-  linkStrength: 0.08,
-  centerStrength: 0.03,
-  communityStrength: 0.06,
+  charge: 0.008,
+  linkDist: 0.12,
+  linkStrength: 0.05,
+  centerStrength: 0.008,
+  communityStrength: 0.2,
   velocityDecay: 0.55,
 };
 
 /** Per-tick displacement clamp — keeps the explicit integrator from exploding. */
 const MAX_SPEED = 0.12;
+
+/** Springs that BRIDGE two communities pull this much weaker, so clusters can
+ * breathe apart instead of collapsing into one hairball (Obsidian look). */
+export const INTER_COMMUNITY_LINK = 0.08;
+
+/** How far out the fixed community anchors sit (world units). */
+export const ANCHOR_SPREAD = 2.1;
 
 /** Deterministic tiny PRNG (mulberry32). */
 export function mulberry32(seed: number): () => number {
@@ -170,6 +177,8 @@ export interface BrainGraph {
   links: ForceLink[];
   /** Node array positions grouped by community id. */
   communities: Map<number, number[]>;
+  /** Fixed gravity anchor per community (from real member patch centroids). */
+  anchors: Map<number, { x: number; y: number }>;
   /** Source used for the gravity groups (diagnostic). */
   communitySource: "graph" | "label-propagation" | "spatial";
 }
@@ -247,7 +256,35 @@ export function buildBrainGraph(graph: GraphJson, seed = graph.seed ?? 0): Brain
     else communities.set(node.community, [i]);
   });
 
-  return { nodes, links, communities, communitySource };
+  // Fixed gravity anchors: each community's REAL patch-centroid direction,
+  // pushed out to ANCHOR_SPREAD so clusters separate instead of collapsing
+  // onto their shared (moving) centre of mass. Honest geometry, stable layout.
+  const anchors = new Map<number, { x: number; y: number }>();
+  for (const [id, members] of communities) {
+    let sx = 0;
+    let sy = 0;
+    let count = 0;
+    for (const mi of members) {
+      const pc = tokenToPatch(nodes[mi].idx, grid);
+      if (!pc) continue;
+      sx += ((pc[1] + 0.5) / grid) * 2 - 1;
+      sy += ((pc[0] + 0.5) / grid) * 2 - 1;
+      count++;
+    }
+    if (!count) {
+      anchors.set(id, { x: 0, y: 0 }); // CLS-only group rests at the centre
+      continue;
+    }
+    const cx = sx / count;
+    const cy = sy / count;
+    const len = Math.hypot(cx, cy);
+    // Push the anchor outward along its centroid direction; central regions
+    // stay near the middle (len≈0 → no artificial displacement).
+    const gain = len > 1e-6 ? ANCHOR_SPREAD : 0;
+    anchors.set(id, { x: cx * gain, y: cy * gain });
+  }
+
+  return { nodes, links, communities, anchors, communitySource };
 }
 
 /** Mean position of a set of node array-positions. */
@@ -273,6 +310,7 @@ export function forceStep(
   communities: Map<number, number[]>,
   alpha: number,
   opts: ForceOpts = DEFAULT_FORCE_OPTS,
+  anchors?: Map<number, { x: number; y: number }>,
 ): void {
   const n = nodes.length;
   const eps = 1e-4;
@@ -302,23 +340,29 @@ export function forceStep(
     }
   }
 
-  // Link springs.
+  // Link springs (bridges between communities pull far weaker, so the
+  // clusters the gravity groups define can actually separate).
   for (const { a, b, w } of links) {
     const na = nodes[a];
     const nb = nodes[b];
     const dx = nb.x - na.x;
     const dy = nb.y - na.y;
     const d = Math.sqrt(dx * dx + dy * dy) || eps;
-    const diff = ((d - opts.linkDist) / d) * opts.linkStrength * alpha * (0.5 + w);
+    const cross = na.community !== nb.community ? INTER_COMMUNITY_LINK : 1;
+    const diff = ((d - opts.linkDist) / d) * opts.linkStrength * cross * alpha * (0.5 + w);
     na.vx += dx * diff;
     na.vy += dy * diff;
     nb.vx -= dx * diff;
     nb.vy -= dy * diff;
   }
 
-  // Community gravity + centering.
+  // Community gravity (toward the FIXED anchor when provided — this is what
+  // pulls clusters apart; the moving-centroid fallback only keeps groups
+  // cohesive) + weak centering.
   const cents = new Map<number, { x: number; y: number }>();
-  for (const [id, members] of communities) cents.set(id, centroid(nodes, members));
+  for (const [id, members] of communities) {
+    cents.set(id, anchors?.get(id) ?? centroid(nodes, members));
+  }
   for (const node of nodes) {
     const c = cents.get(node.community);
     if (c) {
@@ -378,7 +422,7 @@ export function computeLayout(
   const decay = Math.pow(alphaMin / alphaStart, 1 / Math.max(1, iterations));
   let alpha = alphaStart;
   for (let i = 0; i < iterations; i++) {
-    forceStep(graph.nodes, graph.links, graph.communities, alpha, opts);
+    forceStep(graph.nodes, graph.links, graph.communities, alpha, opts, graph.anchors);
     alpha *= decay;
   }
   return graph.nodes;
