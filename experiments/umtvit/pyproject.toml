@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "umtvit"
+version = "0.1.0"
+description = "Universal Multi-Scale Topographic Vision Transformer (UMT-ViT) — a self-supervised, config-driven dual-scale cross-attention ViT with a 3-D latent voxel volume and differentiable Soft-3D-SOM."
+requires-python = ">=3.11"
+license = { text = "Proprietary" }
+dependencies = [
+    "torch",
+    "numpy",
+    "pyyaml",
+    "pillow",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools.packages.find]
+include = ["umtvit*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

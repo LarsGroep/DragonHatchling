@@ -1,0 +1,58 @@
+# UMT-ViT — shapes CI configuration (ARCHITECTURE §4, §7).
+#
+# The zero-download, CPU-only smoke config: the generated shapes dataset at
+# small scale so the whole pipeline runs in CI without a GPU or a download.
+# Every knob here is deliberately tiny (image 32, depth 2, a 4x4x2x16 latent
+# volume, a 3x3x3 SOM) — this is the "scale the same code down" corner of the
+# compute budget in ARCHITECTURE §7. To run any other dataset, point the
+# notebook / trainer at a different YAML (see configs/README.md); no code
+# changes.
+dataset:
+  name: shapes
+  loader: shapes
+  image_dir: null
+  metadata_csv: null
+  label_column: shape        # present, but used only by the evaluation suite
+  group_column: null
+  image_size: 32
+  channels: 3
+  splits:
+    train: 0.8
+    val: 0.1
+    test: 0.1
+    seed: 1
+  augmentation: natural_default
+
+model:
+  image_size: 32             # must match dataset.image_size; divisible by patches
+  fine_patch: 8              # 32 / 8  = 4x4 fine grid
+  coarse_patch: 16           # 32 / 16 = 2x2 coarse grid
+  dim: 64
+  depth: 2                   # L encoder layers == latent-volume Z depth
+  heads: 4                   # divides dim
+  volume_h: 4                # H' of the latent volume
+  volume_w: 4                # W' of the latent volume
+  volume_channels: 16        # C of the latent volume  ->  4x4x2x16 cube
+  som_grid: [3, 3, 3]        # 27-neuron 3-D SOM lattice
+  som_update: gradient       # DESOM-style differentiable soft SOM
+  cross_attention: cls_bridged
+
+loss:
+  lambda_ntxent: 1.0
+  lambda_som: 0.5
+  lambda_smooth: 0.1
+  lambda_order: 0.1
+  lambda_geodesic: 0.0       # ablation-gated, off by default
+  ntxent_temperature: 0.2
+  som_temperature: 0.5
+
+train:
+  batch_size: 16
+  lr: 0.0003
+  warmup_steps: 10
+  epochs: 2
+  max_steps: null            # exactly one of epochs / max_steps is set
+  amp: false                 # CPU CI: no mixed precision
+  grad_checkpoint: false
+  seed: 7
+  checkpoint_dir: checkpoints
