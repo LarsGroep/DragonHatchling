@@ -76,7 +76,7 @@ Two user-supplied inputs, both preserved in the research record:
 | U | Scope (see UMT-VIT-ARCHITECTURE.md §9) | Status |
 |---|---|---|
 | U0 | Package scaffold, config schema, shapes generator, pytest wiring | **Complete** (Opus agent, 2026-07-10; 33 tests pass; reviewed & pushed) |
-| U1 | Universal data pipeline + 3 dataset configs + augmentation registry | Pending |
+| U1 | Universal data pipeline + 3 dataset configs + augmentation registry | **Complete** (Opus agent, 2026-07-10; 62 tests pass incl. grouped-split leakage; image_size unified to dataset.image_size; reviewed & pushed) |
 | U2 | Dual-scale backbone (embed, cross-attention ×2 modes, fusion, encoder) | Pending |
 | U3 | Spatial uplifting + Soft3DSOM (+ EMA variant) + L_som | Pending |
 | U4 | Loss suite + trainer (AMP, checkpointing, schedules, resume) | Pending |
