@@ -12,8 +12,11 @@ dataset:
   loader: shapes
   image_dir: null
   metadata_csv: null
+  path_column: image_id      # csv loader only (unused by the shapes loader)
+  path_suffix: .jpg          # csv loader only
   label_column: shape        # present, but used only by the evaluation suite
   group_column: null
+  n_per_class: 12            # shapes loader: images generated per class
   image_size: 32
   channels: 3
   splits:
@@ -24,7 +27,8 @@ dataset:
   augmentation: natural_default
 
 model:
-  image_size: 32             # must match dataset.image_size; divisible by patches
+  # image_size is unified: omitted here so it derives from dataset.image_size
+  # (the single source of truth). fine/coarse patches must divide that size.
   fine_patch: 8              # 32 / 8  = 4x4 fine grid
   coarse_patch: 16           # 32 / 16 = 2x2 coarse grid
   dim: 64
@@ -45,6 +49,9 @@ loss:
   lambda_geodesic: 0.0       # ablation-gated, off by default
   ntxent_temperature: 0.2
   som_temperature: 0.5
+  sigma_start: 2.0           # SOM neighbourhood width, annealed down over training
+  sigma_end: 0.5
+  order_fmax: 0.5            # layer-scale ordering regularizer max cutoff (cycles/px)
 
 train:
   batch_size: 16

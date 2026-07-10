@@ -1,0 +1,64 @@
+# UMT-ViT — EuroSAT satellite configuration (ARCHITECTURE §1, §4).
+#
+# The swap-proof dataset: maximal domain contrast against HAM10000, reached by
+# config only (zero code diffs between the two runs — ARCHITECTURE §9 U7).
+# Mirrors the notebook's "eurosat" preset (Kaggle dataset apollo2506/eurosat-
+# dataset). GPU-scale backbone per the DECISION-LOG standing defaults (dim 256,
+# depth 8, 8x8x8x64 latent volume, 8x8x8 SOM).
+#
+# Loads + validates WITHOUT the data present (filesystem-free validation).
+dataset:
+  name: eurosat
+  loader: imagefolder        # root/<class>/*.jpg (optionally train/ val/ test/)
+  image_dir: /kaggle/input/eurosat-dataset/EuroSAT
+  metadata_csv: null
+  path_column: image_id      # csv-only knobs; unused by the imagefolder loader
+  path_suffix: .jpg
+  label_column: folder       # labels come from the class directory names
+  group_column: null
+  n_per_class: null          # shapes-only knob; irrelevant to imagefolder
+  image_size: 64
+  channels: 3
+  splits:
+    train: 0.8
+    val: 0.1
+    test: 0.1
+    seed: 1
+  augmentation: satellite_default    # overhead imagery: both flips + 90° rotations
+
+model:
+  # image_size derives from dataset.image_size (64); patches divide it.
+  fine_patch: 8              # 64 / 8  = 8x8 fine grid
+  coarse_patch: 16           # 64 / 16 = 4x4 coarse grid
+  dim: 256
+  depth: 8                   # L encoder layers == latent-volume Z depth
+  heads: 8
+  volume_h: 8
+  volume_w: 8
+  volume_channels: 64        # 8x8x8x64 latent cube
+  som_grid: [8, 8, 8]        # 512-neuron 3-D SOM lattice
+  som_update: gradient       # DESOM-style differentiable soft SOM
+  cross_attention: cls_bridged
+
+loss:
+  lambda_ntxent: 1.0
+  lambda_som: 0.5
+  lambda_smooth: 0.1
+  lambda_order: 0.1
+  lambda_geodesic: 0.0       # ablation-gated, off by default
+  ntxent_temperature: 0.2
+  som_temperature: 0.5
+  sigma_start: 2.0
+  sigma_end: 0.5
+  order_fmax: 0.5
+
+train:
+  batch_size: 256
+  lr: 0.001
+  warmup_steps: 500
+  epochs: 30
+  max_steps: null            # exactly one of epochs / max_steps is set
+  amp: true
+  grad_checkpoint: true
+  seed: 7
+  checkpoint_dir: checkpoints

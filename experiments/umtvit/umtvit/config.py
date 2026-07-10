@@ -27,7 +27,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field, fields, is_dataclass
 from pathlib import Path
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import yaml
 
@@ -119,18 +119,34 @@ class DatasetConfig:
     optional (absent ``label_column`` ⇒ fully unlabeled mode). No class names,
     resolutions, or directory layouts are hardcoded in model/training code —
     they live here.
+
+    File-address fields (mirroring the notebook's data pipeline):
+
+    - ``image_dir`` — the ``imagefolder`` root or, for ``csv``, the directory
+      (or *list* of directories) images are resolved against.
+    - ``path_column`` / ``path_suffix`` — the ``csv`` loader builds each image
+      filename as ``row[path_column] + path_suffix`` (e.g. ``image_id`` +
+      ``.jpg``).
+    - ``n_per_class`` — images generated per class by the ``shapes`` loader;
+      meaningful only for that loader (leave ``null`` otherwise).
+
+    Validation is filesystem-free: it checks types and required fields but
+    never touches disk, so a config validates on any machine.
     """
 
     name: str = "shapes"
     loader: str = "shapes"
-    image_dir: Optional[str] = None
+    image_dir: Optional[Union[str, List[str]]] = None
     metadata_csv: Optional[str] = None
+    path_column: str = "image_id"
+    path_suffix: str = ".jpg"
     label_column: Optional[str] = None
     group_column: Optional[str] = None
+    n_per_class: Optional[int] = None
     image_size: int = 64
     channels: int = 3
     splits: SplitConfig = field(default_factory=SplitConfig)
-    augmentation: str = "default"
+    augmentation: str = "none"
 
     def validate(self, path: str = "dataset") -> None:
         _require(
@@ -158,7 +174,41 @@ class DatasetConfig:
             f"{path}.augmentation",
             "must be a non-empty policy name",
         )
-        # The csv loader needs a metadata file to read paths/labels from.
+        for name in ("path_column", "path_suffix"):
+            value = getattr(self, name)
+            _require(
+                isinstance(value, str) and value != "",
+                f"{path}.{name}",
+                f"must be a non-empty string, got {value!r}",
+            )
+        _require(
+            self.n_per_class is None
+            or (isinstance(self.n_per_class, int) and self.n_per_class > 0),
+            f"{path}.n_per_class",
+            f"must be a positive int or null, got {self.n_per_class!r}",
+        )
+        # ``image_dir`` accepts a single directory or a list of directories
+        # (the csv loader resolves image names against each in turn).
+        if self.image_dir is not None:
+            ok = isinstance(self.image_dir, str) or (
+                isinstance(self.image_dir, list)
+                and all(isinstance(d, str) and d != "" for d in self.image_dir)
+                and len(self.image_dir) > 0
+            )
+            _require(
+                ok,
+                f"{path}.image_dir",
+                "must be a directory string or a non-empty list of directory "
+                f"strings, got {self.image_dir!r}",
+            )
+        # File-backed loaders need a root to resolve images against.
+        if self.loader in ("imagefolder", "csv"):
+            _require(
+                bool(self.image_dir),
+                f"{path}.image_dir",
+                f"is required when loader == {self.loader!r}",
+            )
+        # The csv loader also needs a metadata file to read paths/labels from.
         if self.loader == "csv":
             _require(
                 bool(self.metadata_csv),
@@ -175,9 +225,17 @@ class ModelConfig:
     The latent volume is ``volume_h × volume_w × depth × volume_channels``
     (H'×W'×L×C): the Z-axis length is the number of encoder layers ``depth``.
     ``som_grid`` is the 3-D SOM neuron lattice.
+
+    ``image_size`` is unified with the dataset: there is a **single source of
+    truth**, ``dataset.image_size``. Leave ``model.image_size`` as ``None``
+    (the default) and :meth:`Config.validate` derives it from the dataset. It
+    may still be written explicitly in a config, but must then *equal*
+    ``dataset.image_size`` or validation fails (naming ``model.image_size``);
+    this keeps the patch-divisibility checks below meaningful while forbidding
+    the two fields from silently disagreeing.
     """
 
-    image_size: int = 128
+    image_size: Optional[int] = None
     fine_patch: int = 8
     coarse_patch: int = 16
     dim: int = 256
@@ -254,6 +312,12 @@ class LossConfig:
     Defaults are the DECISION-LOG standing defaults. ``geodesic`` is
     ablation-gated and weighted 0 by default. Each ``lambda_*`` is a
     non-negative weight; setting one to 0 disables that term.
+
+    Schedule knobs (ARCHITECTURE §3.5, §3.7): ``sigma_start``/``sigma_end``
+    are the SOM neighbourhood width annealed exponentially over training
+    (DESOM schedule, ``sigma_start`` ≥ ``sigma_end``); ``order_fmax`` is the
+    layer-scale ordering regulariser's maximum spatial-frequency cutoff
+    (cycles/pixel), whose per-slice cutoff is ``order_fmax·(1 − l/L)``.
     """
 
     lambda_ntxent: float = 1.0
@@ -263,6 +327,9 @@ class LossConfig:
     lambda_geodesic: float = 0.0
     ntxent_temperature: float = 0.2
     som_temperature: float = 1.0
+    sigma_start: float = 2.0
+    sigma_end: float = 0.5
+    order_fmax: float = 0.5
 
     def validate(self, path: str = "loss") -> None:
         for name in (
@@ -285,6 +352,19 @@ class LossConfig:
                 f"{path}.{name}",
                 f"must be a positive temperature, got {value!r}",
             )
+        for name in ("sigma_start", "sigma_end", "order_fmax"):
+            value = getattr(self, name)
+            _require(
+                isinstance(value, (int, float)) and value > 0.0,
+                f"{path}.{name}",
+                f"must be a positive float, got {value!r}",
+            )
+        _require(
+            self.sigma_start >= self.sigma_end,
+            f"{path}.sigma_end",
+            "SOM neighbourhood anneals downward: sigma_end must be "
+            f"≤ sigma_start ({self.sigma_start}), got {self.sigma_end}",
+        )
 
 
 @dataclass
@@ -363,8 +443,25 @@ class Config:
     train: TrainConfig = field(default_factory=TrainConfig)
 
     def validate(self) -> "Config":
-        """Validate all sections in place and return ``self`` for chaining."""
+        """Validate all sections in place and return ``self`` for chaining.
+
+        Unifies image size before validating the model: ``model.image_size``
+        is a single source of truth held by ``dataset.image_size``. If the
+        model leaves it ``None`` it is filled from the dataset; if it is set
+        explicitly it must match, else a :class:`ConfigError` naming
+        ``model.image_size`` is raised.
+        """
         self.dataset.validate()
+        if self.model.image_size is None:
+            self.model.image_size = self.dataset.image_size
+        else:
+            _require(
+                self.model.image_size == self.dataset.image_size,
+                "model.image_size",
+                "must equal dataset.image_size "
+                f"({self.dataset.image_size}) or be omitted (null) to derive "
+                f"it, got {self.model.image_size!r}",
+            )
         self.model.validate()
         self.loss.validate()
         self.train.validate()

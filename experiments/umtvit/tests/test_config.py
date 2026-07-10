@@ -154,3 +154,101 @@ def test_load_empty_file_raises_config_error(tmp_path: Path):
     empty.write_text("", encoding="utf-8")
     with pytest.raises(ConfigError):
         load_config(empty)
+
+
+# --------------------------------------------------------------------------- #
+# U1 schema hardening — image_size unification
+# --------------------------------------------------------------------------- #
+def test_model_image_size_derived_from_dataset():
+    # model.image_size omitted (null) ⇒ derived from dataset.image_size.
+    data = Config().to_dict()
+    data["dataset"]["image_size"] = 96
+    data["model"]["image_size"] = None
+    config = Config.from_dict(data)
+    assert config.model.image_size == 96
+
+
+def test_model_image_size_may_match_dataset_explicitly():
+    data = Config().to_dict()
+    data["dataset"]["image_size"] = 96
+    data["model"]["image_size"] = 96  # explicit but consistent — allowed
+    assert Config.from_dict(data).model.image_size == 96
+
+
+def test_reject_model_image_size_mismatch():
+    data = Config().to_dict()
+    data["dataset"]["image_size"] = 96
+    data["model"]["image_size"] = 128  # disagrees with the dataset
+    with pytest.raises(ConfigError) as exc:
+        Config.from_dict(data)
+    assert "model.image_size" in str(exc.value)
+
+
+# --------------------------------------------------------------------------- #
+# U1 schema hardening — new dataset fields
+# --------------------------------------------------------------------------- #
+def test_new_dataset_field_defaults():
+    dataset = Config().dataset
+    assert dataset.path_column == "image_id"
+    assert dataset.path_suffix == ".jpg"
+    assert dataset.n_per_class is None
+
+
+def test_reject_empty_path_column():
+    data = _mutated(dataset={"path_column": ""})
+    with pytest.raises(ConfigError) as exc:
+        Config.from_dict(data)
+    assert "dataset.path_column" in str(exc.value)
+
+
+def test_reject_non_positive_n_per_class():
+    data = _mutated(dataset={"n_per_class": 0})
+    with pytest.raises(ConfigError) as exc:
+        Config.from_dict(data)
+    assert "dataset.n_per_class" in str(exc.value)
+
+
+def test_image_dir_accepts_list():
+    data = _mutated(
+        dataset={"loader": "csv", "metadata_csv": "m.csv", "image_dir": ["a", "b"]}
+    )
+    config = Config.from_dict(data)
+    assert config.dataset.image_dir == ["a", "b"]
+
+
+def test_reject_image_dir_bad_list():
+    data = _mutated(dataset={"loader": "csv", "metadata_csv": "m.csv", "image_dir": ["a", 3]})
+    with pytest.raises(ConfigError) as exc:
+        Config.from_dict(data)
+    assert "dataset.image_dir" in str(exc.value)
+
+
+def test_reject_imagefolder_without_image_dir():
+    data = _mutated(dataset={"loader": "imagefolder", "image_dir": None})
+    with pytest.raises(ConfigError) as exc:
+        Config.from_dict(data)
+    assert "dataset.image_dir" in str(exc.value)
+
+
+# --------------------------------------------------------------------------- #
+# U1 schema hardening — loss schedule fields
+# --------------------------------------------------------------------------- #
+def test_new_loss_schedule_defaults():
+    loss = Config().loss
+    assert loss.sigma_start == 2.0
+    assert loss.sigma_end == 0.5
+    assert loss.order_fmax == 0.5
+
+
+def test_reject_non_positive_order_fmax():
+    data = _mutated(loss={"order_fmax": 0.0})
+    with pytest.raises(ConfigError) as exc:
+        Config.from_dict(data)
+    assert "loss.order_fmax" in str(exc.value)
+
+
+def test_reject_sigma_end_above_sigma_start():
+    data = _mutated(loss={"sigma_start": 0.5, "sigma_end": 2.0})
+    with pytest.raises(ConfigError) as exc:
+        Config.from_dict(data)
+    assert "loss.sigma_end" in str(exc.value)

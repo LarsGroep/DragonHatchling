@@ -1,0 +1,68 @@
+# UMT-ViT — HAM10000 dermoscopy configuration (ARCHITECTURE §1, §4).
+#
+# Primary dataset: DSCATNet's domain, enabling direct context. Mirrors the
+# notebook's "ham10000" preset (Kaggle dataset kmader/skin-cancer-mnist-
+# ham10000). Swapping to this dataset is a config-only operation — no model or
+# training code changes. GPU-scale backbone per the DECISION-LOG standing
+# defaults (dim 256, depth 8, 16x16x8x64 latent volume, 8x8x8 SOM).
+#
+# This file loads + validates WITHOUT the data present: validation is
+# filesystem-free. The paths below are the Kaggle mount points, read only when
+# a run actually builds the dataset.
+dataset:
+  name: ham10000
+  loader: csv                # metadata CSV: image_id + optional label/group columns
+  image_dir:                 # csv resolves each image against these dirs in order
+    - /kaggle/input/skin-cancer-mnist-ham10000/HAM10000_images_part_1
+    - /kaggle/input/skin-cancer-mnist-ham10000/HAM10000_images_part_2
+  metadata_csv: /kaggle/input/skin-cancer-mnist-ham10000/HAM10000_metadata.csv
+  path_column: image_id      # filename = row[image_id] + path_suffix
+  path_suffix: .jpg
+  label_column: dx           # diagnosis; used only by the evaluation suite
+  group_column: lesion_id    # leakage-free splits: a lesion never straddles splits
+  n_per_class: null          # shapes-only knob; irrelevant to csv
+  image_size: 128
+  channels: 3
+  splits:
+    train: 0.8
+    val: 0.1
+    test: 0.1
+    seed: 1
+  augmentation: dermoscopy_default   # NO hue/channel jitter: colour is diagnostic
+
+model:
+  # image_size derives from dataset.image_size (128); patches divide it.
+  fine_patch: 8              # 128 / 8  = 16x16 fine grid
+  coarse_patch: 16           # 128 / 16 = 8x8 coarse grid
+  dim: 256
+  depth: 8                   # L encoder layers == latent-volume Z depth
+  heads: 8
+  volume_h: 16
+  volume_w: 16
+  volume_channels: 64        # 16x16x8x64 latent cube
+  som_grid: [8, 8, 8]        # 512-neuron 3-D SOM lattice
+  som_update: gradient       # DESOM-style differentiable soft SOM
+  cross_attention: cls_bridged
+
+loss:
+  lambda_ntxent: 1.0
+  lambda_som: 0.5
+  lambda_smooth: 0.1
+  lambda_order: 0.1
+  lambda_geodesic: 0.0       # ablation-gated, off by default
+  ntxent_temperature: 0.2
+  som_temperature: 0.5
+  sigma_start: 2.0
+  sigma_end: 0.5
+  order_fmax: 0.5
+
+train:
+  batch_size: 128
+  lr: 0.001
+  warmup_steps: 500
+  epochs: 30
+  max_steps: null            # exactly one of epochs / max_steps is set
+  amp: true                  # bf16/fp16 mixed precision on GPU
+  grad_checkpoint: true      # fit the encoder on a Kaggle T4
+  seed: 7
+  checkpoint_dir: checkpoints
