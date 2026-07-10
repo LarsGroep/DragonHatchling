@@ -8,6 +8,15 @@
 > design in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). Code:
 > `packages/` (core + schema), `apps/` (web + live), `kaggle/`, `supabase/`.
 >
+> **UMT-ViT** — a separate experiment — is a universal, self-supervised
+> multi-scale topographic Vision Transformer: dual-scale cross-attention,
+> encoder layers uplifted into a 3-D latent voxel volume, self-organized by a
+> differentiable 3-D SOM. Design contract:
+> [`docs/UMT-VIT-ARCHITECTURE.md`](docs/UMT-VIT-ARCHITECTURE.md); research:
+> [`docs/UMT-VIT-RESEARCH.md`](docs/UMT-VIT-RESEARCH.md); orchestration:
+> [`docs/UMT-VIT-DECISION-LOG.md`](docs/UMT-VIT-DECISION-LOG.md). Code will
+> land in `experiments/umtvit/`.
+>
 > Everything below documents the **legacy** hatchvision prototype, kept as
 > historical reference (evaluated in [`docs/RESEARCH.md`](docs/RESEARCH.md)).
 
