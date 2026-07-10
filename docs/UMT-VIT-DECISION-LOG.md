@@ -75,7 +75,7 @@ Two user-supplied inputs, both preserved in the research record:
 
 | U | Scope (see UMT-VIT-ARCHITECTURE.md §9) | Status |
 |---|---|---|
-| U0 | Package scaffold, config schema, shapes generator, pytest wiring | Pending |
+| U0 | Package scaffold, config schema, shapes generator, pytest wiring | **Complete** (Opus agent, 2026-07-10; 33 tests pass; reviewed & pushed) |
 | U1 | Universal data pipeline + 3 dataset configs + augmentation registry | Pending |
 | U2 | Dual-scale backbone (embed, cross-attention ×2 modes, fusion, encoder) | Pending |
 | U3 | Spatial uplifting + Soft3DSOM (+ EMA variant) + L_som | Pending |
@@ -85,3 +85,16 @@ Two user-supplied inputs, both preserved in the research record:
 | U7 | EuroSAT swap proof + ablation matrix + final experiment report | Pending |
 
 Update this table as milestones land.
+
+Out-of-band delivery (owner request, 2026-07-10): the complete experiment
+also ships as a **self-contained universal notebook** —
+`experiments/umtvit/notebooks/kaggle_umtvit.ipynb` (config-cell dataset
+swapping via presets, all visualisations + three animations, evaluation,
+artifact export; verified clean 33-cell CPU execution). It previews U6 and
+serves as the executable reference for U1–U5; the package modules remain the
+production form. Schema deltas between the notebook's CONFIG dict and
+`umtvit/config.py` are expected (the architecture doc is binding); noted for
+U1 hardening: unify `image_size` (derive `model.image_size` from `dataset`),
+and fold the notebook's `path_column`/`path_suffix`/`n_per_class` dataset
+fields plus loss-schedule knobs (`sigma_start/end`, `order_fmax`) into the
+schema as those milestones land.
