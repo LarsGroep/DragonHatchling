@@ -106,6 +106,53 @@ and drag the produced `umtvit_web.json` onto the page.
 
 ---
 
-*Add subsequent runs above this line as new sections (most recent first
-below Run 1), each with: config delta from the previous run, results table,
-which guidance items were applied, and what changed.*
+## Run 2 — HAM10000, Kaggle GPU, 2026-07-11 (owner notebook upload)
+
+Config delta from Run 1: `som_grid [6,6,6]` (216 neurons), slower/wider σ
+anneal (≈5.7 → 1.5), 30 epochs, manual checkpoint save added by owner.
+Applied guidance: Run-1 items 1–2 (σ + grid). Wall time ≈ 73 min.
+
+### Results
+
+| Metric | Run 2 | Run 1 | Reading |
+|---|---|---|---|
+| Linear probe | **0.774** | 0.768 | slightly better |
+| k-NN (k=5, cosine) | **0.743** | 0.730 | slightly better |
+| SOM quantization error | 0.205 | 0.243 | better (but see below) |
+| SOM topographic error | **0.973** | 0.008 | **collapsed** |
+| SOM dead-neuron fraction | **0.991** | 0.977 | **collapsed** (~2/216 alive) |
+| Trustworthiness (k=7) | 0.766 | 0.759 | flat |
+| Spectral centroids | 0.161, 0.135, 0.131, 0.130, 0.136, 0.136, 0.131, 0.135 | non-monotone | z=0 sharpest, then flat |
+
+### Diagnosis
+
+- **SOM collapse, root cause σ_start ≈ 5.7 > grid radius.** With the
+  neighborhood wider than the entire 6³ grid, every neuron was pulled toward
+  the global voxel mean from step one (epoch log: TE ≈ 1.0 from epoch 2);
+  the map never differentiated and QE looks good only because ~2 neurons
+  quantize everything. Schedule tweaks alone cannot fix this —
+  **structural fixes needed**: data-driven weight init, dead-neuron
+  revival, and σ defaults derived from the grid (σ_start = max(grid)/2).
+- **Centroids**: z=0 now correctly sharpest; the flat tail (≈0.13) is the
+  smoothness Z-term homogenizing depth, exactly as predicted in Run 1
+  option 1 (exclude Z from `L_smooth`).
+- **Viz bug found in the run**: matplotlib warning `handles=1 vs labels=7` —
+  the embedding subset takes the *first* 400 eval-train items and HAM10000's
+  CSV ordering makes that nearly single-class (biased animation + broken
+  legend). Fix: seeded random subset + explicit per-class legend handles.
+- **Cosmetic**: the eval banner hardcodes "short CPU smoke run" on GPU runs.
+
+### Actions (work order N2, implemented in the notebook)
+
+Config-flagged: `som_init: data` + `som_revival: true` + grid-derived σ
+defaults (`sigma_start/end: null`); `smooth_axes: [h, w]` (Z excluded);
+monotone-centroid penalty `order_monotone: 0.05`; per-channel centroid
+probe (old metric printed once alongside for comparability); seeded random
+embedding subset + fixed legend; formalized checkpoint save/load;
+conditional eval banner. Web-bundle schema v1 unchanged.
+
+---
+
+*Add subsequent runs above this line as new sections (most recent last),
+each with: config delta from the previous run, results table, which
+guidance items were applied, and what changed.*
