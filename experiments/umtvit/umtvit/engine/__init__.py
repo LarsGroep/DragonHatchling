@@ -1,13 +1,13 @@
 """umtvit.engine — training loop and ablation runner (ARCHITECTURE §5, §9).
 
-Planned (lands in U4): a resumable trainer with AMP, gradient checkpointing,
-cosine LR + warmup, and the σ/τ_som anneal schedules, plus an ablation runner
-that toggles loss terms and architecture variants to generate comparison
-tables (not hand-assembled).
-
-Stub package (U0). No engine code is defined yet.
+Ships the U4 :class:`~umtvit.engine.trainer.Trainer`: a resumable, callback-driven
+self-supervised trainer with AMP, optional encoder gradient checkpointing, cosine
+LR + warmup, and the σ neighbourhood anneal. The ablation runner (toggling loss
+terms / architecture variants into comparison tables) lands with U5.
 """
 
 from __future__ import annotations
 
-__all__: list[str] = []
+from umtvit.engine.trainer import Trainer
+
+__all__ = ["Trainer"]

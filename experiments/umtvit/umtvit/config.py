@@ -48,6 +48,7 @@ LOADERS = ("csv", "imagefolder", "shapes")
 SOM_UPDATES = ("gradient", "kohonen_ema")
 SOM_INITS = ("data", "random")
 CROSS_ATTENTION_MODES = ("cls_bridged", "full_pair")
+SMOOTH_AXIS_NAMES = ("h", "w", "z")
 
 # Tolerance for the train/val/test fractions summing to 1.0.
 _SPLIT_SUM_TOL = 1e-3
@@ -344,8 +345,15 @@ class LossConfig:
     """Objective weights and temperatures (ARCHITECTURE §3.6-§3.8).
 
     Defaults are the DECISION-LOG standing defaults. ``geodesic`` is
-    ablation-gated and weighted 0 by default. Each ``lambda_*`` is a
-    non-negative weight; setting one to 0 disables that term.
+    ablation-gated and weighted 0 by default. Each ``lambda_*`` (and
+    ``order_monotone``) is a non-negative weight; setting one to 0 disables that
+    term. ``order_monotone`` weights the per-slice spectral-centroid
+    monotonicity penalty (ARCHITECTURE §3.7) that complements ``lambda_order``.
+
+    ``smooth_axes`` selects which volume axes the total-variation smoothness term
+    penalises: a non-empty subset of ``["h", "w", "z"]`` (default ``["h", "w"]``;
+    Z is excluded because TV along depth fights the depth differentiation the
+    ordering regulariser imposes — pass ``["h", "w", "z"]`` to restore it).
 
     Schedule knobs (ARCHITECTURE §3.5, §3.7): ``sigma_start``/``sigma_end``
     are the SOM neighbourhood width annealed exponentially over training
@@ -368,11 +376,13 @@ class LossConfig:
     lambda_smooth: float = 0.1
     lambda_order: float = 0.1
     lambda_geodesic: float = 0.0
+    order_monotone: float = 0.05
     ntxent_temperature: float = 0.2
     som_temperature: float = 1.0
     sigma_start: Optional[float] = 2.0
     sigma_end: Optional[float] = 0.5
     order_fmax: float = 0.5
+    smooth_axes: List[str] = field(default_factory=lambda: ["h", "w"])
 
     def validate(self, path: str = "loss") -> None:
         for name in (
@@ -381,13 +391,24 @@ class LossConfig:
             "lambda_smooth",
             "lambda_order",
             "lambda_geodesic",
+            "order_monotone",
         ):
             value = getattr(self, name)
             _require(
-                isinstance(value, (int, float)) and value >= 0.0,
+                isinstance(value, (int, float))
+                and not isinstance(value, bool)
+                and value >= 0.0,
                 f"{path}.{name}",
                 f"must be a non-negative weight, got {value!r}",
             )
+        _require(
+            isinstance(self.smooth_axes, list)
+            and len(self.smooth_axes) > 0
+            and all(a in SMOOTH_AXIS_NAMES for a in self.smooth_axes),
+            f"{path}.smooth_axes",
+            "must be a non-empty subset of "
+            f"{list(SMOOTH_AXIS_NAMES)}, got {self.smooth_axes!r}",
+        )
         for name in ("ntxent_temperature", "som_temperature"):
             value = getattr(self, name)
             _require(
@@ -433,7 +454,9 @@ class TrainConfig:
 
     Exactly one of ``epochs``/``max_steps`` drives run length: set the other
     to ``None``. ``amp`` and ``grad_checkpoint`` are the memory knobs that let
-    the same code fit a Kaggle T4.
+    the same code fit a Kaggle T4. ``som_sample_voxels`` caps how many voxels are
+    sampled per step for the SOM quantization loss and hit accounting (the
+    sparse-update bound of ARCHITECTURE §7).
     """
 
     batch_size: int = 128
@@ -443,6 +466,7 @@ class TrainConfig:
     max_steps: Optional[int] = None
     amp: bool = True
     grad_checkpoint: bool = True
+    som_sample_voxels: int = 2048
     seed: int = 0
     checkpoint_dir: str = "checkpoints"
 
@@ -469,6 +493,13 @@ class TrainConfig:
                 f"{path}.{name}",
                 f"must be a positive int or null, got {value!r}",
             )
+        _require(
+            isinstance(self.som_sample_voxels, int)
+            and not isinstance(self.som_sample_voxels, bool)
+            and self.som_sample_voxels > 0,
+            f"{path}.som_sample_voxels",
+            f"must be a positive int, got {self.som_sample_voxels!r}",
+        )
         _require(
             (self.epochs is None) != (self.max_steps is None),
             f"{path}.epochs",

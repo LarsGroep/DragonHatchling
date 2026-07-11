@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from typing import List
 
+import torch
+import torch.utils.checkpoint
 from torch import Tensor, nn
 
 __all__ = ["SelfAttnBlock", "TransformerEncoder"]
@@ -66,14 +68,27 @@ class TransformerEncoder(nn.Module):
         if depth <= 0:
             raise ValueError(f"depth must be positive, got {depth}")
         self.depth = depth
+        self.use_checkpoint = False
         self.layers = nn.ModuleList(
             SelfAttnBlock(dim, heads, mlp_ratio) for _ in range(depth)
         )
 
     def forward(self, x: Tensor) -> List[Tensor]:
-        """Return the output of every layer as a list of ``depth`` tensors."""
+        """Return the output of every layer as a list of ``depth`` tensors.
+
+        With ``use_checkpoint`` set (and in a training, grad-enabled context)
+        each block is wrapped in :func:`torch.utils.checkpoint.checkpoint` to
+        trade compute for activation memory (ARCHITECTURE §7); otherwise the
+        eager path runs unchanged.
+        """
+        checkpointing = (
+            self.use_checkpoint and self.training and torch.is_grad_enabled()
+        )
         outputs: List[Tensor] = []
         for layer in self.layers:
-            x = layer(x)
+            if checkpointing:
+                x = torch.utils.checkpoint.checkpoint(layer, x, use_reentrant=False)
+            else:
+                x = layer(x)
             outputs.append(x)
         return outputs
