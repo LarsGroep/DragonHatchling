@@ -5,6 +5,7 @@
  * (dataset · prediction), the Plain/Expert mode toggle, and a small pack-status
  * lamp. Clean and unobtrusive — the brain is the star, not the chrome.
  */
+import Link from "next/link";
 import { useWorkbench } from "@/src/lib/state/store";
 
 function ModeToggle() {
@@ -58,6 +59,13 @@ export function WorkbenchHeader({ datasetName }: { datasetName?: string }) {
         <span className="hidden text-[12px] text-muted md:inline">
           a window into a vision model&rsquo;s brain
         </span>
+        <Link
+          href="/umtvit"
+          className="rounded-md border border-edge px-2 py-0.5 text-[11px] font-medium text-muted transition-colors hover:border-latent hover:text-latent"
+          title="UMT-ViT Explorer — a separate topographic-latent experiment"
+        >
+          UMT-ViT
+        </Link>
       </div>
 
       <div className="flex items-center gap-4">
