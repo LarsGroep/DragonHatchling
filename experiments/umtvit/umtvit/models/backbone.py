@@ -16,6 +16,12 @@ was functionally inert. Cross-first makes every round live for any
 ``cross_rounds``. ``full_pair`` is unaffected by the ordering but uses the
 same order for consistency.
 
+``cross_rounds == 0`` is supported (the ``no_cross_attention`` ablation): the
+cross/self-attn ``ModuleList``s are empty, the round loop does not execute, and
+the two embedded streams go straight to fusion — no cross-scale exchange and no
+per-stream self-attention. This is the clean structural baseline that isolates
+the dual-stream-plus-fusion contribution from the cross-scale bridge.
+
 This module is the front end only: spatial uplifting into the latent voxel
 volume, the 3-D SOM, and the projection/heads are U3+ and live elsewhere. The
 backbone therefore exposes exactly what U3 consumes — every encoder layer's

@@ -274,7 +274,6 @@ class ModelConfig:
             "dim",
             "depth",
             "heads",
-            "cross_rounds",
             "volume_h",
             "volume_w",
             "volume_channels",
@@ -290,6 +289,15 @@ class ModelConfig:
             isinstance(self.mlp_ratio, (int, float)) and self.mlp_ratio > 0.0,
             f"{path}.mlp_ratio",
             f"must be a positive float, got {self.mlp_ratio!r}",
+        )
+        # cross_rounds is non-negative: 0 skips the whole cross-scale exchange
+        # (no cross-attention and no per-stream self-attn blocks), i.e. the
+        # dual streams go straight to fusion — the no_cross_attention ablation.
+        _require(
+            isinstance(self.cross_rounds, int) and self.cross_rounds >= 0,
+            f"{path}.cross_rounds",
+            f"must be a non-negative int (0 skips the cross-scale exchange), "
+            f"got {self.cross_rounds!r}",
         )
         _require(
             self.image_size % self.fine_patch == 0,
