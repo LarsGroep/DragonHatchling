@@ -80,11 +80,20 @@ Two user-supplied inputs, both preserved in the research record:
 | U2 | Dual-scale backbone (embed, cross-attention ×2 modes, fusion, encoder) | **Complete** (Opus agent, 2026-07-11; 82 tests; + **U2b fix**: cls_bridged was inert at cross_rounds=1 — reordered cross→self-attn, liveness+gradient proofs, notebook+package both fixed; runs 1–2 stand as the no-cross-attention baseline) |
 | U3 | Spatial uplifting + Soft3DSOM (+ EMA variant) + L_som | **Complete** (Opus agent, 2026-07-11; 104 tests; both SOM modes converge on synthetic blobs, TE 0.013 vs 0.735 random; data-init dead 0.89→0.0) |
 | U4 | Loss suite + trainer (AMP, checkpointing, schedules, resume) | **Complete** (Opus agent, 2026-07-11; 123 tests; resume bit-exact incl. optimizer state; geodesic gate verified) |
-| U5 | Evaluation suite + ablation runner | Pending |
+| U5 | Evaluation suite + ablation runner | **Complete** (Opus agent, 2026-07-11; 136 tests; interrupted-agent WIP audited clean + finished; run_evaluation/render_report + AblationRunner with 6 canonical axes; cross_rounds=0 verified) |
 | U6 | Kaggle notebook (HAM10000) + artifact export | Pending |
 | U7 | EuroSAT swap proof + ablation matrix + final experiment report | Pending |
 
 Update this table as milestones land.
+
+Ablation note (U5, CPU smoke scale — NOT conclusive): on a 20-step tiny run
+the `no_cross_attention` variant tied/beat `full_pair` on linear probe
+(0.77 vs 0.69). At smoke scale this is noise, but it means the cross-scale
+bridge's value is genuinely open and must be settled at real scale — U7 runs
+the ablation matrix on a full GPU run to answer it, with runs 1–2 (inert
+bridge, §NOTEBOOK-FEEDBACK) as the historical no-cross baseline. `kohonen_ema`
+gave the best topographic error / lowest dead fraction in the smoke run, as
+expected for the literal Kohonen rule.
 
 Out-of-band delivery **V1** (owner request, 2026-07-11): the **UMT-ViT
 Explorer** — a standalone `/umtvit` route in the deployed `apps/web` Vercel
