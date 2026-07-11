@@ -18,7 +18,11 @@ from umtvit.models.backbone import UMTViTBackbone
 from umtvit.models.cross_attention import CrossScaleBlock
 from umtvit.models.encoder import SelfAttnBlock, TransformerEncoder
 from umtvit.models.fusion import FeatureFusion
+from umtvit.models.heads import ProjectionHead
+from umtvit.models.model import UMTViT
 from umtvit.models.patch_embed import DualScalePatchEmbed
+from umtvit.models.som3d import Soft3DSOM, resolve_sigma
+from umtvit.models.uplifting import SpatialUplifting
 
 __all__ = [
     "DualScalePatchEmbed",
@@ -27,4 +31,9 @@ __all__ = [
     "SelfAttnBlock",
     "TransformerEncoder",
     "UMTViTBackbone",
+    "SpatialUplifting",
+    "Soft3DSOM",
+    "resolve_sigma",
+    "ProjectionHead",
+    "UMTViT",
 ]

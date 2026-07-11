@@ -46,6 +46,7 @@ __all__ = [
 # the exact accepted set and tests can reference one authority.
 LOADERS = ("csv", "imagefolder", "shapes")
 SOM_UPDATES = ("gradient", "kohonen_ema")
+SOM_INITS = ("data", "random")
 CROSS_ATTENTION_MODES = ("cls_bridged", "full_pair")
 
 # Tolerance for the train/val/test fractions summing to 1.0.
@@ -226,6 +227,17 @@ class ModelConfig:
     (H'×W'×L×C): the Z-axis length is the number of encoder layers ``depth``.
     ``som_grid`` is the 3-D SOM neuron lattice.
 
+    SOM-lifecycle knobs (U3, mirroring the notebook reference):
+
+    - ``som_init`` — how the SOM neurons are seeded: ``"data"`` copies each
+      neuron from a random voxel of the first batch (breaks the collapse-to-mean
+      failure of random init under a wide neighbourhood σ), ``"random"`` keeps
+      the Gaussian-noise init.
+    - ``som_revival`` — when ``True``, dead neurons (zero BMU wins over an
+      epoch) are re-seeded from recently-seen voxels at each epoch end.
+    - ``proj_dim`` — output width of the 2-layer contrastive projection head
+      that reads the pooled latent volume.
+
     ``image_size`` is unified with the dataset: there is a **single source of
     truth**, ``dataset.image_size``. Leave ``model.image_size`` as ``None``
     (the default) and :meth:`Config.validate` derives it from the dataset. It
@@ -248,6 +260,9 @@ class ModelConfig:
     volume_channels: int = 64
     som_grid: Tuple[int, int, int] = (8, 8, 8)
     som_update: str = "gradient"
+    som_init: str = "data"
+    som_revival: bool = True
+    proj_dim: int = 128
     cross_attention: str = "cls_bridged"
 
     def validate(self, path: str = "model") -> None:
@@ -262,6 +277,7 @@ class ModelConfig:
             "volume_h",
             "volume_w",
             "volume_channels",
+            "proj_dim",
         ):
             value = getattr(self, name)
             _require(
@@ -306,6 +322,16 @@ class ModelConfig:
             f"unknown value {self.som_update!r}; must be one of {list(SOM_UPDATES)}",
         )
         _require(
+            self.som_init in SOM_INITS,
+            f"{path}.som_init",
+            f"unknown value {self.som_init!r}; must be one of {list(SOM_INITS)}",
+        )
+        _require(
+            isinstance(self.som_revival, bool),
+            f"{path}.som_revival",
+            f"must be a bool, got {self.som_revival!r}",
+        )
+        _require(
             self.cross_attention in CROSS_ATTENTION_MODES,
             f"{path}.cross_attention",
             f"unknown value {self.cross_attention!r}; "
@@ -326,6 +352,15 @@ class LossConfig:
     (DESOM schedule, ``sigma_start`` ≥ ``sigma_end``); ``order_fmax`` is the
     layer-scale ordering regulariser's maximum spatial-frequency cutoff
     (cycles/pixel), whose per-slice cutoff is ``order_fmax·(1 − l/L)``.
+
+    ``sigma_start``/``sigma_end`` are **nullable**: setting either to ``None``
+    defers it to a grid-derived default (``max(som_grid)/2`` for the start,
+    ``0.75`` for the end — see :func:`umtvit.models.som3d.resolve_sigma`). A
+    start wider than the grid pulls every neuron to the global mean and the map
+    never differentiates, so the grid-derived start keeps the initial
+    neighbourhood inside the lattice. Explicit numbers are honoured as-is; the
+    package default keeps the concrete ``2.0``/``0.5`` (the ``None`` sentinels
+    are opt-in per config, mirroring the notebook presets).
     """
 
     lambda_ntxent: float = 1.0
@@ -335,8 +370,8 @@ class LossConfig:
     lambda_geodesic: float = 0.0
     ntxent_temperature: float = 0.2
     som_temperature: float = 1.0
-    sigma_start: float = 2.0
-    sigma_end: float = 0.5
+    sigma_start: Optional[float] = 2.0
+    sigma_end: Optional[float] = 0.5
     order_fmax: float = 0.5
 
     def validate(self, path: str = "loss") -> None:
@@ -360,19 +395,36 @@ class LossConfig:
                 f"{path}.{name}",
                 f"must be a positive temperature, got {value!r}",
             )
-        for name in ("sigma_start", "sigma_end", "order_fmax"):
+        _require(
+            isinstance(self.order_fmax, (int, float))
+            and not isinstance(self.order_fmax, bool)
+            and self.order_fmax > 0.0,
+            f"{path}.order_fmax",
+            f"must be a positive float, got {self.order_fmax!r}",
+        )
+        # sigma_start/sigma_end are nullable: None defers to the grid-derived
+        # default (resolve_sigma). A concrete value must be a positive number.
+        for name in ("sigma_start", "sigma_end"):
             value = getattr(self, name)
             _require(
-                isinstance(value, (int, float)) and value > 0.0,
+                value is None
+                or (
+                    isinstance(value, (int, float))
+                    and not isinstance(value, bool)
+                    and value > 0.0
+                ),
                 f"{path}.{name}",
-                f"must be a positive float, got {value!r}",
+                f"must be a positive float or null (grid-derived), got {value!r}",
             )
-        _require(
-            self.sigma_start >= self.sigma_end,
-            f"{path}.sigma_end",
-            "SOM neighbourhood anneals downward: sigma_end must be "
-            f"≤ sigma_start ({self.sigma_start}), got {self.sigma_end}",
-        )
+        # The downward-anneal invariant only binds when both ends are explicit;
+        # a None end/start is resolved later against the SOM grid.
+        if self.sigma_start is not None and self.sigma_end is not None:
+            _require(
+                self.sigma_start >= self.sigma_end,
+                f"{path}.sigma_end",
+                "SOM neighbourhood anneals downward: sigma_end must be "
+                f"≤ sigma_start ({self.sigma_start}), got {self.sigma_end}",
+            )
 
 
 @dataclass
