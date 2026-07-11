@@ -241,6 +241,8 @@ class ModelConfig:
     dim: int = 256
     depth: int = 8
     heads: int = 8
+    mlp_ratio: float = 2.0
+    cross_rounds: int = 1
     volume_h: int = 16
     volume_w: int = 16
     volume_channels: int = 64
@@ -256,6 +258,7 @@ class ModelConfig:
             "dim",
             "depth",
             "heads",
+            "cross_rounds",
             "volume_h",
             "volume_w",
             "volume_channels",
@@ -266,6 +269,11 @@ class ModelConfig:
                 f"{path}.{name}",
                 f"must be a positive int, got {value!r}",
             )
+        _require(
+            isinstance(self.mlp_ratio, (int, float)) and self.mlp_ratio > 0.0,
+            f"{path}.mlp_ratio",
+            f"must be a positive float, got {self.mlp_ratio!r}",
+        )
         _require(
             self.image_size % self.fine_patch == 0,
             f"{path}.fine_patch",
