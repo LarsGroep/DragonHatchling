@@ -77,9 +77,9 @@ Two user-supplied inputs, both preserved in the research record:
 |---|---|---|
 | U0 | Package scaffold, config schema, shapes generator, pytest wiring | **Complete** (Opus agent, 2026-07-10; 33 tests pass; reviewed & pushed) |
 | U1 | Universal data pipeline + 3 dataset configs + augmentation registry | **Complete** (Opus agent, 2026-07-10; 62 tests pass incl. grouped-split leakage; image_size unified to dataset.image_size; reviewed & pushed) |
-| U2 | Dual-scale backbone (embed, cross-attention ×2 modes, fusion, encoder) | Pending |
-| U3 | Spatial uplifting + Soft3DSOM (+ EMA variant) + L_som | Pending |
-| U4 | Loss suite + trainer (AMP, checkpointing, schedules, resume) | Pending |
+| U2 | Dual-scale backbone (embed, cross-attention ×2 modes, fusion, encoder) | **Complete** (Opus agent, 2026-07-11; 82 tests; + **U2b fix**: cls_bridged was inert at cross_rounds=1 — reordered cross→self-attn, liveness+gradient proofs, notebook+package both fixed; runs 1–2 stand as the no-cross-attention baseline) |
+| U3 | Spatial uplifting + Soft3DSOM (+ EMA variant) + L_som | **Complete** (Opus agent, 2026-07-11; 104 tests; both SOM modes converge on synthetic blobs, TE 0.013 vs 0.735 random; data-init dead 0.89→0.0) |
+| U4 | Loss suite + trainer (AMP, checkpointing, schedules, resume) | **Complete** (Opus agent, 2026-07-11; 123 tests; resume bit-exact incl. optimizer state; geodesic gate verified) |
 | U5 | Evaluation suite + ablation runner | Pending |
 | U6 | Kaggle notebook (HAM10000) + artifact export | Pending |
 | U7 | EuroSAT swap proof + ablation matrix + final experiment report | Pending |
