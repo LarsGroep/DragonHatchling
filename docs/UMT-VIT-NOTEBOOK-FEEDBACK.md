@@ -181,6 +181,64 @@ representation.
 
 ---
 
+## Run 3 pre-flight (N3) — preset route reproduced on CPU + GPU/AMP hardening
+
+Before the owner's next Kaggle GPU run we reproduced the `ham10000` preset
+route locally and hardened the paths a CPU cannot exercise. The owner hit
+errors on Kaggle (T4 GPU, AMP) but did not capture the message, so this pass
+is split: **reproduce what CPU can run**, **audit what it cannot**.
+
+### Preset route reproduced locally (CPU) — clean
+
+Synthetic HAM10000-layout dataset (160 128 px JPEGs across
+`HAM10000_images_part_1/2`, a 7-class `dx` column, grouped `lesion_id`), config
+edited exactly as the owner does — `CONFIG = apply_preset("ham10000")` plus a
+dataset-path override — with **only run-budget values shrunk** (epochs 2,
+batch 16, `embed_subset` 120, `som_sample_voxels` 1024). **Model scale stayed
+at the preset** (dim 256, depth 8, image 128 px, volume 16²×8×64, SOM 6×6×6,
+6.55 M params) so the preset's real code paths executed. Result: the full
+preset route ran **end-to-end clean on CPU** (~55 s). No CPU-reproducible
+crash exists — which localizes the owner's failure to a **GPU/AMP-only path**
+(the T4 has no bf16, so AMP selects fp16).
+
+### GPU/AMP hardening applied (the likely Kaggle killers)
+
+- **`torch.fft.rfft2` under fp16 autocast** — `ordering_loss` and
+  `monotone_centroid_loss` FFT the latent volume, which is fp16 inside a T4
+  autocast context; cuFFT rejects half precision (and imposes power-of-two size
+  constraints), throwing at runtime. Both now cast `V = V.float()` before the
+  transform. *(Most probable cause of the owner's crash — this is the only path
+  that raises rather than merely degrading.)*
+- **SOM math under autocast** — `Soft3DSOM.loss / bmu / metrics / data_init /
+  revive` now run inside `torch.autocast(enabled=False)` with explicit `.float()`
+  casts. Under autocast `torch.cdist` and the Hebbian `lerp_` would otherwise
+  downcast the fp32 weight buffer to fp16, corrupting BMU assignment and the EMA
+  write. Inputs were already `.float()`ed in the loop; this closes the weight-op
+  gap.
+- **GradScaler skipped-first-step** — AMP may skip the first optimizer step
+  while it calibrates the loss scale (inf/NaN → scale halved, step skipped)
+  while `sched.step()` still runs, emitting PyTorch's "scheduler before
+  optimizer" warning. The loop now advances the LR schedule only when the step
+  actually landed (`scaler.get_scale() >= prev_scale`); constant on CPU, so
+  behaviour there is unchanged.
+- **`torch.load` on resume** — the commented resume snippet now passes
+  `weights_only=False`. torch 2.6+ flipped that default to `True`, whose
+  restricted unpickler rejects this checkpoint (it stores the `CONFIG` dict +
+  history, not a bare tensor state-dict); Kaggle images ship recent torch.
+- **numpy 2.x vs Kaggle 1.26** — audited; the only at-risk call is `np.ptp`,
+  used in function form (`np.ptp(s)`), which is valid on both. No 2.x-only API
+  is generated.
+
+Both routes (default `shapes` and `ham10000` preset) re-execute clean after
+the hardening; the shapes run regenerated `apps/web/public/umtvit/demo.json`
+(schema v1, validates against `apps/web/src/lib/umtvit.ts`).
+
+**If it still fails on Kaggle:** export the failing cell's error text
+(`Cell → Run`, copy the traceback tail) and attach it — the remaining
+GPU-only causes are indistinguishable without the actual message.
+
+---
+
 *Add subsequent runs above this line as new sections (most recent last),
 each with: config delta from the previous run, results table, which
 guidance items were applied, and what changed.*
