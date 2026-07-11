@@ -239,6 +239,68 @@ GPU-only causes are indistinguishable without the actual message.
 
 ---
 
+## Run 3 — HAM10000, Kaggle GPU, 2026-07-11 (post-N2/U2b/N3 notebook)
+
+First run on the fully-fixed notebook: SOM structural fixes (data-init,
+revival, grid-derived σ = 3.0→0.75), Z-free smoothness + monotone-centroid
+penalty, **live** cls_bridged cross-attention (U2b), GPU/AMP hardening (N3).
+Same ham10000 preset, 30 epochs, 6.55 M params, 1890 steps in ~71 min. Ran
+**clean — no errors, no warnings** (the N3 fp16-FFT/SOM-autocast hardening
+resolved the earlier Kaggle crash).
+
+### Results
+
+| Metric | Run 3 | Run 2 | Run 1 | Reading |
+|---|---|---|---|---|
+| Linear probe | 0.770 | 0.774 | 0.768 | stable |
+| k-NN (k=5, cosine) | 0.738 | 0.743 | 0.730 | stable |
+| SOM quantization error | 0.233 | 0.205 | 0.243 | healthy |
+| SOM topographic error | **0.084** | 0.973 (collapsed) | 0.008 | **fixed — topology preserved, no collapse** |
+| SOM dead-neuron fraction | **0.194** | 0.991 | 0.977 | **fixed — ~174/216 neurons alive** |
+| Trustworthiness (k=7) | 0.742 | 0.766 | 0.759 | stable |
+| Centroids (per-channel, fair) | 0.138,0.143,0.142,0.140,0.135,0.144,0.145,0.145 | — | — | ⚠ flat, not monotone |
+| Centroids (channel-mean, old) | 0.138,0.119,0.106,0.113,0.106,0.122,0.133,0.144 | 0.161→0.135(flat) | non-monotone | ⚠ non-monotone |
+
+### What the fixes achieved
+
+- **SOM collapse solved.** Dead fraction fell 0.99 → 0.46 through training
+  (was pinned at 0.99 in runs 1–2); the epoch log shows revival doing its
+  job — 211 neurons re-seeded at epoch 2, tapering to 0 by ~epoch 20 as the
+  map stabilizes — and TE dropping to 0.08–0.11. The SOM is now a genuinely
+  *used*, topology-preserving map (~174/216 live) rather than ~2 neurons
+  quantizing everything. This is the headline result of the N2 work.
+- **Representation quality held.** Probe 0.770 / k-NN 0.738 essentially
+  unchanged from runs 1–2, so fixing the SOM cost nothing on the features.
+- **Notebook robust on Kaggle.** The N3 hardening cleared the crash; full
+  30-epoch run with no errors/warnings.
+
+### Two open findings (both honest negatives, both for U7)
+
+1. **Cross-attention bridge made ~no difference.** Run 3 is the first with
+   the *live* cls_bridged bridge (U2b); probe 0.770 vs runs 1–2's inert-bridge
+   0.768/0.774 — within noise. At this scale the dual-scale cross-attention is
+   not (yet) earning its parameters on the probe metric. This is exactly the
+   question queued for the **U7 ablation matrix** (no_cross_attention vs
+   cls_bridged vs full_pair at full scale); Run 3 supplies the live-bridge
+   data point.
+2. **Z-axis still does not order by scale.** The fair per-channel centroids
+   are essentially flat (~0.14 across all 8 depths); the old channel-mean
+   measure is non-monotone. The Z-free smoothness + monotone penalty (λ 0.05)
+   did not induce a hierarchy. Standing as the experiment's documented
+   negative result (RESEARCH §3): *imposing depth-scale ordering on a
+   residual ViT with these regularizers, at this strength, does not work.*
+   Next levers if pursued (from Run 1 options, escalating): raise
+   `order_monotone` to 0.2–0.3, raise `loss.order` to 0.3–0.5, convex cutoff
+   schedule γ≈2, or a per-depth band-pass (two-sided) target.
+
+### Web explorer
+
+This run's notebook includes the `umtvit_web.json` export — drop it on the
+`/umtvit` page to explore the (now healthy) SOM organization, latent cube,
+and embeddings interactively.
+
+---
+
 *Add subsequent runs above this line as new sections (most recent last),
 each with: config delta from the previous run, results table, which
 guidance items were applied, and what changed.*
