@@ -86,6 +86,24 @@ Two user-supplied inputs, both preserved in the research record:
 
 Update this table as milestones land.
 
+Out-of-band delivery **V1** (owner request, 2026-07-11): the **UMT-ViT
+Explorer** — a standalone `/umtvit` route in the deployed `apps/web` Vercel
+app (one nav link added; ViTreous views untouched). The notebook exports a
+compact `umtvit_web.json` (v1 contract, ≤4 MB) per run; the page ships a
+shapes demo fixture and accepts drag-drop of real run bundles, fully
+client-side. Panels: latent-cube Z-scrubber, per-epoch SOM U-matrix replay +
+hit maps, embedding-formation replay, training curves, metrics row, Z-axis
+honesty panel with the monotone-centroid check. Verified: tsc clean,
+110 vitest pass (15 new), next build clean, notebook re-executed end-to-end.
+
+First owner GPU run (HAM10000, 2026-07-11): linear probe **0.768** / k-NN
+**0.730** (chance 0.143), QE 0.243, TE **0.008**, trustworthiness 0.759 —
+strong label-free signal, near-perfect SOM topology preservation. Flag:
+**dead-neuron fraction 0.977** (SOM underused). Tuning guidance for the next
+run, in priority order: slower neighborhood anneal (`sigma_end: 1.0`),
+smaller SOM grid (`[6,6,6]`), or raise the `som` loss weight; revisit at U5
+ablations.
+
 Out-of-band delivery (owner request, 2026-07-10): the complete experiment
 also ships as a **self-contained universal notebook** —
 `experiments/umtvit/notebooks/kaggle_umtvit.ipynb` (config-cell dataset
