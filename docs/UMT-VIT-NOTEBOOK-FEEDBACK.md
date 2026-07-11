@@ -151,6 +151,34 @@ probe (old metric printed once alongside for comparability); seeded random
 embedding subset + fixed legend; formalized checkpoint save/load;
 conditional eval banner. Web-bundle schema v1 unchanged.
 
+#### Post-run fix (U2b): cls_bridged cross-attention was inert
+
+**What was wrong.** Each cross-scale round ran `per-stream self-attn →
+cross-attention`. In `cls_bridged` mode the cross step writes *only* to each
+stream's CLS token, and fusion then drops the CLS tokens. With the default
+`cross_rounds: 1` (used by every preset, including ham10000/eurosat), the
+CLS-bridge information therefore never reached the patch tokens: the
+cross-scale exchange was functionally inert and the cross-attention
+parameters received a strictly zero gradient. The model degenerated to two
+independent streams plus sum fusion. (CrossViT avoids this because a
+*subsequent* self-attention block redistributes the re-injected CLS into the
+patch tokens.)
+
+**Implication for runs 1–2.** Both runs effectively trained *without any
+cross-scale exchange*. Their metrics remain valid — but specifically as a
+**no-cross-attention baseline**: useful ablation data isolating the
+dual-stream-plus-fusion contribution from the cross-scale bridge.
+
+**The fix.** Reorder each round to `cross-attention → per-stream self-attn`,
+so the self-attn spreads the updated CLS into the patch tokens *before*
+fusion drops the CLS. This makes every round live for any `cross_rounds`
+(purely an ordering change — no new blocks or parameters). `full_pair` is
+unaffected by the ordering but uses the same order for consistency. Applied
+to both the notebook `UMTViT.forward` and the package backbone.
+
+**From run 3 onward** the cross-scale bridge is live and contributes to the
+representation.
+
 ---
 
 *Add subsequent runs above this line as new sections (most recent last),

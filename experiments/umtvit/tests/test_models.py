@@ -169,11 +169,11 @@ def test_fusion_resamples_onto_volume_grid():
 def test_gradient_flows_to_every_parameter(mode: str):
     """A scalar backward must leave a (non-None) gradient on every parameter.
 
-    Note: in ``cls_bridged`` mode the cross-attention writes only to the CLS
-    tokens, which fusion drops, so those parameters receive a *zero* gradient —
-    non-None but inert. This mirrors the notebook reference (CLS never reaches
-    the objective there either); the acceptance criterion is non-None, checked
-    here for every parameter.
+    Since the U2b fix (cross-scale attn runs *before* per-stream self-attn),
+    the self-attn step redistributes the cross-attended CLS into the patch
+    tokens before fusion drops the CLS, so the cross-attention parameters now
+    receive genuinely non-zero gradients in ``cls_bridged`` mode too — see
+    ``test_cross_params_get_nonzero_gradient`` for that stronger check.
     """
     config = _make_config(32, cross_attention=mode)
     backbone = UMTViTBackbone(config)
@@ -182,6 +182,79 @@ def test_gradient_flows_to_every_parameter(mode: str):
     loss.backward()
     missing = [name for name, p in backbone.named_parameters() if p.grad is None]
     assert not missing, f"parameters with no gradient: {missing}"
+
+
+@pytest.mark.parametrize("mode", ["cls_bridged", "full_pair"])
+def test_cross_params_get_nonzero_gradient(mode: str):
+    """Cross-attention parameters receive NON-ZERO gradients (U2b).
+
+    Before the U2b ordering fix, ``cls_bridged`` with ``cross_rounds=1`` wrote
+    the cross-attended result only to the CLS tokens, which fusion drops before
+    the objective — so the cross-attention weights received a strictly *zero*
+    gradient (non-None but inert). Reordering each round to cross → self-attn
+    lets the self-attn spread the updated CLS into the patch tokens, so the
+    cross path now contributes to the loss. This asserts at least one
+    ``self.cross`` parameter has a non-zero gradient after backward.
+    """
+    config = _make_config(32, cross_attention=mode, cross_rounds=1)
+    backbone = UMTViTBackbone(config)
+    out = backbone(torch.randn(2, 3, 32, 32))
+    loss = sum(layer.sum() for layer in out["layers"]) + out["fused"].sum()
+    loss.backward()
+
+    cross_grads = [
+        p.grad for name, p in backbone.named_parameters()
+        if name.startswith("cross.") and p.grad is not None
+    ]
+    assert cross_grads, "no cross-attention parameters found"
+    max_abs = max(float(g.abs().max()) for g in cross_grads)
+    assert max_abs > 0.0, (
+        f"cross-attention parameters received an all-zero gradient in {mode} "
+        f"mode (max |grad| = {max_abs}); the cross path is inert"
+    )
+
+
+def test_cls_bridged_cross_path_is_live():
+    """The ``cls_bridged`` cross path must influence the backbone output (U2b).
+
+    Zeroing the cross-attention blocks' output projection weights *and* biases
+    turns each cross round into an identity on the token streams. If the cross
+    path were inert (the pre-U2b bug), the backbone output would be unchanged;
+    since cross now precedes the per-stream self-attn, nulling it must shift the
+    fused tokens and every layer output. Both backbones share initial weights
+    (identical seed + identical structure) so the delta isolates the cross path.
+    """
+    x = torch.randn(2, 3, 32, 32)
+
+    torch.manual_seed(0)
+    live = UMTViTBackbone(_make_config(32, cross_attention="cls_bridged",
+                                       cross_rounds=1))
+    torch.manual_seed(0)
+    nulled = UMTViTBackbone(_make_config(32, cross_attention="cls_bridged",
+                                         cross_rounds=1))
+    # Null every cross block's output projection -> cross becomes identity.
+    with torch.no_grad():
+        for block in nulled.cross:
+            for attn in (block.fine_from_coarse, block.coarse_from_fine):
+                attn.out_proj.weight.zero_()
+                attn.out_proj.bias.zero_()
+
+    with torch.no_grad():
+        out_live = live(x)
+        out_nulled = nulled(x)
+
+    fused_delta = (out_live["fused"] - out_nulled["fused"]).abs().max().item()
+    layer_delta = (
+        out_live["layers"][-1] - out_nulled["layers"][-1]
+    ).abs().max().item()
+    assert fused_delta > 1e-6, (
+        f"nulling the cross path left the fused tokens unchanged "
+        f"(max delta {fused_delta}); the cross-scale bridge is inert"
+    )
+    assert layer_delta > 1e-6, (
+        f"nulling the cross path left the final layer output unchanged "
+        f"(max delta {layer_delta})"
+    )
 
 
 # --- parameter budget ----------------------------------------------------

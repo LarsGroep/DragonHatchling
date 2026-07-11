@@ -2,8 +2,19 @@
 
 Wires the U2 components into the encoder trunk of UMT-ViT:
 
-    embed → cross_rounds × (per-stream self-attn + cross-scale attn)
+    embed → cross_rounds × (cross-scale attn + per-stream self-attn)
           → fusion → encoder (all L layer outputs kept)
+
+Round ordering (U2b fix): each round runs **cross-scale attention first,
+then per-stream self-attention**. In ``cls_bridged`` mode the cross step
+writes only to each stream's CLS token; running self-attn afterwards lets
+that updated CLS redistribute into the patch tokens *before* fusion drops
+the CLS. With the old (self-attn → cross) order and the default
+``cross_rounds: 1``, the CLS-bridge information never reached the patch
+tokens and the cross-scale parameters received zero gradient — the exchange
+was functionally inert. Cross-first makes every round live for any
+``cross_rounds``. ``full_pair`` is unaffected by the ordering but uses the
+same order for consistency.
 
 This module is the front end only: spatial uplifting into the latent voxel
 volume, the 3-D SOM, and the projection/heads are U3+ and live elsewhere. The
@@ -78,8 +89,9 @@ class UMTViTBackbone(nn.Module):
             channels=d.channels,
         )
 
-        # One self-attn block per stream per cross round, then a cross-scale
-        # exchange: cross_rounds × (per-stream self-attn + cross).
+        # One cross-scale exchange then a self-attn block per stream, per
+        # round: cross_rounds × (cross + per-stream self-attn). See the
+        # module docstring for why cross precedes self-attn (U2b).
         self.stream_fine = nn.ModuleList(
             SelfAttnBlock(m.dim, m.heads, m.mlp_ratio) for _ in range(m.cross_rounds)
         )
@@ -108,9 +120,12 @@ class UMTViTBackbone(nn.Module):
         for self_f, self_c, cross in zip(
             self.stream_fine, self.stream_coarse, self.cross
         ):
-            tokens_fine, tokens_coarse = cross(
-                self_f(tokens_fine), self_c(tokens_coarse)
-            )
+            # Cross first so the CLS-bridged exchange is written, then
+            # per-stream self-attn redistributes the updated CLS into the
+            # patch tokens before fusion drops the CLS (U2b).
+            tokens_fine, tokens_coarse = cross(tokens_fine, tokens_coarse)
+            tokens_fine = self_f(tokens_fine)
+            tokens_coarse = self_c(tokens_coarse)
         fused = self.fusion(tokens_fine, tokens_coarse)
         layers: List[Tensor] = self.encoder(fused)
         return {"layers": layers, "fused": fused}
