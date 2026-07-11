@@ -81,7 +81,7 @@ Two user-supplied inputs, both preserved in the research record:
 | U3 | Spatial uplifting + Soft3DSOM (+ EMA variant) + L_som | **Complete** (Opus agent, 2026-07-11; 104 tests; both SOM modes converge on synthetic blobs, TE 0.013 vs 0.735 random; data-init dead 0.89→0.0) |
 | U4 | Loss suite + trainer (AMP, checkpointing, schedules, resume) | **Complete** (Opus agent, 2026-07-11; 123 tests; resume bit-exact incl. optimizer state; geodesic gate verified) |
 | U5 | Evaluation suite + ablation runner | **Complete** (Opus agent, 2026-07-11; 136 tests; interrupted-agent WIP audited clean + finished; run_evaluation/render_report + AblationRunner with 6 canonical axes; cross_rounds=0 verified) |
-| U6 | Kaggle notebook (HAM10000) + artifact export | Pending |
+| U6 | Kaggle notebook (HAM10000) + artifact export | **Complete** (2026-07-11/12; U6a: owner Run-3 improvements back-ported into canonical notebook — HAM10000 path auto-detect, non-square crop, OOM guard; U6b, Opus agent: package-driven kaggle_umtvit_package.ipynb + notebooks/README.md; both executed clean on CPU, web bundle validates against the TS parser, 136 tests) |
 | U7 | EuroSAT swap proof + ablation matrix + final experiment report | Pending |
 
 Update this table as milestones land.
