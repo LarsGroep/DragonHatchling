@@ -155,3 +155,24 @@ def test_total_loss_gradient_path():
 def test_total_loss_empty_rejected():
     with pytest.raises(ValueError):
         total_loss({}, {})
+
+
+# --------------------------------------------------------------------------- #
+# Mixed-precision FFT regression (SGP run 2 field bug)
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize("dtype", [torch.bfloat16, torch.float16])
+def test_spectral_losses_accept_half_precision_volumes(dtype):
+    """Under autocast the volume reaches the spectral losses as bf16/fp16, and
+    torch.fft supports neither — slice_power_spectrum must upcast internally
+    (regression: 'rfft2 not implemented for BFloat16' on the Kaggle T4 run)."""
+    torch.manual_seed(0)
+    vol = torch.randn(2, 8, 8, 3, 4, dtype=torch.float32, requires_grad=True)
+    half = vol.to(dtype)
+    order = ordering_loss(half, fmax=0.5)
+    mono = monotone_centroid_loss(half)
+    assert order.ndim == 0 and torch.isfinite(order)
+    assert mono.ndim == 0 and torch.isfinite(mono)
+    # the fp32 upcast must not detach the graph.
+    grad_vol = torch.randn(2, 8, 8, 3, 4, requires_grad=True)
+    ordering_loss(grad_vol.to(dtype), fmax=0.5).backward()
+    assert grad_vol.grad is not None

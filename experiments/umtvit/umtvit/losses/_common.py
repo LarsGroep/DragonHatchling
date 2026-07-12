@@ -50,8 +50,14 @@ def slice_power_spectrum(volume: Tensor) -> Tensor:
     Args:
         volume: Latent voxel volume ``[B, H', W', L, C]``.
 
+    Under mixed precision the volume arrives as bfloat16/float16, which
+    ``torch.fft`` does not support (CUDA raises "rfft2 not implemented for
+    BFloat16"). The FFT is therefore taken in float32 — the cast is
+    autograd-transparent, and the spectral losses are a small fraction of the
+    step, so the extra precision costs nothing measurable.
+
     Shape:
         - Output: ``[B, L, C, H', W'//2 + 1]`` real, non-negative power.
     """
-    permuted = volume.permute(0, 3, 4, 1, 2)  # [B, L, C, H', W']
+    permuted = volume.permute(0, 3, 4, 1, 2).float()  # [B, L, C, H', W'] fp32 for FFT
     return torch.fft.rfft2(permuted, norm="ortho").abs() ** 2

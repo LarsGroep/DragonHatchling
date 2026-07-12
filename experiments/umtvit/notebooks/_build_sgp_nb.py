@@ -68,17 +68,28 @@ re-runs: training auto-resumes from the latest checkpoint.
 cells.append(CODE(
     """
 # ─── Knobs ──────────────────────────────────────────────────────────────────
-EPOCHS       = 30       # full run ≈ 75 min on a T4 → healthy SOM (Report Run 3).
-                        #   Lower for a quick look; the SGP graph is legible from
-                        #   ~10 epochs, crisp by 30. Timed out? Just Run All again
+EPOCHS       = 30       # ≈ 60-75 min on a T4. Timed out? Just Run All again
                         #   (auto-resume continues from the last checkpoint).
+SOM_GRID     = (6, 6, 6)  # Run-comparison finding (docs/SGP-RUNS.md): 6×6×6 (216
+                          #   neurons) reaches a healthy ~0.19 dead fraction in 30
+                          #   epochs (v14/v16); the 8×8×8 map from SGP run 2 was
+                          #   still 47% dead at 30 — use (8, 8, 8) only with
+                          #   EPOCHS ≈ 60+.
 N_PROBE      = 8        # probe images whose BMU trail we export/animate.
+HITS_IMAGES  = 256      # eval images measured for som.json hit counts, so node
+                        #   sizing + dead flags reflect the DATASET's usage of the
+                        #   map (8 probes alone overstated deadness in run 2).
 COMMUNITY_K  = 12       # k-means community count over neuron weights (som.json).
+RUN_EVAL     = True     # linear probe / k-NN / SOM+manifold metrics (≈ +6 min);
+                        #   run 2 skipped this and lost comparability with v14/v16.
 SEED         = 7
-CKPT_DIR     = "/kaggle/working/sgp_ckpt"
 OUT_DIR      = "/kaggle/working/sgp_out"
 REPO_URL     = "https://github.com/LarsGroep/DragonHatchling"
 REPO_BRANCH  = "claude/project-review-muokn9"   # branch carrying vitreous.som + this nb
+
+# Checkpoints are per-SOM-grid: switching SOM_GRID must not try to resume an
+# incompatible _latest.pt from an earlier run.
+CKPT_DIR = f"/kaggle/working/sgp_ckpt_{'x'.join(str(g) for g in SOM_GRID)}"
 """
 ))
 
@@ -150,6 +161,7 @@ if meta:
     cfg.dataset.metadata_csv = meta[0]
 if imgdirs:
     cfg.dataset.image_dir = imgdirs
+cfg.model.som_grid = tuple(int(g) for g in SOM_GRID)
 cfg.train.epochs = EPOCHS
 cfg.train.seed = SEED
 cfg.train.checkpoint_dir = CKPT_DIR
@@ -215,6 +227,50 @@ print("training done — final metrics:", trainer.metrics_history[-1] if trainer
 # --------------------------------------------------------------------------- #
 cells.append(MD(
     """
+## 4b · Evaluation — the SSL yardsticks (comparability with v14/v16)
+
+SGP run 2 skipped this and lost comparability with the earlier runs, so it is
+now part of the standard flow: frozen-feature **linear probe** and **k-NN**
+against the train split, SOM quality (QE / TE / dead fraction), and
+trustworthiness — the same `umtvit.eval.run_evaluation` suite the package
+notebooks use. Labels enter the experiment only here.
+"""
+))
+cells.append(CODE(
+    """
+eval_metrics = {}
+if RUN_EVAL:
+    from umtvit.eval import run_evaluation
+
+    train_eval_ds = UniversalDataset(cfg, split="train", mode="eval")
+    results = run_evaluation(
+        model, som, cfg,
+        {"train": train_eval_ds, "test": eval_ds},
+        seed=SEED, device=device,
+    )
+    probe = (results.get("linear_probe") or {}).get("accuracy")
+    knn = (results.get("knn") or {}).get("accuracy")
+    s = results.get("som", {})
+    m = results.get("manifold", {})
+    n_classes = len(getattr(train_eval_ds, "classes", []) or []) or 7
+    eval_metrics = {
+        "linear_probe": probe,
+        "knn": knn,
+        "chance": 1.0 / n_classes,
+        "som_quantization_error": s.get("quantization_error"),
+        "som_topographic_error": s.get("topographic_error"),
+        "som_dead_fraction": s.get("dead_neuron_fraction"),
+        "trustworthiness": m.get("trustworthiness"),
+    }
+    print({k: (round(v, 4) if isinstance(v, float) else v) for k, v in eval_metrics.items()})
+else:
+    print("RUN_EVAL=False — skipping the probe suite")
+"""
+))
+
+# --------------------------------------------------------------------------- #
+cells.append(MD(
+    """
 ## 5 · Build the SGP assets (the numpy-only, tested core)
 
 Everything below is a thin call into `vitreous.som` — the same functions
@@ -245,16 +301,29 @@ with torch.no_grad():
     vols = model(imgs)["volume"].detach().cpu().numpy().astype(np.float32)  # [N,H,W,Z,C]
 N, Hc, Wc, Z, Cv = vols.shape
 
-# BMU hit counts over ALL probe voxels (node sizing + dead flags).
-all_vox = vols.reshape(-1, Cv)
-hits    = hit_counts(bmu_indices(all_vox, weights), K)
+# BMU hit counts over a BROAD eval pass (HITS_IMAGES images), not just the 8
+# probes: run 2's probe-only hits flagged 69% of neurons dead when the training
+# dead fraction was 47% — node sizing/dead flags should reflect the dataset's
+# use of the map. Batched forward; a few minutes at most.
+hits = np.zeros(K, dtype=np.int64)
+hit_idx = rng.choice(len(eval_ds), size=min(HITS_IMAGES, len(eval_ds)), replace=False)
+BS = 32
+with torch.no_grad():
+    for s in range(0, len(hit_idx), BS):
+        batch = torch.stack([eval_ds[int(i)][0] for i in hit_idx[s : s + BS]]).to(device)
+        v = model(batch)["volume"].detach().cpu().numpy().astype(np.float32)
+        hits += hit_counts(bmu_indices(v.reshape(-1, Cv), weights), K)
+print(f"hit pass: {len(hit_idx)} images → {int((hits > 0).sum())}/{K} neurons used")
 
-# som.json — the shared SOM graph asset.
+# som.json — the shared SOM graph asset. Provenance carries the eval metrics
+# so a bundle is comparable with the run log (docs/SGP-RUNS.md) on its own.
 som_asset = build_som_graph_asset(
     weights, grid, hits=hits, community_k=COMMUNITY_K, seed=SEED,
     depth_steps=int(cfg.model.depth), volume_grid=(Hc, Wc),
     provenance={"dataset": cfg.dataset.name, "epochs": int(cfg.train.epochs),
-                "params_millions": round(sum(p.numel() for p in model.parameters())/1e6, 2)},
+                "som_grid": list(grid), "hit_images": int(len(hit_idx)),
+                "params_millions": round(sum(p.numel() for p in model.parameters())/1e6, 2),
+                "eval": {k: v for k, v in eval_metrics.items() if v is not None}},
 )
 
 # One BMU map per probe image → [Z, H', W'] uint16.
