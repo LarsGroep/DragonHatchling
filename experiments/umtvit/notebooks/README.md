@@ -13,6 +13,7 @@ are for*.
 | `kaggle_umtvit_package.ipynb` | Milestone-U6 package form — same experiment via the installed package | Imports the **`umtvit`** package (config → data → model → engine → eval → export) | Yes — the config cell (`CONFIG_NAME`, `OVERRIDES`) |
 | `kaggle_umtvit_ham10000_run3.ipynb` | Frozen executed-results artifact | Inline (a run of the canonical notebook) | No — never edit; it is a record |
 | `kaggle_umtvit_sgp.ipynb` | **SGP** — trains/resumes UMT-ViT on HAM10000, then renders the trained 3-D SOM as a native ViTreous graph + per-image BMU replay, and exports `som.json`/`som_bmu.bin` packs + a `sgp_ham10000.json` web bundle (`docs/SGP-ARCHITECTURE.md`) | Imports **`umtvit`** + **`vitreous.som`** (the numpy-only SGP core); regenerate with `_build_sgp_nb.py` | Edit via the builder |
+| `kaggle_umtvit_sgp_run2.ipynb` | Frozen executed SGP results artifact (owner Kaggle run, 8×8×8 SOM, 30 epochs — `docs/SGP-RUNS.md`) | Inline (a run of the pre-fix SGP notebook, incl. the since-fixed runtime `rfft2` patch cell) | No — never edit; it is a record |
 
 ## `kaggle_umtvit.ipynb` — canonical self-contained notebook
 

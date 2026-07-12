@@ -51,3 +51,28 @@ Positives worth keeping: the packaged pipeline ran end-to-end from a fresh
 clone, auto-resume checkpoints worked, QE was the best of the three runs, all
 12 k-means communities were populated, and the exported bundle loaded in the
 `/sgp` viewer as designed.
+
+## Executed artifact
+
+The owner's executed notebook is frozen as
+[`../experiments/umtvit/notebooks/kaggle_umtvit_sgp_run2.ipynb`](../experiments/umtvit/notebooks/kaggle_umtvit_sgp_run2.ipynb)
+(never edit; it is a record — it still contains the runtime `rfft2` patch cell
+that the source fix has since made unnecessary). Its recorded finals differ
+slightly from the summary table above (a separate execution of the same
+notebook version):
+
+| epoch | loss | dead | TE |
+|---|---|---|---|
+| 5 | 1.997 | 0.703 | 0.965 |
+| 10 | 1.066 | 0.566 | 0.574 |
+| 15 | 0.946 | 0.531 | 0.288 |
+| 20 | 0.679 | 0.494 | 0.140 |
+| 25 | 0.556 | 0.492 | 0.111 |
+| 30 | **0.475** | **0.471** | **0.096** |
+
+Final QE 0.217 · TE 0.096 (the best topographic error recorded for the 512
+map, edging v14's 6×6×6 0.0845 benchmark class) · training dead fraction 0.471
+still trending down at epoch 30 — consistent with this file's conclusion that
+the 8×8×8 map is under-trained at 30 epochs rather than unhealthy. Probe-only
+hit counts flagged 366/512 (71.5%) unused for the 8 exported probes — the
+measurement artifact the broad hit pass now corrects.
