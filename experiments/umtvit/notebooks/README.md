@@ -20,7 +20,11 @@ config, data pipeline, dual-scale backbone, 3-D SOM, losses, training loop,
 visualisations, evaluation, and the artifact/web-bundle exporters — is written
 **inline** so the whole experiment is legible top-to-bottom in one file with no
 package dependency. It carries the current conveniences (HAM10000 path
-auto-detect, non-square-safe crop, CUDA-OOM guard). This is the notebook to
+auto-detect, non-square-safe crop, CUDA-OOM guard). It runs the **entire roadmap
+in one notebook**: training with **periodic per-epoch checkpoints and
+`resume:"auto"`** (a timed-out Kaggle run continues on re-run), evaluation, an
+optional **six-axis ablation matrix** (`RUN_ABLATIONS`), and a report + web
+bundle that together form the full experimental record. This is the notebook to
 prototype in; the `umtvit` package is the hardened extraction of exactly this
 code.
 
