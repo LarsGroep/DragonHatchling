@@ -48,11 +48,24 @@ One source of truth, declared on the dataset. HAM10000's 7 diagnoses group as:
 | bcc | basal cell carcinoma | malignant | 2 invasive |
 | mel | melanoma | malignant | 2 invasive |
 
-Notes for review: `akiec` sits at level 1 because it is intraepithelial
-(in-situ) — the honest middle of a normal→in-situ→invasive biological axis.
-`bcc` is grouped at level 2 as a malignant invasive tumour (locally invasive,
-low metastatic potential — a footnote worth surfacing in the UI, not a separate
-level). These cutpoints are the main thing to confirm before building (§8).
+This grouping is **confirmed against the dermatology literature** (§9), not a
+guess, and it is the *medically correct* one — with two cautions the research
+surfaced:
+
+- **Do NOT copy the popular Kaggle split.** A widely-reproduced HAM10000 binary
+  split reports "benign 6705 / malignant 3295", which is effectively *nevi vs.
+  everything else* and, in some copies, literally files **BCC (a carcinoma) as
+  benign**. That is clinically wrong; we use the correct grouping above
+  (malignant = mel + bcc + akiec = 1954 images; benign = 8061; ≈19.5%
+  malignant).
+- **The in-situ rung is real but keratinocyte-specific.** `akiec` (actinic
+  keratosis / Bowen's disease) is genuinely *pre-invasive*: AK is the most
+  common precursor of cutaneous SCC (progression ≈10% over 10 years; Bowen's ≈5%
+  to invasive), so `benign → akiec (in-situ) → invasive SCC` is a textbook
+  pathway (§9). `mel` and `bcc` have no separate in-situ class in HAM10000, so
+  they sit at level 2 as "invasive malignancy"; only `akiec` truly occupies the
+  in-situ rung. The UI copy should say exactly that rather than implying every
+  malignancy passed through a labelled in-situ stage.
 
 ## 3. Where it lives (core = one source of truth)
 
@@ -166,15 +179,47 @@ apps/web
 
 L1–L3 need no GPU and no new training run — they read models you already have.
 
-## 8. Decisions to confirm before building
+## 8. Decisions — resolved by research (§9)
 
-1. **Category cutpoints (§2):** is `akiec`=in-situ(1), `bcc`+`mel`=invasive(2)
-   the grouping you want, or should `bcc` be its own level / melanoma be
-   isolated at the top? (Changes only a lookup table.)
-2. **Malignancy readout:** derived sum of softmax now (free), or also a
-   dedicated trained binary head later for calibration under HAM10000's ~67% `nv`
-   imbalance? (v1 derived either way; head is a v2 option.)
-3. **Manifold feature space:** final-step CLS from the supervised pack's
-   `tokens.bin` (ships today), or the UMT-ViT SSL pooled feature (the more
-   "unsupervised" choice, but a separate model)? The design supports either via
-   the `space` field; default proposes the always-present CLS.
+The owner is not a dermatology expert and asked these to be settled from the
+literature. Resolved recommendations (all reversible — each is a lookup table or
+a config field):
+
+1. **Category cutpoints — RESOLVED.** Use the medically-correct grouping in §2:
+   malignant `{mel, bcc, akiec}`, benign `{nv, bkl, df, vasc}`; ordinal
+   `benign(0)` → `akiec` in-situ `(1)` → `{mel, bcc}` invasive `(2)`. Reject the
+   common Kaggle "bcc-as-benign" split. **Optional secondary "urgency" toggle:**
+   because melanoma is by far the deadliest, a variant that isolates `mel` at the
+   top is worth offering as a second colouring — cheap (another lookup) and
+   clinically meaningful.
+2. **Malignancy readout — RESOLVED for v1: derived, high-sensitivity.** Ship the
+   softmax-sum readout (free, honest). Given the ~19.5% malignant imbalance and
+   that a missed melanoma is the worst possible error, expose an **adjustable
+   decision threshold defaulting to a high-sensitivity operating point** (flag
+   "possible malignancy" well below 0.5) rather than a plain argmax — this
+   matches how the field treats the asymmetric cost (§9). A trained binary head
+   stays a v2 calibration option.
+3. **Manifold feature space — RESOLVED for v1: supervised CLS, SSL as a study.**
+   Default to the final-step CLS from the supervised pack's `tokens.bin` (ships
+   today; the axis is meaningful because the model was trained to separate these
+   classes). Keep the UMT-ViT SSL pooled feature selectable via `space` — and
+   note it as a genuinely interesting `/sgp` experiment: *does the label-free
+   manifold recover the same benign→malignant axis the supervised model learned?*
+   That question is on-brand and doesn't block v1.
+
+## 9. Evidence base
+
+- **Malignant grouping & the Kaggle-split caution** — the HAM10000 source paper
+  and multiple classification studies; malignant = melanoma + BCC + AK/intra-
+  epithelial carcinoma is the clinically standard split (benign = nv, bkl, df,
+  vasc). Tschandl et al., *Sci Data* 2018; SkinNet-16, *Front. Oncol.* 2022.
+- **`akiec` as pre-invasive / the in-situ rung** — actinic keratosis is the
+  commonest precursor of cutaneous SCC (≈10%/10 yr progression); Bowen's disease
+  is SCC in-situ (≈5% → invasive). dermoscopedia "AK/Bowen's/SCC"; RCPA
+  *Pathology* 2024; ScienceDirect S0190962200254601.
+- **Honesty / disclaimer framing & the OOD gate** — no skin-cancer app has FDA
+  approval; professional guidance is that such tools be labelled *educational,
+  not diagnostic, not clinically validated*, and that they under-perform on real
+  populations vs. reported. BMJ systematic review (PMC7190019); *AI smartphone
+  apps need better regulation* (PMC8144419). This directly motivates the §1
+  honesty table and the manifold OOD refusal.
