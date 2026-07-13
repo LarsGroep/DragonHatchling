@@ -66,6 +66,35 @@ SPLITS = ("train", "val", "test")
 
 
 @dataclass(frozen=True)
+class Taxonomy:
+    """Honest, label-free groupings of a dataset's classes (malignancy lens).
+
+    Every field is a deterministic function of the class list — no new labels.
+    ``malignant`` maps each class name to a benign/malignant flag;
+    ``category_level`` maps each class to an **ordinal** level (``0`` = least
+    advanced) whose human labels are ``category_labels``. ``axis_pair`` names the
+    two endpoints of the unsupervised manifold axis (benign → malignant).
+
+    See ``docs/MALIGNANCY-LENS.md``. The lens NEVER emits clinical stage; these
+    groupings are a coarse benign→in-situ→invasive *category* reading, not
+    AJCC/TNM staging (which is not present in a dermatoscopic surface image).
+    """
+
+    malignant: Dict[str, bool] = field(default_factory=dict)
+    category_level: Dict[str, int] = field(default_factory=dict)
+    category_labels: List[str] = field(default_factory=list)
+    axis_pair: Tuple[str, str] = ("benign", "malignant")
+
+    def to_json(self) -> Dict[str, Any]:
+        return {
+            "malignant": dict(self.malignant),
+            "category_level": dict(self.category_level),
+            "category_labels": list(self.category_labels),
+            "axis_pair": list(self.axis_pair),
+        }
+
+
+@dataclass(frozen=True)
 class DatasetSpec:
     """Declarative description of a dataset (§4)."""
 
@@ -79,6 +108,10 @@ class DatasetSpec:
     license: str = ""
     citation: str = ""
     kaggle_sources: List[str] = field(default_factory=list)
+    # Optional, additive: honest class groupings for the malignancy lens. Absent
+    # (None) for every dataset that has no clinical taxonomy — nothing else in
+    # the pipeline reads it, so existing datasets/tests are unaffected.
+    taxonomy: Optional["Taxonomy"] = None
 
     def __post_init__(self) -> None:
         if self.class_names and len(self.class_names) != self.num_classes:
@@ -91,6 +124,12 @@ class DatasetSpec:
                 f"class_colors has {len(self.class_colors)} entries but "
                 f"num_classes is {self.num_classes}"
             )
+        if self.taxonomy is not None and self.class_names:
+            missing = [c for c in self.class_names if c not in self.taxonomy.malignant]
+            if missing:
+                raise ValueError(
+                    f"taxonomy.malignant is missing classes: {missing}"
+                )
 
 
 @dataclass
@@ -630,6 +669,24 @@ _HAM10000_DX = {
 # Stable class order (sorted by code) so label indices are reproducible.
 _HAM10000_CODES = sorted(_HAM10000_DX)  # akiec, bcc, bkl, df, mel, nv, vasc
 _HAM10000_CLASSES = [_HAM10000_DX[c] for c in _HAM10000_CODES]
+
+# Honest, label-free clinical groupings (docs/MALIGNANCY-LENS.md §2), keyed by
+# the human-readable class names (so it matches DatasetSpec.class_names). The
+# malignant set is the medically-correct {melanoma, BCC, actinic keratosis};
+# the category ordinal is benign(0) -> in-situ/pre-invasive[akiec](1) ->
+# invasive malignancy[mel, bcc](2). This is a coarse category axis, NOT staging.
+_HAM10000_MALIGNANT = {"akiec", "bcc", "mel"}
+_HAM10000_CATEGORY = {  # dx code -> ordinal level
+    "nv": 0, "bkl": 0, "df": 0, "vasc": 0,   # benign
+    "akiec": 1,                               # in-situ / pre-invasive (AK/Bowen's)
+    "bcc": 2, "mel": 2,                       # invasive malignancy
+}
+_HAM10000_TAXONOMY = Taxonomy(
+    malignant={_HAM10000_DX[c]: (c in _HAM10000_MALIGNANT) for c in _HAM10000_CODES},
+    category_level={_HAM10000_DX[c]: _HAM10000_CATEGORY[c] for c in _HAM10000_CODES},
+    category_labels=["benign", "in-situ", "invasive"],
+    axis_pair=("benign", "malignant"),
+)
 _HAM10000_COLORS = [
     "#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#42d4f4",
 ]
@@ -677,6 +734,7 @@ class HAM10000Adapter(DatasetAdapter):
         license="CC BY-NC 4.0",
         citation="Tschandl et al. 2018",
         kaggle_sources=["kmader/skin-cancer-mnist-ham10000"],
+        taxonomy=_HAM10000_TAXONOMY,
     )
 
     def _find_metadata(self, root: Path) -> Path:
@@ -1001,6 +1059,7 @@ __all__ = [
     "IMAGE_EXTS",
     "SPLITS",
     "DatasetSpec",
+    "Taxonomy",
     "Sample",
     "SplitPolicy",
     "VizHooks",

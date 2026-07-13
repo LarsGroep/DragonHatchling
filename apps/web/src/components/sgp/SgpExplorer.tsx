@@ -193,6 +193,12 @@ export function SgpExplorer() {
             }}
           />
           <Link
+            href="/lens"
+            className="rounded-md px-2.5 py-1 text-[11px] font-medium text-muted transition-colors hover:text-readout"
+          >
+            Lens
+          </Link>
+          <Link
             href="/umtvit"
             className="rounded-md px-2.5 py-1 text-[11px] font-medium text-muted transition-colors hover:text-readout"
           >
