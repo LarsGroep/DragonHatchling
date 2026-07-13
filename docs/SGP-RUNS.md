@@ -9,23 +9,49 @@ narratives (Runs 1–3 of the original notebook line) live in
 
 ## Head-to-head
 
-| metric | v14 | v16 (best model) | SGP run 2 |
-|---|---|---|---|
-| notebook | inline `new.ipynb` | inline, path fixes | `kaggle_umtvit_sgp.ipynb` (packaged `umtvit` + `vitreous`) |
-| SOM grid | 6×6×6 (216) | 6×6×6 (216) | 8×8×8 (512) |
-| linear probe (chance 0.143) | 0.7700 | **0.7816** | — (eval step omitted) |
-| k-NN (k=5, cosine) | 0.7384 | **0.7384** | — |
-| trustworthiness (k=7) | 0.7424 | **0.7706** | — |
-| SOM quantization error | 0.2329 | 0.2387 | **0.1994** (larger map — not directly comparable) |
-| SOM topographic error | **0.0845** | 0.1147 | 0.1089 |
-| dead fraction (training) | 0.1944 | **0.1852** | 0.4746 |
-| SGP graph export | — | — | ✅ `sgp_ham10000.json` (0.29 MB) + 8 probe packs |
-| wall time (30 epochs, T4) | ~1 h | ~1 h | ~3.1 h (larger SOM + per-epoch checkpoints) |
+| metric | v14 | v16 | SGP run 2 | **SGP run 3 (best model)** |
+|---|---|---|---|---|
+| notebook | inline `new.ipynb` | inline, path fixes | `kaggle_umtvit_sgp.ipynb` (pre-fix) | `kaggle_umtvit_sgp.ipynb` (fixed, defaults) |
+| SOM grid | 6×6×6 (216) | 6×6×6 (216) | 8×8×8 (512) | 6×6×6 (216) |
+| linear probe (chance 0.143) | 0.7700 | 0.7816 | — (eval step omitted) | **0.7922** |
+| k-NN (k=5, cosine) | 0.7384 | **0.7384** | — | 0.7278 |
+| trustworthiness (k=7) | 0.7424 | 0.7706 | — | **0.7807** |
+| SOM quantization error (eval) | 0.2329 | 0.2387 | 0.1994 (larger map) | **0.1831** |
+| SOM topographic error (eval) | 0.0845 | 0.1147 | 0.1089 | **0.0220** |
+| dead fraction (training metric) | 0.1944 | 0.1852 | 0.4746 | **0.2407** / **4.2 %** by the 256-image hit pass (207/216 used) |
+| SGP graph export | — | — | ✅ | ✅ `sgp_ham10000.json` + 8 probe packs |
+| wall time (30 epochs, T4) | ~1 h | ~1 h | ~3.1 h | ~3.1 h (per-epoch ckpts + eval) |
 
-**Recommendation (owner + adopted as notebook defaults):** v16 is the best
-model for downstream use. The SGP pipeline should train a **6×6×6** SOM at 30
-epochs (or 8×8×8 at ~60+) to match v16's map health while keeping the graph
-export.
+**Standing recommendation:** **SGP run 3 is the best model AND the certified
+pipeline** — first run of the fixed notebook (no runtime patches), and it beats
+v16 on linear probe (+1.06 pp), trustworthiness (+1.01 pp), QE, and TE (0.022,
+best ever recorded, ~4× better than v14's previous best) while carrying the
+full graph export. The only metric below v16 is k-NN (−1.06 pp). Its
+`sgp_ham10000.json` is the flagship `/sgp` bundle. The 8×8×8 @ ~60-epoch run
+remains optional upside (run 2 showed the big map still converging at 30).
+
+## SGP run 3 — the certified baseline (fixed notebook, defaults)
+
+First execution of the post-fix notebook (6×6×6, 30 epochs, `RUN_EVAL=True`,
+256-image hit pass), owner-run on a Kaggle T4, 2026-07-13. No runtime patches
+needed — the bf16 FFT fix held in the field.
+
+| epoch | loss | dead | TE |
+|---|---|---|---|
+| 5 | 2.006 | 0.588 | 0.896 |
+| 10 | 1.163 | 0.343 | 0.494 |
+| 15 | 1.023 | 0.301 | 0.200 |
+| 20 | 0.701 | 0.278 | 0.041 |
+| 25 | 0.595 | 0.255 | 0.041 |
+| 30 | 0.522 | 0.241 | 0.044 |
+
+Final eval: probe **0.7922** · k-NN 0.7278 · trustworthiness **0.7807** ·
+QE **0.1831** · TE **0.0220** · dead 0.2778 (eval subsample) / **9/216 = 4.2 %**
+by the dataset-wide 256-image hit pass. The three dead-fraction figures are
+three honest budgets of the same map: last-batch voxels (training metric),
+a bounded eval subsample (`som_metrics`), and the full 256-image voxel pass —
+the broad pass is the one `som.json` node sizing uses, and it shows nearly the
+whole lattice participating.
 
 ## SGP run 2 — findings folded back into the repo
 
