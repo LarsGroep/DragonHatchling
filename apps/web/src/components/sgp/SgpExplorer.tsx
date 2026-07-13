@@ -26,7 +26,15 @@ import { BmuReplayPanel } from "./BmuReplayPanel";
 import { SomLatticeView } from "./SomLatticeView";
 import { UMatrixPanel } from "./UMatrixPanel";
 
-const DEMO_URL = "/sgp/demo.json";
+/**
+ * Bundled runs, tried in order on mount: the REAL HAM10000 run (SGP run 3 —
+ * probe 0.7922, TE 0.022, 207/216 neurons live; docs/SGP-RUNS.md) first, the
+ * synthetic generator-contract demo as fallback.
+ */
+const DEFAULT_URLS: Array<{ url: string; label: string }> = [
+  { url: "/sgp/ham10000.json", label: "ham10000 · SGP run 3" },
+  { url: "/sgp/demo.json", label: "demo (synthetic)" },
+];
 
 export function SgpExplorer() {
   const [bundle, setBundle] = useState<SgpBundle | null>(null);
@@ -47,18 +55,25 @@ export function SgpExplorer() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      try {
-        const res = await fetch(DEMO_URL);
-        if (!res.ok) throw new Error(`could not load demo fixture (${res.status})`);
-        const parsed = parseSgpJson(await res.text());
-        if (alive) {
-          setBundle(parsed);
-          setSource("demo");
+      let lastErr: string | null = null;
+      for (const { url, label } of DEFAULT_URLS) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`could not load ${url} (${res.status})`);
+          const parsed = parseSgpJson(await res.text());
+          if (alive) {
+            setBundle(parsed);
+            setSource(label);
+          }
+          lastErr = null;
+          break;
+        } catch (e) {
+          lastErr = e instanceof Error ? e.message : String(e);
         }
-      } catch (e) {
-        if (alive) setError(e instanceof Error ? e.message : String(e));
-      } finally {
-        if (alive) setLoading(false);
+      }
+      if (alive) {
+        if (lastErr) setError(lastErr);
+        setLoading(false);
       }
     })();
     return () => {
@@ -115,6 +130,20 @@ export function SgpExplorer() {
   const Z = bundle?.som.depth_steps ?? 1;
   const depthInt = Math.max(0, Math.min(Z - 1, Math.round(t)));
   const liveCount = bundle ? bundle.som.num_neurons - bundle.som.dead_neurons : 0;
+
+  // Eval metrics stamped into the bundle's provenance by the notebook
+  // (RUN_EVAL=True) — shown when present so the run tells its own story.
+  const evalProv = ((): Record<string, number> | null => {
+    const e = bundle?.som.provenance?.eval;
+    if (e && typeof e === "object" && !Array.isArray(e)) {
+      const out: Record<string, number> = {};
+      for (const [k, v] of Object.entries(e as Record<string, unknown>)) {
+        if (typeof v === "number" && Number.isFinite(v)) out[k] = v;
+      }
+      return Object.keys(out).length ? out : null;
+    }
+    return null;
+  })();
 
   return (
     <div
@@ -223,6 +252,25 @@ export function SgpExplorer() {
                 hint={`${bundle.som.communities.method} · seed ${bundle.som.communities.seed}`}
               />
               <Metric label="probe images" value={String(bundle.probes.length)} />
+              {evalProv?.linear_probe !== undefined ? (
+                <Metric
+                  label="linear probe"
+                  value={evalProv.linear_probe.toFixed(4)}
+                  tone="evidence"
+                  hint={
+                    evalProv.chance !== undefined
+                      ? `label-free SSL · chance ${evalProv.chance.toFixed(3)}`
+                      : "label-free SSL"
+                  }
+                />
+              ) : null}
+              {evalProv?.som_topographic_error !== undefined ? (
+                <Metric
+                  label="topographic err"
+                  value={evalProv.som_topographic_error.toFixed(4)}
+                  hint="lower = neighbors stay neighbors"
+                />
+              ) : null}
             </div>
 
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
