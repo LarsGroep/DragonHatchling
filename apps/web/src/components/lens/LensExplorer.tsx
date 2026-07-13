@@ -15,7 +15,15 @@ import { LensValidationError, parseLensJson, type LensBundle } from "@/src/lib/l
 import { Panel } from "../umtvit/controls";
 import { LensReadout, type LensMode } from "./LensReadout";
 
-const DEMO_URL = "/lens/demo.json";
+/**
+ * Bundled bundles tried in order on mount: a REAL HAM10000 lens export
+ * (probe-derived probabilities + SSL features + learned axis, from the Kaggle
+ * notebook's lens-export cell) first, the synthetic contract demo as fallback.
+ */
+const DEFAULT_URLS: Array<{ url: string; label: string }> = [
+  { url: "/lens/ham10000.json", label: "ham10000 · real run" },
+  { url: "/lens/demo.json", label: "demo (synthetic)" },
+];
 const LENSES: Array<{ id: LensMode; label: string }> = [
   { id: "malignancy", label: "Malignant vs benign" },
   { id: "category", label: "Category axis" },
@@ -38,18 +46,25 @@ export function LensExplorer() {
   useEffect(() => {
     let alive = true;
     (async () => {
-      try {
-        const res = await fetch(DEMO_URL);
-        if (!res.ok) throw new Error(`could not load demo (${res.status})`);
-        const parsed = parseLensJson(await res.text());
-        if (alive) {
-          setBundle(parsed);
-          setSource("demo");
+      let lastErr: string | null = null;
+      for (const { url, label } of DEFAULT_URLS) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`could not load ${url} (${res.status})`);
+          const parsed = parseLensJson(await res.text());
+          if (alive) {
+            setBundle(parsed);
+            setSource(label);
+          }
+          lastErr = null;
+          break;
+        } catch (e) {
+          lastErr = e instanceof Error ? e.message : String(e);
         }
-      } catch (e) {
-        if (alive) setError(e instanceof Error ? e.message : String(e));
-      } finally {
-        if (alive) setLoading(false);
+      }
+      if (alive) {
+        if (lastErr) setError(lastErr);
+        setLoading(false);
       }
     })();
     return () => {

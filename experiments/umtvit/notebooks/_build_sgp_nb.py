@@ -494,6 +494,110 @@ print("or upload the packs/ tree to Supabase Storage for the live workbench.")
 # --------------------------------------------------------------------------- #
 cells.append(MD(
     """
+## 8b · Malignancy lens export — a REAL `lens_ham10000.json`
+
+Turns this trained model into a bundle for the ViTreous **`/lens`** page
+(`docs/MALIGNANCY-LENS.md`). UMT-ViT is self-supervised (no diagnosis head), so
+the class probabilities come from a **linear probe on the frozen SSL features** —
+the same ~0.79-accuracy yardstick this run already reports. That is honestly an
+*estimate*, not a diagnostic softmax; the `/lens` page frames it that way and the
+bundle records the probe accuracy in its provenance.
+
+Three honest readouts fall out: malignant-vs-benign and the benign→in-situ→
+invasive category axis (from the probe probabilities + the HAM10000 taxonomy),
+and the unsupervised manifold position (projecting each lesion's pooled feature
+onto the label-free benign↔malignant axis, with an out-of-distribution refusal).
+"""
+))
+cells.append(CODE(
+    """
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
+from umtvit.eval import extract_features
+from vitreous.malignancy import build_malignancy_axis
+
+# HAM10000 dx codes (sorted == the dataset's integer label order) → names + groups.
+DX_NAME = {"akiec": "Actinic keratoses", "bcc": "Basal cell carcinoma",
+           "bkl": "Benign keratosis", "df": "Dermatofibroma", "mel": "Melanoma",
+           "nv": "Melanocytic nevi", "vasc": "Vascular lesion"}
+DX_MALIGNANT = {"akiec", "bcc", "mel"}
+DX_LEVEL = {"nv": 0, "bkl": 0, "df": 0, "vasc": 0, "akiec": 1, "bcc": 2, "mel": 2}
+
+codes = list(train_ds.classes) if hasattr(train_ds, "classes") else \\
+        list(UniversalDataset(cfg, "train", "eval").classes)
+class_names = [DX_NAME.get(c, c) for c in codes]
+taxonomy = {
+    "malignant": {DX_NAME.get(c, c): (c in DX_MALIGNANT) for c in codes},
+    "category_level": {DX_NAME.get(c, c): DX_LEVEL.get(c, 0) for c in codes},
+    "category_labels": ["benign", "in-situ", "invasive"],
+    "axis_pair": ["benign", "malignant"],
+}
+
+# Frozen pooled SSL features + labels for the train split (the probe's fit set).
+tr_eval = UniversalDataset(cfg, "train", "eval")
+ftr = extract_features(model, tr_eval, device=device)
+Xtr = ftr.pooled.cpu().numpy().astype(np.float32)      # [Ntr, depth*Cv]
+ytr = ftr.labels.cpu().numpy().astype(np.int64)
+is_mal_tr = np.array([codes[y] in DX_MALIGNANT for y in ytr])
+
+# Unsupervised benign↔malignant axis over the SSL features.
+lens_axis = build_malignancy_axis(
+    Xtr, is_mal_tr, space="umtvit_pooled",
+    provenance={"dataset": cfg.dataset.name, "feature": "umtvit_pooled",
+                "epochs": int(cfg.train.epochs)},
+)
+
+# Linear probe → per-image class probabilities (the honest SSL estimate).
+scaler = StandardScaler().fit(Xtr)
+# multinomial is the default for multiclass in modern sklearn (the explicit
+# multi_class arg was removed in 1.7) — leave it unset for forward compatibility.
+clf = LogisticRegression(max_iter=2000, C=1.0).fit(scaler.transform(Xtr), ytr)
+probe_acc = float(clf.score(scaler.transform(Xtr), ytr))
+
+def _probs7(pooled_2d):
+    raw = clf.predict_proba(scaler.transform(pooled_2d))     # [n, len(clf.classes_)]
+    full = np.zeros((raw.shape[0], len(codes)), dtype=np.float64)
+    full[:, clf.classes_] = raw                              # align to the full 7
+    return full
+
+# Reuse the SGP probe images (thumbnails already made): pooled = volume mean over H,W.
+demo_pooled = vols.mean(axis=(1, 2)).reshape(N, -1).astype(np.float32)   # [N, depth*Cv]
+demo_probs = _probs7(demo_pooled)
+lesions = []
+for i in range(N):
+    _, lbl = eval_ds[int(probe_idx[i])]
+    lbl = int(lbl)
+    lesions.append({
+        "id": f"probe_{probe_idx[i]:05d}",
+        "thumb_png_b64": _thumb_b64(probe_idx[i]),
+        "true_label": DX_NAME.get(codes[lbl], None) if 0 <= lbl < len(codes) else None,
+        "probabilities": [float(x) for x in demo_probs[i]],
+        "feature": [float(x) for x in demo_pooled[i]],
+    })
+
+lens_bundle = {
+    "lens_schema_version": 1,
+    "dataset": cfg.dataset.name,
+    "class_names": class_names,
+    "taxonomy": taxonomy,
+    "axis": lens_axis,
+    "lesions": lesions,
+    "provenance": {"probe": "logreg on frozen UMT-ViT SSL pooled features",
+                   "probe_train_accuracy": round(probe_acc, 4),
+                   "note": "class probabilities are SSL-probe estimates, not a diagnostic softmax"},
+}
+lens_path = Path(OUT_DIR) / f"lens_{cfg.dataset.name}.json"
+lens_path.write_text(json.dumps(lens_bundle, separators=(",", ":")))
+print(f"wrote {lens_path} ({lens_path.stat().st_size/1e6:.2f} MB) — "
+      f"{N} lesions, probe train acc {probe_acc:.3f}, axis dim {lens_axis['dim']}")
+print("Download lens_" + cfg.dataset.name + ".json and drop it into /lens, or "
+      "share it to set as the page default.")
+"""
+))
+
+# --------------------------------------------------------------------------- #
+cells.append(MD(
+    """
 ## 9 · What you just built
 
 - A trained UMT-ViT SOM on HAM10000, rendered as a **native** graph — real
@@ -501,6 +605,9 @@ cells.append(MD(
 - A per-image **BMU replay across encoder depth** — the workbench's
   activation animation, driven by genuine model geometry.
 - Additive pack assets + a self-contained web bundle, pack format unchanged.
+- A real **`lens_ham10000.json`** for the `/lens` page — honest malignant/benign,
+  category, and manifold readouts, with the class probabilities clearly marked as
+  SSL-probe estimates (not a diagnostic softmax).
 
 Next (SGP roadmap S3–S5, `docs/SGP-ARCHITECTURE.md`): the `SomBrainView` web
 component consumes exactly these assets so the map lives inside the ViTreous
