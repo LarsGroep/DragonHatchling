@@ -1,5 +1,47 @@
 # DragonHatchling
 
+> ## Where the Hebbian × HAM10000 work lives
+>
+> The goal this repo is being pointed at: **visualise Hebbian networks to make
+> skin-cancer diagnosis interpretable, on HAM10000.** Read this before the rest
+> of the README, which documents older lines of work.
+>
+> | Concern | Module | Status |
+> |---|---|---|
+> | Hebbian co-activation as a `GraphProvider` | `vitreous.hebbian` | ✅ tested, numpy-only; torch recorder is lazy |
+> | Dermoscopic concept naming (ISIC 2018 Task 2) | `vitreous.dermoscopy` | ✅ tested; metadata demoted to a confound probe |
+> | Sensitivity / melanoma recall / real baselines | `vitreous.clinical` | ✅ tested |
+> | Malignancy lens readouts (+ OOD refusal) | `vitreous.malignancy` | ✅ tested |
+> | Composed bundle | `vitreous.interpret` | ✅ tested |
+> | A real HAM10000 run filling any of it in | — | ❌ **not yet run** |
+>
+> Three things are worth knowing up front, because the code used to imply
+> otherwise:
+>
+> 1. **The `BrainView` in `apps/web` renders ViT *attention*, not Hebbian
+>    co-activation.** Attention edges come from
+>    `vitreous.graph.ViTTokenGraphProvider`; nodes are tokens, not neurons. The
+>    genuine Hebbian mechanism is `vitreous.hebbian`, which satisfies the same
+>    `GraphProvider` Protocol — so the view can render it unchanged once a pack
+>    ships a Hebbian graph asset, and only then does the word belong on screen.
+> 2. **Concepts must not be named after patient metadata.** The legacy HAM10000
+>    export in `webapp/graph.json` labels visual neuron clusters
+>    `"location: foot · location: abdomen"`. A dermatoscopic crop does not
+>    contain body site, and body site correlates with diagnosis in HAM10000, so
+>    that grounding surfaces confounds as if they were learned features.
+>    `vitreous.dermoscopy` grounds in the five ISIC 2018 Task 2 criteria instead
+>    and routes metadata to an explicit *"treat this explanation with caution"*
+>    warning.
+> 3. **HAM10000 is ~67 % nevi, so accuracy against uniform chance means little.**
+>    Quote the majority-class baseline (0.669) and per-class recall — melanoma
+>    sensitivity above all. `vitreous.clinical` reports every rate with a Wilson
+>    interval and its support count.
+>
+> **What is still missing to make this real:** no HAM10000 run has produced a
+> Hebbian graph, and the pipeline currently persists only a scalar `val_acc`,
+> discarding the held-out `[N, K]` probability matrix that every clinical
+> metric needs. Fixing that retention is the next blocker.
+
 > **ViTreous** — the current project — is a multi-view visual-analytics
 > workbench for Vision Transformers: Image Space, Gaussian Feature Field,
 > Interaction Graph, and Latent Embeddings, bidirectionally synced over a
@@ -170,6 +212,15 @@ The explainability pipeline then:
 3. **grounds** concepts in dataset attributes when available
    (`ground_concepts`) — measuring how much more a concept fires on images
    *with* an attribute than without, and naming it after its top attributes.
+
+> ⚠️ **For HAM10000 this step is superseded.** The legacy loader grounds in
+> patient metadata (sex / age / body site), which produces concept names like
+> `"location: foot"` for clusters that only ever saw a dermatoscopic crop — a
+> confound dressed as an explanation. Use `vitreous.dermoscopy` instead: it
+> grounds in the five ISIC 2018 Task 2 criteria, enforces a minimum-support
+> bar the legacy version lacks, and turns the metadata attributes into a
+> confound *warning* rather than a name. Attribute grounding for CUB-200, where
+> the attributes really are visual, is unaffected.
 
 Plus pixel-level tools: **Grad-CAM** (no dependencies) and **SHAP**
 (optional `shap` extra).
