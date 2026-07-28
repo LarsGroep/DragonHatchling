@@ -331,3 +331,61 @@ def test_ham10000_split_filtering(tmp_path):
         subset = HAM10000Adapter().load(root, sp)
         assert all(s.split == sp for s in subset)
         assert len(subset) == counts[sp]
+
+
+# --------------------------------------------------------------------------- #
+# HAM10000 taxonomy — the malignant grouping is a medical claim, so pin it.
+# --------------------------------------------------------------------------- #
+
+
+def test_ham10000_malignant_grouping_is_the_clinically_correct_one():
+    """malignant = {melanoma, BCC, AK/intraepithelial carcinoma}.
+
+    docs/MALIGNANCY-LENS.md §2 warns against the widely-reproduced Kaggle
+    binary split, which is effectively "nevi vs everything else" and in some
+    copies files **basal cell carcinoma — a carcinoma — as benign**. Nothing
+    enforced the correct grouping until this test: it is a one-line edit away
+    from silently becoming wrong, and it drives every malignancy readout.
+    """
+    from vitreous.data import HAM10000Adapter
+
+    tax = HAM10000Adapter.spec.taxonomy
+    assert tax is not None, "HAM10000 must carry a Taxonomy for the malignancy lens"
+
+    malignant = {name for name, is_mal in tax.malignant.items() if is_mal}
+    assert malignant == {"Melanoma", "Basal cell carcinoma", "Actinic keratoses"}
+
+    # The specific error the docs call out.
+    assert tax.malignant["Basal cell carcinoma"] is True, "BCC is a carcinoma, not benign"
+
+    benign = {name for name, is_mal in tax.malignant.items() if not is_mal}
+    assert benign == {
+        "Melanocytic nevi",
+        "Benign keratosis",
+        "Dermatofibroma",
+        "Vascular lesion",
+    }
+    # Every class is classified exactly once.
+    assert malignant | benign == set(HAM10000Adapter.spec.class_names)
+
+
+def test_ham10000_category_axis_places_akiec_at_the_in_situ_rung():
+    """Only akiec is genuinely pre-invasive; mel and bcc sit at invasive.
+
+    HAM10000 has no separate in-situ class for melanoma or BCC, so they are
+    level 2 — the UI copy must not imply every malignancy passed through a
+    labelled in-situ stage (docs/MALIGNANCY-LENS.md §2).
+    """
+    from vitreous.data import HAM10000Adapter
+
+    tax = HAM10000Adapter.spec.taxonomy
+    assert tax.category_labels == ["benign", "in-situ", "invasive"]
+    assert tax.category_level["Actinic keratoses"] == 1
+    assert tax.category_level["Melanoma"] == 2
+    assert tax.category_level["Basal cell carcinoma"] == 2
+    for benign_class in ("Melanocytic nevi", "Benign keratosis", "Dermatofibroma", "Vascular lesion"):
+        assert tax.category_level[benign_class] == 0
+
+    # A malignant class can never sit at the benign rung, and vice versa.
+    for name, level in tax.category_level.items():
+        assert (level > 0) == tax.malignant[name], name
