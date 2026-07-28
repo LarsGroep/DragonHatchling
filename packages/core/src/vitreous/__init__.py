@@ -12,8 +12,21 @@ Submodules (M0 ships interfaces; logic lands per the §16 roadmap):
 - :mod:`vitreous.xai`         attribution suite + faithfulness eval (M2)
 - :mod:`vitreous.gaussians`   Gaussian Feature Field builder (M3)
 - :mod:`vitreous.graph`       GraphProvider + ViTTokenGraphProvider (M3)
+- :mod:`vitreous.som`         SomGraphProvider — the SGP self-organizing map
+- :mod:`vitreous.hebbian`     HebbianGraphProvider — neuron co-activation
+  ("fire together, wire together") as a GraphProvider, plus the observation-only
+  HebbianRecorder. This is the *actual* Hebbian mechanism; the attention graph
+  from :mod:`vitreous.graph` is a different thing and must not be called Hebbian.
 - :mod:`vitreous.projections` dataset-level PCA/UMAP/t-SNE projections (M3)
 - :mod:`vitreous.concepts`    k-sparse-autoencoder concept tier + k-means fallback (M4)
+- :mod:`vitreous.malignancy`  malignancy lens readouts (benign/malignant, category
+  axis, learned manifold + OOD refusal)
+- :mod:`vitreous.dermoscopy`  ISIC-2018-Task-2 dermoscopic attribute vocabulary,
+  concept grounding, and the metadata **confound probe** — body site/age/sex may
+  warn about a concept, never name one
+- :mod:`vitreous.clinical`    sensitivity/specificity, per-class + melanoma recall,
+  balanced accuracy, ROC AUC, threshold sweeps, Wilson intervals, and the
+  majority-class baseline that accuracy must always be quoted beside
 - :mod:`vitreous.packs`       Explanation Pack manifest models + writer
 - :mod:`vitreous.storage`     StorageAdapter (local / Supabase / HF backends) (M4)
 
