@@ -27,6 +27,7 @@ MODULES = [
     "vitreous.malignancy",
     "vitreous.dermoscopy",
     "vitreous.clinical",
+    "vitreous.interpret",
     "vitreous.packs",
     "vitreous.packs.manifest",
     "vitreous.packs.writer",

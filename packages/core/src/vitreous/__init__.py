@@ -27,6 +27,9 @@ Submodules (M0 ships interfaces; logic lands per the §16 roadmap):
 - :mod:`vitreous.clinical`    sensitivity/specificity, per-class + melanoma recall,
   balanced accuracy, ROC AUC, threshold sweeps, Wilson intervals, and the
   majority-class baseline that accuracy must always be quoted beside
+- :mod:`vitreous.interpret`   composes hebbian + dermoscopy + clinical into one
+  interpretability bundle; every block degrades independently and records why it
+  is absent, so "not measured" is never confusable with "measured as zero"
 - :mod:`vitreous.packs`       Explanation Pack manifest models + writer
 - :mod:`vitreous.storage`     StorageAdapter (local / Supabase / HF backends) (M4)
 
