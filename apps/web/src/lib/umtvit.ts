@@ -29,7 +29,19 @@ export interface UmtvitModel {
 export interface UmtvitMetrics {
   linear_probe: number | null;
   knn: number | null;
+  /**
+   * Uniform chance, 1/K. NOT the bar a probe has to clear on an imbalanced
+   * dataset — see {@link UmtvitMetrics.majority_baseline}. Kept because the
+   * executed runs recorded it.
+   */
   chance: number | null;
+  /**
+   * Majority-class rate: the accuracy of always predicting the most common
+   * class. This is the real floor. HAM10000 is ~67% `nv`, so a probe at 0.79
+   * beats uniform chance 0.143 by a huge margin while beating the baseline
+   * that matters by only ~12 pp. Null when the run did not record it.
+   */
+  majority_baseline: number | null;
   som_quantization_error: number | null;
   som_topographic_error: number | null;
   som_dead_fraction: number | null;
@@ -111,6 +123,17 @@ function numOrNull(v: unknown, path: string): number | null {
   if (v === null) return null;
   if (typeof v !== "number" || !Number.isFinite(v)) fail(path, "a finite number or null");
   return v;
+}
+
+/**
+ * Like {@link numOrNull} but tolerates the key being absent entirely, for
+ * fields added after bundles were already in the wild. An older run that
+ * predates `majority_baseline` must still parse — it simply reports the
+ * baseline as unknown rather than being rejected or, worse, silently compared
+ * against the wrong one.
+ */
+function optionalNumOrNull(v: unknown, path: string): number | null {
+  return v === undefined ? null : numOrNull(v, path);
 }
 
 function str(v: unknown, path: string): string {
@@ -200,6 +223,7 @@ function parseMetrics(v: unknown): UmtvitMetrics {
     linear_probe: f("linear_probe"),
     knn: f("knn"),
     chance: f("chance"),
+    majority_baseline: optionalNumOrNull(o.majority_baseline, "metrics.majority_baseline"),
     som_quantization_error: f("som_quantization_error"),
     som_topographic_error: f("som_topographic_error"),
     som_dead_fraction: f("som_dead_fraction"),

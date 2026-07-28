@@ -259,14 +259,28 @@ export function SgpExplorer() {
               />
               <Metric label="probe images" value={String(bundle.probes.length)} />
               {evalProv?.linear_probe !== undefined ? (
+                /*
+                 * Baseline honesty: uniform chance (1/K) is not the bar on an
+                 * imbalanced dataset. HAM10000 is ~67% nevi, so predicting the
+                 * commonest class always scores ~0.669 — a probe is only
+                 * evidence once it clears THAT. Tone stays neutral unless the
+                 * run recorded a majority baseline to compare against.
+                 */
                 <Metric
                   label="linear probe"
                   value={evalProv.linear_probe.toFixed(4)}
-                  tone="evidence"
+                  tone={
+                    evalProv.majority_baseline !== undefined &&
+                    evalProv.linear_probe > evalProv.majority_baseline
+                      ? "evidence"
+                      : "readout"
+                  }
                   hint={
-                    evalProv.chance !== undefined
-                      ? `label-free SSL · chance ${evalProv.chance.toFixed(3)}`
-                      : "label-free SSL"
+                    evalProv.majority_baseline !== undefined
+                      ? `label-free SSL · vs majority ${evalProv.majority_baseline.toFixed(3)}`
+                      : evalProv.chance !== undefined
+                        ? `label-free SSL · unif ${evalProv.chance.toFixed(3)} · majority not recorded`
+                        : "label-free SSL"
                   }
                 />
               ) : null}
