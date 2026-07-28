@@ -1,12 +1,18 @@
 """Concept tier (§9) — SAE training, providers, dictionary, quality gate.
 
-Offline, synthetic. The SAE tests require torch (skipped cleanly if absent);
-the dictionary / quality-gate / interface tests are torch-free (k-means uses
-scikit-learn, which is an M0-env dep).
+Offline, synthetic. The SAE tests require torch (skipped cleanly if absent).
+
+The dictionary / interface tests additionally require **scikit-learn**, which
+is an ``[ml]`` extra and NOT an M0 dependency — this docstring previously
+claimed otherwise, and the mismatch was real: with torch present but sklearn
+absent those tests collected and failed with ModuleNotFoundError rather than
+skipping. They now carry their own guard. The quality-gate tests are genuinely
+free of both.
 """
 
 from __future__ import annotations
 
+import importlib.util
 from types import SimpleNamespace
 
 import numpy as np
@@ -137,7 +143,18 @@ def test_quality_gate_flags_degenerate_sae():
 # dictionary building
 # --------------------------------------------------------------------------- #
 
+# These exercise KMeansConceptProvider, which imports scikit-learn lazily
+# (concepts.py). The module-level torch guard above does NOT cover that: with
+# torch installed but scikit-learn absent — a perfectly ordinary partial-[ml]
+# environment, and what a torch-only CI job would produce — these four
+# collected and then failed with ModuleNotFoundError instead of skipping.
+sklearn_required = pytest.mark.skipif(
+    importlib.util.find_spec("sklearn") is None,
+    reason="scikit-learn (an [ml] extra) is required for KMeansConceptProvider",
+)
 
+
+@sklearn_required
 def test_build_dictionary_shape_and_exemplars():
     X, labels, K = _clustered(seed=5)
     prov = KMeansConceptProvider.fit(X, n_clusters=K, seed=0, layer=9)
@@ -159,6 +176,7 @@ def test_build_dictionary_shape_and_exemplars():
     assert json.loads(json.dumps(d.to_json()))["n_concepts"] == K
 
 
+@sklearn_required
 def test_label_hook_is_pluggable_and_defaults_none():
     X, labels, K = _clustered(seed=6)
     prov = KMeansConceptProvider.fit(X, n_clusters=K, seed=0)
@@ -179,6 +197,7 @@ def test_label_hook_is_pluggable_and_defaults_none():
 # --------------------------------------------------------------------------- #
 
 
+@sklearn_required
 def test_kmeans_provider_interface_parity():
     X, labels, K = _clustered(seed=7)
     km = KMeansConceptProvider.fit(X, n_clusters=K, seed=0, layer=9)
@@ -197,6 +216,7 @@ def test_kmeans_provider_interface_parity():
     assert km.encode(X).sum(axis=1) == pytest.approx(np.ones(X.shape[0]), abs=1e-4)
 
 
+@sklearn_required
 def test_concept_pack_spec_build_asset():
     X, labels, K = _clustered(seed=8)
     prov = KMeansConceptProvider.fit(X, n_clusters=32, seed=0, layer=9)

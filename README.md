@@ -37,10 +37,26 @@
 >    sensitivity above all. `vitreous.clinical` reports every rate with a Wilson
 >    interval and its support count.
 >
-> **What is still missing to make this real:** no HAM10000 run has produced a
-> Hebbian graph, and the pipeline currently persists only a scalar `val_acc`,
-> discarding the held-out `[N, K]` probability matrix that every clinical
-> metric needs. Fixing that retention is the next blocker.
+> **What is still missing to make this real.** The plumbing is in place — the
+> pipeline now retains what the metrics need (`Trainer.predict` returns the
+> held-out `[N, K]` probability matrix; `DatasetLoader.probe_image_ids` gives
+> concept activations something to join on) and
+> `scripts/build_interpretability_bundle.py` composes the whole bundle from
+> saved artifacts without retraining. What is left is **running it**:
+>
+> 1. A HAM10000 training run that attaches `vitreous.hebbian.HebbianRecorder`
+>    (call `observe_labels()` before each forward, or class affinities stay
+>    empty) and saves `stats.save_npz(...)`.
+> 2. That run also saving per-image probe activations **with their image ids**,
+>    and the held-out `y_true` / `y_prob` from a lesion-grouped split.
+> 3. The ISIC 2018 Task 2 ground-truth masks (a separate ~2 594-image download;
+>    nothing in the repo fetches them). Only ~26 % of HAM10000 is annotated, so
+>    the grounding split is a subset of the probe set — the CLI does that inner
+>    join and prints the drop.
+>
+> Try the shape of the output first with `python
+> scripts/build_interpretability_bundle.py --demo --out bundle.json`, which
+> needs no data at all.
 
 > **ViTreous** — the current project — is a multi-view visual-analytics
 > workbench for Vision Transformers: Image Space, Gaussian Feature Field,
