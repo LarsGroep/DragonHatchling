@@ -49,6 +49,14 @@ jobs:
         working-directory: apps/live
         run: python -m pytest -q
 
+      # experiments/umtvit as a whole needs torch and stays out of scope (see
+      # the note at the top), but this one file is deliberately pure stdlib —
+      # it loads umtvit/eval/baselines.py by path. It pins the majority-class
+      # baseline against uniform chance, which is the mistake that made a
+      # ~12 pp HAM10000 gain read as "≫ chance" across the docs and the UI.
+      - name: Test umtvit read-out baselines (torch-free subset)
+        run: python -m pytest experiments/umtvit/tests/test_baselines.py -q
+
   web:
     name: web (schema + web typecheck, test, lint, build)
     runs-on: ubuntu-latest
