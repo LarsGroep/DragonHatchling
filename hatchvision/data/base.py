@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 import torch
@@ -112,6 +113,37 @@ class DatasetLoader(ABC):
         val = self.val_dataset()
         n = min(n, len(val))
         return torch.stack([val[i][0] for i in range(n)])
+
+    def probe_image_ids(self, n: int = 64) -> Optional[List[str]]:
+        """Identifiers aligned 1:1 with :meth:`probe_batch`, or ``None``.
+
+        Concept activations are only useful for grounding if each row can be
+        joined to an external annotation — e.g. the ISIC 2018 Task 2
+        dermoscopic masks, which cover a ~26 % subset of HAM10000 and are keyed
+        by ISIC image id. Without ids the probe matrix cannot be joined to
+        anything, so grounding is forced back onto whatever the loader happens
+        to carry in-band (for HAM10000 that was patient metadata, which must
+        never name a visual concept).
+
+        The default derives ids from the underlying dataset's file paths, which
+        covers every loader whose split object exposes ``samples`` as
+        ``(path, label)`` pairs. Returns ``None`` rather than inventing ids
+        when they cannot be recovered — a caller must be able to tell "no ids"
+        from "ids that happen to be indices".
+        """
+        val = self.val_dataset()
+        samples = getattr(val, "samples", None)
+        if samples is None:
+            return None
+        limit = min(n, len(val), len(samples))
+        ids: List[str] = []
+        for i in range(limit):
+            entry = samples[i]
+            path = entry[0] if isinstance(entry, (tuple, list)) and entry else entry
+            if not isinstance(path, (str, Path)):
+                return None
+            ids.append(Path(path).stem)
+        return ids
 
     def probe_attributes(self, n: int = 64) -> Optional[torch.Tensor]:
         """Attribute rows aligned with :meth:`probe_batch`, or None."""

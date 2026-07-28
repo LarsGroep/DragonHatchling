@@ -115,6 +115,46 @@ class Trainer:
         return loss_sum / total, correct / total
 
     @torch.no_grad()
+    def predict(self, loader: DataLoader) -> tuple["np.ndarray", "np.ndarray"]:
+        """Per-image labels and softmax probabilities over ``loader``.
+
+        :meth:`evaluate` deliberately returns only ``(loss, accuracy)``, and
+        that scalar was the *only* thing any run ever persisted — which is why
+        this project could never report a sensitivity, a specificity, an AUC or
+        a confidence interval after the fact. Those all need the full
+        ``[N, num_classes]`` probability matrix, and once a run ends without it
+        the numbers are unrecoverable short of retraining.
+
+        Returns ``(y_true [N], y_prob [N, K])`` as numpy arrays, in loader
+        order, ready for :func:`vitreous.clinical.clinical_report`. Like
+        :meth:`evaluate` this pauses the Hebbian memory so a scoring pass never
+        contaminates the co-activation statistics.
+
+        Note the split fed in must be lesion- or patient-grouped: HAM10000 has
+        several images per lesion, and an ungrouped split leaks near-duplicate
+        views across train/test and inflates melanoma sensitivity.
+        """
+        import numpy as np
+
+        self.model.eval()
+        ctx = self.memory.paused() if self.memory is not None else None
+        if ctx:
+            ctx.__enter__()
+        try:
+            probs: list["np.ndarray"] = []
+            trues: list["np.ndarray"] = []
+            for images, labels in loader:
+                logits = self.model(images.to(self.device))
+                probs.append(torch.softmax(logits.float(), dim=1).cpu().numpy())
+                trues.append(labels.cpu().numpy())
+            if not probs:
+                raise ValueError("loader yielded no batches; nothing to predict")
+            return np.concatenate(trues), np.concatenate(probs)
+        finally:
+            if ctx:
+                ctx.__exit__(None, None, None)
+
+    @torch.no_grad()
     def evaluate(self, loader: DataLoader) -> tuple[float, float]:
         self.model.eval()
         # Validation passes should not contaminate the Hebbian statistics.

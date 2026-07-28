@@ -3,10 +3,21 @@ name: CI
 # Scope: the torch-free surfaces only.
 #
 # packages/core[dev] (the M0 suite), apps/live, apps/web and packages/schema all
-# run without the ML stack. The torch/GPU-dependent suites — experiments/umtvit
-# and the legacy top-level tests/ — are intentionally OUT of CI scope: they need
-# torch + timm (and in places a GPU and downloaded datasets), which does not fit
-# a free ubuntu-latest runner. Do not add a job for them here.
+# run without the ML stack, and that is what this workflow covers.
+#
+# experiments/umtvit and the legacy top-level tests/ are OUT of scope here, but
+# the reason is cost, NOT capability — measured 2026-07-28, both run green on
+# CPU in under 30 s:
+#
+#   packages/core (with [ml] extras) ... 296 passed,  8 skipped
+#   experiments/umtvit ................. 150 passed
+#   legacy tests/ ......................  47 passed,  1 skipped
+#
+# What they need is torch + torchvision + scikit-learn + pillow (~1 GB of
+# wheels), no GPU and no dataset download. If you want them covered, add a
+# third job with a pip cache rather than assuming it is impossible. Note that
+# 4 tests in packages/core/tests/test_concepts.py gate on torch but actually
+# need scikit-learn, so a torch-only job would report them as failures.
 
 on:
   push:
