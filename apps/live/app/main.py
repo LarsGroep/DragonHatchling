@@ -91,7 +91,7 @@ def _default_analyzer(data: bytes, dataset: str, out: Path, progress: Callable[[
     loaded = load_model(os.environ.get("VITREOUS_MODEL", "vit_s16"), adapter.spec)
     weights = os.environ.get("VITREOUS_WEIGHTS")  # optional fine-tuned checkpoint
     if weights and Path(weights).exists():
-        loaded.model.load_state_dict(torch.load(weights, map_location="cpu"))
+        loaded.module.load_state_dict(torch.load(weights, map_location="cpu"))
     _loaded["model"], _loaded["dataset"] = loaded.spec.arch, dataset
 
     img = Image.open(io.BytesIO(data)).convert("RGB")  # re-encode: EXIF dropped

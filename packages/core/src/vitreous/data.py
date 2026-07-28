@@ -437,6 +437,7 @@ def _register_builtins() -> None:
     for name, cls in (
         ("eurosat", EuroSATAdapter),
         ("oxford_pet", OxfordPetAdapter),
+        ("ham10000", HAM10000Adapter),
         ("imagefolder", ImageFolderAdapter),
     ):
         if name not in _REGISTRY:

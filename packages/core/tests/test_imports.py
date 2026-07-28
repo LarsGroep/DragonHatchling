@@ -115,7 +115,12 @@ def test_concepts_public_surface():
     assert callable(quality_gate)
     assert ConceptProvider is not None
     assert SAEConceptProvider is not None and KMeansConceptProvider is not None
-    # KSparseAutoencoder is provided lazily via module __getattr__ (torch import).
+    # KSparseAutoencoder is provided lazily via module __getattr__, which imports
+    # torch on first access (concepts._build_sae_class). Touching it here would
+    # make this very file — the guard for the M0 "no torch required" promise —
+    # depend on the [ml] extras, so the assertion is skipped when torch is
+    # absent. Everything above stays torch-free and always runs.
+    pytest.importorskip("torch")
     import vitreous.concepts as concepts
 
     assert concepts.KSparseAutoencoder.__name__ == "KSparseAutoencoder"

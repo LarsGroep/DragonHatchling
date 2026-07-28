@@ -41,7 +41,10 @@ def _ensure_builtins():
 
 
 def test_builtin_datasets_registered():
-    for name in ("eurosat", "oxford_pet", "imagefolder"):
+    # Every @register_dataset in vitreous.data must appear here AND in
+    # _register_builtins(); ham10000 was missing from both, so a registry-clearing
+    # test could silently lose this project's headline dataset.
+    for name in ("eurosat", "oxford_pet", "ham10000", "imagefolder"):
         assert name in list_datasets()
 
 

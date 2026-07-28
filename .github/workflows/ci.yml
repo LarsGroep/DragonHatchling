@@ -1,0 +1,89 @@
+name: CI
+
+# Scope: the torch-free surfaces only.
+#
+# packages/core[dev] (the M0 suite), apps/live, apps/web and packages/schema all
+# run without the ML stack. The torch/GPU-dependent suites — experiments/umtvit
+# and the legacy top-level tests/ — are intentionally OUT of CI scope: they need
+# torch + timm (and in places a GPU and downloaded datasets), which does not fit
+# a free ubuntu-latest runner. Do not add a job for them here.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: python (core + live)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install packages/core (M0 runtime, no ML extras) + pytest
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e "packages/core[dev]"
+
+      # `python -m pytest` (not bare `pytest`) so the test run always uses the
+      # same interpreter pip installed into, and so the working directory is on
+      # sys.path — apps/live's tests import the local `app` package that way.
+      - name: Test packages/core (torch-free M0 suite)
+        run: python -m pytest packages/core/tests -q
+
+      # apps/live imports vitreous (installed above) but must never need torch;
+      # the default analyzer's heavy imports are stubbed in the tests.
+      - name: Install apps/live deps
+        run: pip install -r apps/live/requirements-dev.txt
+
+      - name: Test apps/live
+        working-directory: apps/live
+        run: python -m pytest -q
+
+  web:
+    name: web (schema + web typecheck, test, lint, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install packages/schema
+        working-directory: packages/schema
+        run: npm ci
+
+      - name: Typecheck packages/schema (fixture round-trip)
+        working-directory: packages/schema
+        run: npm run typecheck
+
+      - name: Install apps/web
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Typecheck apps/web
+        working-directory: apps/web
+        run: npx tsc --noEmit
+
+      - name: Test apps/web
+        working-directory: apps/web
+        run: npx vitest run
+
+      - name: Lint apps/web
+        working-directory: apps/web
+        run: npm run lint
+
+      - name: Build apps/web
+        working-directory: apps/web
+        run: npm run build
