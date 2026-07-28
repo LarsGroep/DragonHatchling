@@ -35,10 +35,14 @@ all CPU-only, no downloads.
 
 **Three headline findings** (all from the owner's HAM10000 GPU runs, §5):
 
-1. **Strong label-free representation.** A frozen-feature linear probe reaches
-   **0.768 / 0.774 / 0.770** across the three runs (chance 0.143, 7 classes),
-   k-NN **0.730 / 0.743 / 0.738** — the SSL objectives learned genuinely
-   discriminative dermoscopy features with no labels in training.
+1. **Measurable label-free representation** (claim corrected 2026-07-28, see
+   the baseline note below). A frozen-feature linear probe reaches
+   **0.768 / 0.774 / 0.770** across the three runs, k-NN
+   **0.730 / 0.743 / 0.738**. Against HAM10000's **majority-class baseline of
+   0.669** that is roughly **+10 pp**, so the SSL objectives did learn signal
+   beyond "always answer nevus" — but "strong" overstated it, and the k-NN
+   numbers sit within ~7 pp of a model that has learned nothing but the
+   prior. Read with per-class recall, not accuracy.
 2. **SOM collapse was a real failure, then structurally fixed.** Dead-neuron
    fraction traced **0.977 → 0.991 (full collapse) → 0.194 (healthy)** across
    the runs; topographic error **0.008 → 0.973 → 0.084**. The fix (data-driven
@@ -133,7 +137,7 @@ HAM10000 (RESEARCH §2, report caveat in `eval/report.py`).
 
 | Metric | Run 1 | Run 2 | Run 3 | Reading |
 |---|---|---|---|---|
-| Linear probe (chance 0.143) | 0.768 | 0.774 | 0.770 | **stable, strong** |
+| Linear probe (0.143 uniform / **0.669 majority**) | 0.768 | 0.774 | 0.770 | stable; **+10 pp over majority** |
 | k-NN (k=5, cosine) | 0.730 | 0.743 | 0.738 | stable |
 | SOM quantization error | 0.243 | 0.205 | 0.233 | healthy |
 | SOM topographic error | 0.008 | **0.973** | 0.084 | collapse in Run 2, fixed in Run 3 |

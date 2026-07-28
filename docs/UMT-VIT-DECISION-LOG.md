@@ -106,8 +106,11 @@ honesty panel with the monotone-centroid check. Verified: tsc clean,
 110 vitest pass (15 new), next build clean, notebook re-executed end-to-end.
 
 First owner GPU run (HAM10000, 2026-07-11): linear probe **0.768** / k-NN
-**0.730** (chance 0.143), QE 0.243, TE **0.008**, trustworthiness 0.759 —
-strong label-free signal, near-perfect SOM topology preservation. Flag:
+**0.730** (baselines: 0.143 uniform / **0.669 majority** — see the note atop
+`SGP-RUNS.md`; "strong label-free signal" as originally written here compared
+against uniform chance and overstated the result by ~53 pp of headroom that
+the class prior already supplies), QE 0.243, TE **0.008**, trustworthiness
+0.759 — near-perfect SOM topology preservation. Flag:
 **dead-neuron fraction 0.977** (SOM underused). Tuning guidance for the next
 run, in priority order: slower neighborhood anneal (`sigma_end: 1.0`),
 smaller SOM grid (`[6,6,6]`), or raise the `som` loss weight; revisit at U5

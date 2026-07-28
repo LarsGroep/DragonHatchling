@@ -7,13 +7,26 @@ running record the SGP notebook's knob comments cite; earlier UMT-ViT run
 narratives (Runs 1–3 of the original notebook line) live in
 [`UMT-VIT-REPORT.md`](./UMT-VIT-REPORT.md) §5.
 
+> **Read the probe numbers against the right baseline.** HAM10000 is ~67 %
+> `nv` (nv 6705 · mel 1113 · bkl 1099 · bcc 514 · akiec 327 · vasc 142 ·
+> df 115 = 10 015). The meaningful floor is therefore the **majority-class rate
+> ≈ 0.669**, not uniform chance 0.143 — a model that answers "nevus" every
+> time scores 0.669. Run 3's probe at **0.7922 is +12.3 pp over majority**, not
+> ≈5.5× chance. Uniform chance is retained in the tables only because the
+> executed runs recorded it (`som_metrics` emits `chance = 1/K`); it is not the
+> comparison to quote. Accuracy alone is also the wrong summary for this
+> dataset: use **balanced accuracy** and **per-class recall — melanoma
+> sensitivity above all** (`vitreous.clinical`, which reports every rate with a
+> Wilson interval and its support count). This note applies to every "chance
+> 0.143" reading in `UMT-VIT-REPORT.md` §5 and `UMT-VIT-NOTEBOOK-FEEDBACK.md`.
+
 ## Head-to-head
 
 | metric | v14 | v16 | SGP run 2 | **SGP run 3 (best model)** |
 |---|---|---|---|---|
 | notebook | inline `new.ipynb` | inline, path fixes | `kaggle_umtvit_sgp.ipynb` (pre-fix) | `kaggle_umtvit_sgp.ipynb` (fixed, defaults) |
 | SOM grid | 6×6×6 (216) | 6×6×6 (216) | 8×8×8 (512) | 6×6×6 (216) |
-| linear probe (chance 0.143) | 0.7700 | 0.7816 | — (eval step omitted) | **0.7922** |
+| linear probe (baselines: 0.143 uniform / **0.669 majority**) | 0.7700 | 0.7816 | — (eval step omitted) | **0.7922** |
 | k-NN (k=5, cosine) | 0.7384 | **0.7384** | — | 0.7278 |
 | trustworthiness (k=7) | 0.7424 | 0.7706 | — | **0.7807** |
 | SOM quantization error (eval) | 0.2329 | 0.2387 | 0.1994 (larger map) | **0.1831** |

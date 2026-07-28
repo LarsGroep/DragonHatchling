@@ -18,8 +18,8 @@ volume 16×16×8×64, SOM 8×8×8, 30 epochs; wall time ≈ 75 min).
 
 | Metric | Value | Reference |
 |---|---|---|
-| Linear probe accuracy | **0.768** | chance 0.143 (7 classes) |
-| k-NN (k=5, cosine) | **0.730** | chance 0.143 |
+| Linear probe accuracy | **0.768** | 0.143 uniform / **0.669 majority** |
+| k-NN (k=5, cosine) | **0.730** | 0.143 uniform / **0.669 majority** |
 | SOM quantization error | 0.243 | lower = better |
 | SOM topographic error | **0.008** | lower = better |
 | SOM dead-neuron fraction | **0.977** | ⚠ see below |
@@ -28,11 +28,17 @@ volume 16×16×8×64, SOM 8×8×8, 30 epochs; wall time ≈ 75 min).
 
 ### What is working
 
-- **Strong label-free signal.** Probe at 0.768 and k-NN at 0.730 against
-  0.143 chance means the SSL objectives learned genuinely discriminative
-  dermoscopy features — no labels touched training. (These are frozen-feature
-  SSL yardsticks; do not compare directly against supervised end-to-end
-  results such as DSCATNet's 97.8%.)
+- **Measurable label-free signal** (claim corrected 2026-07-28). Probe at
+  0.768 and k-NN at 0.730. The original reading compared these against uniform
+  chance 0.143 and concluded the features were "genuinely discriminative" —
+  that inference does not hold. HAM10000 is ~67 % `nv`, so the floor is the
+  **majority-class rate 0.669**: answering "nevus" every time scores 0.669
+  without learning anything. The probe clears that by ~10 pp (real, but modest)
+  and k-NN by ~6 pp. (These are also frozen-feature SSL yardsticks; do not
+  compare directly against supervised end-to-end results such as DSCATNet's
+  97.8%.) The honest test of discriminativeness here is **per-class recall —
+  melanoma sensitivity in particular** — which none of these runs measured;
+  `vitreous.clinical` now exists to supply it.
 - **Topology preservation is near-perfect** (TE 0.008): the voxels' nearest
   and second-nearest SOM neurons are almost always grid neighbors — the map
   that *is* used is genuinely topographic.
