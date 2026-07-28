@@ -216,25 +216,44 @@ def render_report(results: Dict[str, Any]) -> str:
             "k-NN are skipped (the label-free metrics below still run)._"
         )
     else:
+        # Majority baseline comes FIRST: it is the floor that matters on an
+        # imbalanced set, and a table that led with uniform chance is how a
+        # ~12 pp gain on HAM10000 got recorded as "≫ chance" in earlier runs.
         lines += [
-            "| Metric | Value | Chance |",
-            "|---|---|---|",
+            "| Metric | Value | Majority baseline | Uniform chance |",
+            "|---|---|---|---|",
         ]
         if probe is not None:
             lines.append(
                 f"| Linear probe accuracy | {_fmt(probe.get('accuracy'))} | "
-                f"{_fmt(probe.get('chance'))} |"
+                f"{_fmt(probe.get('majority_baseline'))} | {_fmt(probe.get('chance'))} |"
             )
         if knn is not None:
             lines.append(
                 f"| k-NN (k={knn.get('k', '?')}, cosine) | "
-                f"{_fmt(knn.get('accuracy'))} | {_fmt(knn.get('chance'))} |"
+                f"{_fmt(knn.get('accuracy'))} | "
+                f"{_fmt(knn.get('majority_baseline'))} | {_fmt(knn.get('chance'))} |"
+            )
+        if probe is not None and probe.get("balanced_accuracy") is not None:
+            lines.append(
+                f"| Balanced accuracy (mean per-class recall) | "
+                f"{_fmt(probe.get('balanced_accuracy'))} | {_fmt(probe.get('chance'))} | — |"
             )
         if probe is not None and probe.get("per_class_accuracy"):
             per_class = ", ".join(
                 f"{c}:{_fmt(a, 3)}" for c, a in sorted(probe["per_class_accuracy"].items())
             )
             lines += ["", f"Per-class probe recall — {per_class}"]
+        if probe is not None and probe.get("meaningful_floor") == "majority_baseline":
+            lines += [
+                "",
+                "> This split is imbalanced, so compare accuracy against the "
+                "**majority baseline**, not uniform chance: always predicting the "
+                "commonest class already scores the former. Balanced accuracy and "
+                "per-class recall are the numbers that survive the imbalance — for "
+                "clinical read-outs use `vitreous.clinical`, which adds melanoma "
+                "sensitivity and Wilson intervals.",
+            ]
 
     lines += [
         "",

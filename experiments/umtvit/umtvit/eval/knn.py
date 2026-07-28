@@ -14,6 +14,7 @@ from typing import Dict, Optional
 import torch
 import torch.nn.functional as F
 
+from umtvit.eval.baselines import baseline_block
 from umtvit.eval.features import FrozenFeatures, standardize
 
 __all__ = ["knn_accuracy"]
@@ -54,6 +55,6 @@ def knn_accuracy(
     return {
         "accuracy": accuracy,
         "k": eff_k,
-        "chance": 1.0 / num_classes,
-        "num_classes": num_classes,
+        # See linear_probe: uniform chance is not the bar on an imbalanced set.
+        **baseline_block(test.labels.tolist(), num_classes),
     }

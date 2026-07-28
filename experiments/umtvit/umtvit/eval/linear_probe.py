@@ -20,6 +20,7 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor
 
+from umtvit.eval.baselines import baseline_block
 from umtvit.eval.features import FrozenFeatures, standardize
 
 __all__ = ["linear_probe"]
@@ -84,9 +85,12 @@ def linear_probe(
     with torch.no_grad():
         pred = probe(xte).argmax(1).cpu()
     accuracy = float((pred == yte).float().mean().item())
+    per_class = _per_class_accuracy(pred, yte, num_classes)
     return {
         "accuracy": accuracy,
-        "per_class_accuracy": _per_class_accuracy(pred, yte, num_classes),
-        "chance": 1.0 / num_classes,
-        "num_classes": num_classes,
+        "per_class_accuracy": per_class,
+        # Uniform chance alone flattered every run recorded in docs/SGP-RUNS.md;
+        # baseline_block adds the majority-class floor and balanced accuracy so
+        # a degenerate "always predict the commonest class" model cannot pass.
+        **baseline_block(yte.tolist(), num_classes, per_class_recall=per_class),
     }
