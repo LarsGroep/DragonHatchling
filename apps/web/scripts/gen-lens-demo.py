@@ -156,7 +156,15 @@ def main() -> None:
         "taxonomy": tax.to_json(),
         "axis": axis,
         "lesions": lesions,
-        "provenance": {"generator": "apps/web/scripts/gen-lens-demo.py", "seed": SEED},
+        "provenance": {
+            "generator": "apps/web/scripts/gen-lens-demo.py",
+            "seed": SEED,
+            # Declared, not inferred: lib/lens.ts reads this to raise the
+            # "these numbers are invented" banner. Any generator of fabricated
+            # lens data MUST set it — a synthetic run shown behind the real
+            # medical disclaimer is the worst outcome this page can produce.
+            "synthetic": True,
+        },
     }
 
     out = Path(__file__).resolve().parents[1] / "public" / "lens" / "demo.json"

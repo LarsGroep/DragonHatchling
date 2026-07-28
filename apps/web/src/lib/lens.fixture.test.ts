@@ -63,6 +63,14 @@ describe("lens demo fixture (Python-generated) round-trip", () => {
     expect(projectFeature(inDist.feature, axis).ood).toBe(false);
   });
 
+  it("is flagged synthetic, and declares it rather than relying on inference", () => {
+    // The fixture's numbers are invented; /lens must say so above the medical
+    // disclaimer. The generator declares it explicitly so the flag never
+    // depends on a filename or a heuristic surviving a refactor.
+    expect(bundle.synthetic).toBe(true);
+    expect(bundle.provenance.synthetic).toBe(true);
+  });
+
   it("every lesion has decodable thumbnail + full-width softmax", () => {
     for (const l of bundle.lesions) {
       expect(l.probabilities).toHaveLength(bundle.class_names.length);

@@ -30,6 +30,45 @@ export interface LensBundle {
   axis: MalignancyAxis | null;
   lesions: LensLesion[];
   provenance: Record<string, unknown>;
+  /**
+   * True when this bundle's probabilities/features are FABRICATED rather than
+   * produced by a trained model — see {@link isSyntheticBundle}. The UI must
+   * say so as loudly as it says "not a medical device": a synthetic run behind
+   * a real clinical disclaimer is the more dangerous of the two, because the
+   * disclaimer makes the page look careful while the numbers mean nothing.
+   */
+  synthetic: boolean;
+}
+
+/**
+ * Decide whether a lens bundle is synthetic.
+ *
+ * Preferred signal is an explicit `provenance.synthetic: true`, which
+ * `scripts/gen-lens-demo.py` emits. The remaining checks recognise fixtures
+ * generated before that field existed — the demo generator's signature, the
+ * `-demo` dataset suffix, and the axis provenance note `"synthetic axis"` —
+ * so an older `demo.json` is still labelled correctly.
+ *
+ * A real export is NOT flagged: the notebook's lens-export cell writes real
+ * probe-derived probabilities and carries its own honesty markers in
+ * provenance. This function answers "were these numbers invented", not "is
+ * this model any good".
+ */
+export function isSyntheticBundle(
+  provenance: Record<string, unknown>,
+  dataset: string,
+  axis: MalignancyAxis | null,
+): boolean {
+  if (provenance.synthetic === true) return true;
+  const generator = typeof provenance.generator === "string" ? provenance.generator : "";
+  if (generator.includes("gen-lens-demo")) return true;
+  if (dataset.endsWith("-demo")) return true;
+  const axisProv = axis?.provenance ?? {};
+  const note = typeof axisProv.note === "string" ? axisProv.note : "";
+  const axisDataset = typeof axisProv.dataset === "string" ? axisProv.dataset : "";
+  if (note.toLowerCase().includes("synthetic")) return true;
+  if (axisDataset.endsWith("-demo")) return true;
+  return false;
 }
 
 export class LensValidationError extends Error {
@@ -142,14 +181,17 @@ export function parseLensJson(text: string): LensBundle {
   });
   const featDim = lesions[0]?.feature.length;
   const axis = parseAxis(o.axis, featDim);
+  const dataset = str(o.dataset, "dataset");
+  const provenance = (o.provenance as Record<string, unknown>) ?? {};
 
   return {
     version,
-    dataset: str(o.dataset, "dataset"),
+    dataset,
     class_names,
     taxonomy,
     axis,
     lesions,
-    provenance: (o.provenance as Record<string, unknown>) ?? {},
+    provenance,
+    synthetic: isSyntheticBundle(provenance, dataset, axis),
   };
 }

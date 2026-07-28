@@ -1,7 +1,19 @@
 "use client";
 
 /**
- * BrainView (UX-VISION-2) — the living Hebbian brain, the identity of ViTreous.
+ * BrainView (UX-VISION-2) — the living network view, the identity of ViTreous.
+ *
+ * NAMING, precisely (this used to read "the living Hebbian brain"): what this
+ * view renders is a ViT ATTENTION graph — nodes are tokens (CLS + 196 patches)
+ * and edges are top-k head-averaged attention weights from
+ * vitreous.graph.ViTTokenGraphProvider. Attention is not Hebbian co-activation,
+ * and in a medical framing the difference is not cosmetic: a reviewer asking
+ * "show me the update rule behind this edge" must not be answered with a
+ * softmax. The genuine Hebbian mechanism — an EMA of neuron co-activation,
+ * "fire together, wire together" — lives in vitreous.hebbian
+ * (HebbianGraphProvider), which satisfies the same GraphProvider Protocol; when
+ * a pack ships a Hebbian graph asset this view can render it unchanged, and
+ * only THEN does the word Hebbian belong on screen.
  *
  * A force-directed, Obsidian-style graph (canvas-2D) over the pack's graph.json:
  * the LAST layer's attention edges are the resting "memory" topology, gravity

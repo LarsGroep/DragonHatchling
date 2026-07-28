@@ -18,7 +18,7 @@ const mono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "ViTreous — a window into a vision model's brain",
   description:
-    "Watch a vision transformer think: a living Hebbian brain graph, its sensory field, and the evidence behind every prediction.",
+    "Watch a vision transformer think: a living attention graph, its sensory field, and the evidence behind every prediction.",
 };
 
 export default function RootLayout({

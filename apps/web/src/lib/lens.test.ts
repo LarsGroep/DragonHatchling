@@ -77,3 +77,41 @@ describe("parseLensJson", () => {
     expect(() => parseLensJson("{oops")).toThrow(LensValidationError);
   });
 });
+
+describe("synthetic-bundle detection", () => {
+  it("does not flag a plain bundle with no synthetic markers", () => {
+    expect(parseLensJson(JSON.stringify(valid())).synthetic).toBe(false);
+  });
+
+  it("honours an explicit provenance.synthetic flag", () => {
+    const doc = valid();
+    doc.provenance = { synthetic: true };
+    expect(parseLensJson(JSON.stringify(doc)).synthetic).toBe(true);
+  });
+
+  it("recognises a fixture generated before the explicit flag existed", () => {
+    // Older demo.json carried only the generator name and the axis note.
+    const byGenerator = valid();
+    byGenerator.provenance = { generator: "apps/web/scripts/gen-lens-demo.py", seed: 7 };
+    expect(parseLensJson(JSON.stringify(byGenerator)).synthetic).toBe(true);
+
+    const byAxisNote = valid();
+    (byAxisNote.axis as Record<string, unknown>).provenance = { note: "synthetic axis" };
+    expect(parseLensJson(JSON.stringify(byAxisNote)).synthetic).toBe(true);
+
+    const byDatasetSuffix = valid();
+    byDatasetSuffix.dataset = "ham10000-demo";
+    expect(parseLensJson(JSON.stringify(byDatasetSuffix)).synthetic).toBe(true);
+  });
+
+  it("does not flag a real export that merely carries provenance", () => {
+    // A genuine run records how its probabilities were obtained; that is an
+    // honesty marker about model quality, not a claim the numbers are invented.
+    const doc = valid();
+    doc.provenance = {
+      generator: "kaggle_umtvit_sgp.ipynb §8b",
+      probabilities: "SSL-probe ESTIMATE, not a diagnostic softmax",
+    };
+    expect(parseLensJson(JSON.stringify(doc)).synthetic).toBe(false);
+  });
+});
