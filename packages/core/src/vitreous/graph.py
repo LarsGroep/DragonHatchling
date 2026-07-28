@@ -59,6 +59,10 @@ NodeKind = Literal[
     "concept",
     "community",
     "unit",
+    # Emitted by vitreous.hebbian.HebbianGraphProvider, which links concepts to
+    # the classes they fire on (class-conditional firing rates). The ViT token
+    # provider never produces one.
+    "class",
 ]
 
 DEFAULT_K = 8
