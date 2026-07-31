@@ -48,7 +48,7 @@ over three positive images is noise, and the legacy implementation had no defenc
 against exactly that (it gated on a raw effect with a small default support).
 
 **Import discipline (M0 rule):** numpy + stdlib only, no torch, no PIL. Mask PNGs
-are decoded by a small stdlib ``zlib``/``struct`` reader (:func:`_decode_png_gray`);
+are decoded by a small stdlib ``zlib``/``struct`` reader (:func:`decode_png_gray`);
 Pillow is used only as a lazy fallback for non-PNG masks.
 """
 
@@ -76,6 +76,8 @@ __all__ = [
     "AttributeEffect",
     "ConceptGrounding",
     "ConfoundReport",
+    # png decoding (shared with vitreous.localization)
+    "decode_png_gray",
     # loaders
     "load_isic2018_task2_attributes",
     "build_metadata_attributes",
@@ -448,8 +450,12 @@ def _unpack_samples(data: bytes, width: int, height: int, channels: int, depth: 
     raise ValueError(f"unsupported PNG bit depth {depth}")
 
 
-def _decode_png_gray(data: bytes) -> np.ndarray:
+def decode_png_gray(data: bytes) -> np.ndarray:
     """Decode a non-interlaced PNG to a ``[H, W]`` uint16 intensity map (0..255).
+
+    Public because :mod:`vitreous.localization` reads the same ISIC mask files
+    for its overlap metrics. Two stdlib PNG readers in one package would be one
+    too many, so this is the single decoder — keep it that way.
 
     Supports colour types 0/2/3/4/6 and bit depths 1/2/4/8/16 — everything the
     ISIC mask releases and the common encoders (OpenCV, ImageMagick, PIL) emit.
@@ -516,7 +522,7 @@ def _mask_positive_pixels(path: Path, threshold: int = 0) -> int:
     """
     if path.suffix.lower() == ".png":
         try:
-            arr = _decode_png_gray(path.read_bytes())
+            arr = decode_png_gray(path.read_bytes())
             return int((arr > threshold).sum())
         except ValueError:
             pass  # fall through to Pillow for exotic encodings
