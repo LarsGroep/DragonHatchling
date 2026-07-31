@@ -13,7 +13,7 @@
  * Owns: initial data load (datasets → first gallery → first pack) and global
  * keyboard transport. The per-frame replay clock lives in <LoopController/>.
  */
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { CSSProperties } from "react";
 import type { DatasetRow, GalleryImageRow } from "@/src/lib/db/types";
 import { getDb } from "@/src/lib/db/client";
@@ -75,6 +75,8 @@ export function Workbench() {
   const [activeDataset, setActiveDataset] = useState<DatasetRow | null>(null);
   const [images, setImages] = useState<GalleryImageRow[]>([]);
   const [bootError, setBootError] = useState<string | null>(null);
+  // Read once: which data source this deployment is actually using.
+  const storage = useMemo(() => getDb().config, []);
 
   const selectImage = useWorkbench((s) => s.selectImage);
   const mode = useWorkbench((s) => s.mode);
@@ -90,14 +92,34 @@ export function Workbench() {
         const ds = await db.listDatasets();
         if (!alive) return;
         setDatasets(ds);
-        if (ds.length) {
-          const first = ds[0];
-          setActiveDataset(first);
-          const imgs = await db.listGalleryImages(first.id);
-          if (!alive) return;
-          setImages(imgs);
-          if (imgs.length) await selectImage(first.id, imgs[0]);
+        if (!ds.length) {
+          // Supabase reachable but nothing published. Previously this rendered
+          // an empty workbench with no message at all — identical on screen to
+          // a healthy deploy whose dataset just isn't there.
+          setBootError(
+            db.config.mode === "supabase"
+              ? `Connected to Supabase (${db.config.supabaseUrl}) but the "datasets" table ` +
+                "returned no rows. Either the publishing notebook " +
+                "(kaggle/ham10000_live.ipynb) has not completed, or row-level security " +
+                "is blocking anonymous reads on datasets/gallery_images."
+              : "No datasets in the bundled fixture.",
+          );
+          return;
         }
+        const first = ds[0];
+        setActiveDataset(first);
+        const imgs = await db.listGalleryImages(first.id);
+        if (!alive) return;
+        setImages(imgs);
+        if (!imgs.length) {
+          setBootError(
+            `Dataset "${first.name}" has no rows in "gallery_images", so there is nothing ` +
+              "to display. The dataset row was published but the gallery step did not " +
+              "finish.",
+          );
+          return;
+        }
+        await selectImage(first.id, imgs[0]);
       } catch (e) {
         if (alive) setBootError(e instanceof Error ? e.message : String(e));
       }
@@ -161,6 +183,18 @@ export function Workbench() {
         images={images}
         onDataset={onDataset}
       />
+
+      {/*
+        Data-source banner. Mock mode is a SILENT fallback: a Vercel deploy
+        missing one NEXT_PUBLIC_SUPABASE_* var serves the bundled EuroSAT/Pet
+        fixture and looks perfectly healthy, which is impossible to tell apart
+        from "my HAM10000 publish failed". Say which source is in use.
+      */}
+      {storage.mode === "mock" ? (
+        <div className="border-b border-amber-300 bg-amber-50 px-4 py-1.5 text-[11px] text-amber-900">
+          <span className="font-semibold">Demo data</span> — {storage.reason}
+        </div>
+      ) : null}
 
       {bootError ? (
         <div className="border-b border-red-200 bg-red-50 px-4 py-1.5 text-[11px] text-red-600">
