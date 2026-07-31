@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { UmtvitExplorer } from "@/src/components/umtvit/UmtvitExplorer";
+import { experimentsEnabled } from "@/src/lib/features";
 
 /**
  * `/umtvit` — the UMT-ViT Explorer, a separate surface from the ViTreous
@@ -14,5 +16,7 @@ export const metadata: Metadata = {
 };
 
 export default function UmtvitPage() {
+  // Separate experiment surface, hidden by default — see src/lib/features.ts.
+  if (!experimentsEnabled()) notFound();
   return <UmtvitExplorer />;
 }

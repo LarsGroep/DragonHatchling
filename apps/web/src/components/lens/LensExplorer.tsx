@@ -10,6 +10,7 @@
  * out of distribution — the honest gate that also covers phone uploads.
  */
 import Link from "next/link";
+import { experimentsEnabled } from "@/src/lib/features";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LensValidationError, parseLensJson, type LensBundle } from "@/src/lib/lens";
 import { Panel } from "../umtvit/controls";
@@ -153,7 +154,9 @@ export function LensExplorer() {
               e.target.value = "";
             }}
           />
-          <Link href="/sgp" className="rounded-md px-2.5 py-1 text-[11px] font-medium text-muted transition-colors hover:text-readout">SGP</Link>
+          {experimentsEnabled() ? (
+            <Link href="/sgp" className="rounded-md px-2.5 py-1 text-[11px] font-medium text-muted transition-colors hover:text-readout">SGP</Link>
+          ) : null}
           <Link href="/" className="rounded-md px-2.5 py-1 text-[11px] font-medium text-muted transition-colors hover:text-readout">← ViTreous</Link>
         </div>
       </header>

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { SgpExplorer } from "@/src/components/sgp/SgpExplorer";
+import { experimentsEnabled } from "@/src/lib/features";
 
 /**
  * `/sgp` — the SGP (SomGraphProvider) Explorer: UMT-ViT's learned 3-D SOM
@@ -15,5 +17,8 @@ export const metadata: Metadata = {
 };
 
 export default function SgpPage() {
+  // Part of the UMT-ViT experiment line, not the ViTreous product surface.
+  // NEXT_PUBLIC_VITREOUS_EXPERIMENTS=1 + rebuild restores it.
+  if (!experimentsEnabled()) notFound();
   return <SgpExplorer />;
 }
