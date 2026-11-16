@@ -1,10 +1,14 @@
 """Recognise MolenGames chat games and work out the answer.
 
-Each game is a regex over the recent chat (consecutive lines joined with a
-space, because the server splits the announcement over two lines). Only the
-"Omgekeerd" (reverse the word) wording is confirmed from a real screenshot;
-the others are educated guesses -- adjust ``patterns`` in config.json when
-you see the real text (``python -m molenbot read`` shows what the bot reads).
+Confirmed game wordings from MolenCraft Survival (latest.log):
+
+  Omgekeerd   - Je hebt 25 seconden om het woord "X" om te keren.
+  Woordhussel - Je hebt 25 seconden om het woord "X" te ontcijferen.
+  Willekeurige - Je hebt 25 seconden om "X" te typen.
+  Rekenspel   - Je hebt 25 seconden om "X" op te lossen.
+  Aanvul      - Je hebt 25 seconden om het woord "X" aan te vullen.
+  Variabelen  - Je hebt 25 seconden om de waarde van "✗" te vinden.
+               followed by equation lines:  ♡ + ♡ + ♡ = 90 / ♫ + ♫ + ♫ = 75 / ♡ + ♫ + ✗ = 90
 """
 
 from __future__ import annotations
@@ -21,13 +25,21 @@ from .glyphs import UNKNOWN
 PREFIX = "[MolenGames]"
 
 # name -> regex. The regex must have a named group "q" (the puzzle text).
+# All patterns confirmed from MolenCraft Survival latest.log.
 DEFAULT_PATTERNS: dict[str, str] = {
-    # "- Je hebt 25 seconden om het woord "kcirB" om te keren."
+    # Omgekeerd: "- Je hebt 25 seconden om het woord "kcirB" om te keren."
     "reverse": r'woord\s*"(?P<q>[^"]+)"\s*om\s+te\s+keren',
-    # guesses for other games:
-    "type": r'woord\s*"(?P<q>[^"]+)"\s*(?:als\s+eerste\s+)?(?:te\s+)?(?:over)?typen',
-    "unscramble": r'woord\s*"(?P<q>[^"]+)"\s*(?:te\s+)?(?:ontcijferen|ontwarren|ontrafelen|raden)',
-    "math": r'(?:som|rekensom|antwoord\s+(?:op|van))\s*"?(?P<q>[-\d\s+*/x×:().^]+?)"?\s*(?:op\s+te\s+lossen|uit\s+te\s+rekenen|te\s+berekenen|\?|$)',
+    # Woordhussel: "- Je hebt 25 seconden om het woord "oahtnPm" te ontcijferen."
+    "unscramble": r'woord\s*"(?P<q>[^"]+)"\s*te\s+ontcijferen',
+    # Willekeurige: "- Je hebt 25 seconden om "uNlUtA2" te typen."
+    "type": r'"(?P<q>[^"]+)"\s*te\s+typen',
+    # Rekenspel: "- Je hebt 25 seconden om "879 - 249" op te lossen."
+    "math": r'"(?P<q>[-\d\s+*/x×:.()^]+?)"\s*op\s+te\s+lossen',
+    # Aanvul: "- Je hebt 25 seconden om het woord "_eacon" aan te vullen."
+    "fill": r'woord\s*"(?P<q>[^"]+)"\s*aan\s+te\s+vullen',
+    # Variabelen: "- Je hebt 25 seconden om de waarde van "✗" te vinden."
+    # followed by 3 equation lines with emoji symbols.
+    "variables": r'waarde\s+van\s+"(?P<q>[^"]+)"\s+te\s+vinden',
 }
 
 
@@ -58,6 +70,53 @@ def _eval(node):
     if isinstance(node, ast.UnaryOp) and type(node.op) in _OPS:
         return _OPS[type(node.op)](_eval(node.operand))
     raise ValueError("not a plain sum")
+
+
+def solve_variables(lines: list[str], target: str) -> str | None:
+    """Solve a Variabelen puzzle.
+
+    Equation lines look like:  ♡ + ♡ + ♡ = 90
+    The first N-1 lines define symbol values; the last line contains the
+    target symbol (✗ by default) whose value we return.
+    """
+    eq_re = re.compile(r"(.+?)\s*=\s*(-?\d+(?:\.\d+)?)")
+    known: dict[str, float] = {}
+    last_line = None
+
+    for ln in lines:
+        m = eq_re.search(ln)
+        if not m:
+            continue
+        lhs, rhs = m.group(1).strip(), float(m.group(2))
+        # Extract unique symbols on the left side
+        symbols = list(dict.fromkeys(c for c in lhs if c.strip() and c not in "+-×*/ "))
+        if not symbols:
+            continue
+        if len(symbols) == 1 and target not in symbols:
+            # Simple: sym + sym + sym = N  →  sym = N / count
+            count = lhs.count(symbols[0])
+            known[symbols[0]] = rhs / count
+        else:
+            last_line = (symbols, lhs, rhs)
+
+    if last_line is None:
+        return None
+    symbols, lhs, rhs = last_line
+    # Substitute known values and solve for the unknown
+    val = rhs
+    for sym in symbols:
+        if sym == target:
+            continue
+        if sym not in known:
+            return None
+        # count how many times this symbol appears
+        val -= known[sym] * lhs.count(sym)
+    # remaining val = target * its_count
+    count = lhs.count(target)
+    if count == 0:
+        return None
+    result = val / count
+    return str(int(result)) if result == int(result) else f"{result:.2f}".rstrip("0").rstrip(".")
 
 
 def solve_math(expr: str) -> str | None:
@@ -98,6 +157,16 @@ class WordList:
         hits.discard(scrambled)
         return hits.pop() if len(hits) == 1 else None
 
+    def fill(self, pattern: str) -> str | None:
+        """Find a word matching a pattern like '_eacon' (underscores are wildcards)."""
+        import re as _re
+        rx = _re.compile(
+            "^" + "".join(f"[{c}]" if c != "_" else "[a-zA-Z]" for c in pattern) + "$",
+            _re.IGNORECASE,
+        )
+        hits = {w for w in self.words if rx.match(w)}
+        return hits.pop() if len(hits) == 1 else None
+
 
 # ---- detection -------------------------------------------------------------
 
@@ -135,7 +204,12 @@ class Detector:
             return self.words.unscramble(q)
         if game == "math":
             return solve_math(q)
+        if game == "fill":
+            return self.words.fill(q)
         return None
+
+    def solve_variables(self, target: str, context_lines: list[str]) -> str | None:
+        return solve_variables(context_lines, target)
 
     def find(self, lines: list[str], now: float | None = None) -> list[Challenge]:
         """Look at the recent chat lines (oldest first) and return challenges
@@ -148,10 +222,10 @@ class Detector:
             # The game text can continue on the next couple of lines; stop at
             # the next line that starts a new message.
             parts = [line]
-            for nxt in lines[i + 1 : i + 4]:
+            for nxt in lines[i + 1 : i + 8]:
                 if has_prefix(nxt) or nxt.lstrip().startswith("<"):
                     break
-                parts.append(nxt)
+                parts.append(nxt)  # include blank lines so equation lines aren't cut off
             text = " ".join(parts)
             for game, rx in self.patterns.items():
                 m = rx.search(text)
@@ -162,5 +236,9 @@ class Detector:
                 if now - self._seen.get(key, -1e9) < self.cooldown:
                     continue
                 self._seen[key] = now
-                found.append(Challenge(game, q, self.solve(game, q)))
+                if game == "variables":
+                    answer = self.solve_variables(q, parts)
+                else:
+                    answer = self.solve(game, q)
+                found.append(Challenge(game, q, answer))
         return found

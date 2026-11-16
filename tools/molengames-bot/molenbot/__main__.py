@@ -32,10 +32,10 @@ DEFAULTS = {
     "font_file": "font.json",
     "wordlists": ["words.txt"],
     "learned_words": "learned_words.txt",
-    "games": ["reverse", "type", "unscramble", "math"],
+    "games": ["reverse", "type", "unscramble", "math", "fill", "variables"],
     "patterns": {},              # override/add regexes, see games.py
     "chat_key": "t",
-    "answer_delay": [1.2, 2.8],  # seconds before typing
+    "answer_delay": 0.0,  # seconds to wait before typing (0 = instant)
     "poll_interval": 0.3,
     "pause_key": "f8",
 }
@@ -204,7 +204,7 @@ def cmd_run(args, cfg, cfg_path):
         sys.exit("The font isn't calibrated yet. Run:  python -m molenbot calibrate")
     source = _make_source(cfg, font)
     detector = _make_detector(cfg)
-    sender = ChatSender(cfg["chat_key"], tuple(cfg["answer_delay"]), dry_run=args.dry_run)
+    sender = ChatSender(cfg["chat_key"], cfg["answer_delay"], dry_run=args.dry_run)
     state = {"paused": False}
     _start_pause_listener(cfg, state)
     recent: list[str] = []
