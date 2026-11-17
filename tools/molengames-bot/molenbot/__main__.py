@@ -9,8 +9,17 @@
 
 from __future__ import annotations
 
+import sys
+
+# Windows cp1252 terminal can't print Minecraft's special Unicode chars.
+# Replace anything unencodable rather than crash.
+if sys.platform == "win32":
+    sys.stdout.reconfigure(errors="replace")
+    sys.stderr.reconfigure(errors="replace")
+
 import argparse
 import json
+import os
 import sys
 import threading
 import time
@@ -198,33 +207,63 @@ def _start_pause_listener(cfg, state):
         print(f"(pause hotkey unavailable: {e})")
 
 
-def cmd_run(args, cfg, cfg_path):
-    font = Font.load(cfg["font_file"])
-    if cfg["source"] == "screen" and not font.table:
-        sys.exit("The font isn't calibrated yet. Run:  python -m molenbot calibrate")
-    source = _make_source(cfg, font)
-    detector = _make_detector(cfg)
-    sender = ChatSender(cfg["chat_key"], cfg["answer_delay"], dry_run=args.dry_run)
-    state = {"paused": False}
-    _start_pause_listener(cfg, state)
-    recent: list[str] = []
-    print(f"Watching chat ({cfg['source']}). {cfg['pause_key'].upper()} pauses/resumes, Ctrl+C quits.")
+def _acquire_lock(cfg_path: Path) -> Path:
+    """Create a PID lock file next to config.json. Exit if another instance owns it."""
+    lock = cfg_path.parent / "molenbot.lock"
+    if lock.exists():
+        try:
+            pid = int(lock.read_text().strip())
+            # Check if that PID is still alive (Windows).
+            import ctypes
+            handle = ctypes.windll.kernel32.OpenProcess(0x0400, False, pid)  # PROCESS_QUERY_INFORMATION
+            if handle:
+                ctypes.windll.kernel32.CloseHandle(handle)
+                sys.exit(f"Bot is already running (PID {pid}). Kill it first or delete {lock}.")
+        except (ValueError, OSError):
+            pass  # stale lock
+    lock.write_text(str(os.getpid()))
+    return lock
+
+
+def _release_lock(lock: Path) -> None:
     try:
-        while True:
-            lines = source.poll()
-            recent = lines if source.snapshot else (recent + lines)[-12:]
-            for ch in detector.find(recent):
-                if ch.answer is None:
-                    print(f"[{ch.game}] {ch.question!r}: no sure answer, skipping")
-                    continue
-                if state["paused"]:
-                    print(f"[{ch.game}] {ch.question!r} -> {ch.answer}  (paused, not sent)")
-                    continue
-                print(f"[{ch.game}] {ch.question!r} -> {ch.answer}")
-                threading.Thread(target=sender.send, args=(ch.answer,), daemon=True).start()
-            time.sleep(cfg["poll_interval"])
-    except KeyboardInterrupt:
-        print("\nBye.")
+        if lock.exists() and lock.read_text().strip() == str(os.getpid()):
+            lock.unlink()
+    except OSError:
+        pass
+
+
+def cmd_run(args, cfg, cfg_path):
+    lock = _acquire_lock(cfg_path)
+    try:
+        font = Font.load(cfg["font_file"])
+        if cfg["source"] == "screen" and not font.table:
+            sys.exit("The font isn't calibrated yet. Run:  python -m molenbot calibrate")
+        source = _make_source(cfg, font)
+        detector = _make_detector(cfg)
+        sender = ChatSender(cfg["chat_key"], cfg["answer_delay"], dry_run=args.dry_run)
+        state = {"paused": False}
+        _start_pause_listener(cfg, state)
+        recent: list[str] = []
+        print(f"Watching chat ({cfg['source']}). {cfg['pause_key'].upper()} pauses/resumes, Ctrl+C quits.")
+        try:
+            while True:
+                lines = source.poll()
+                recent = lines if source.snapshot else (recent + lines)[-12:]
+                for ch in detector.find(recent):
+                    if ch.answer is None:
+                        print(f"[{ch.game}] {ch.question!r}: no sure answer, skipping")
+                        continue
+                    if state["paused"]:
+                        print(f"[{ch.game}] {ch.question!r} -> {ch.answer}  (paused, not sent)")
+                        continue
+                    print(f"[{ch.game}] {ch.question!r} -> {ch.answer}")
+                    threading.Thread(target=sender.send, args=(ch.answer,), daemon=True).start()
+                time.sleep(cfg["poll_interval"])
+        except KeyboardInterrupt:
+            print("\nBye.")
+    finally:
+        _release_lock(lock)
 
 
 def main(argv=None):
