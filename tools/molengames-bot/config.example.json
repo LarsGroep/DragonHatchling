@@ -1,0 +1,16 @@
+{
+  "source": "screen",
+  "region": null,
+  "scale": null,
+  "extra_colors": [],
+  "log_path": null,
+  "font_file": "font.json",
+  "wordlists": ["words.txt"],
+  "learned_words": "learned_words.txt",
+  "games": ["reverse", "type", "unscramble", "math"],
+  "patterns": {},
+  "chat_key": "t",
+  "answer_delay": [1.2, 2.8],
+  "poll_interval": 0.3,
+  "pause_key": "f8"
+}

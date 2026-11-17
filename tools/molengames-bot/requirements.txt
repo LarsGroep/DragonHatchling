@@ -1,0 +1,6 @@
+numpy
+pillow
+mss            # fast screenshots
+opencv-python  # only for drawing the chat region (molenbot region)
+pynput         # typing answers + pause hotkey
+pyperclip
